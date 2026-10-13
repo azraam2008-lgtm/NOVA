@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-# 1. SAYFA KONFİGÜRASYONU
+# 1. SAYFA KONFİGÜRASYONU & SEKME İKONU (AMBLEM)
 AMBLEM_DOSYA = "amblem.jpg"
 
 st.set_page_config(
@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Safari ve Ana Ekrana Ekle için Özel Apple İkon Tanımlaması
+# Safari ve PWA / Ana Ekran İkonu İçin Meta Etiketi
 st.markdown(
     f"""
     <head>
@@ -178,7 +178,6 @@ st.markdown(
 )
 
 USERS_FILE = "kullanicilar.json"
-AMBLEM_PATH = AMBLEM_DOSYA
 
 LOGO_MAIN = """
 <div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #ffffff; margin-bottom: 5px;">
@@ -479,14 +478,8 @@ if "aktif_kullanici" not in st.session_state:
   st.session_state.aktif_kullanici = ""
 
 if not st.session_state.giris_yapildi:
-  col_img1, col_img2, col_img3 = st.columns([3.2, 0.9, 3.2])
-  with col_img2:
-    if os.path.exists(AMBLEM_PATH):
-      st.image(AMBLEM_PATH, use_container_width=True)
-
   st.markdown(
-      '<div style="max-width: 760px; margin: 0 auto; padding: 0px 15px;'
-      ' margin-bottom: 10px;">'
+      '<div style="max-width: 760px; margin: 20px auto 0 auto; padding: 0px 15px;">'
       + LOGO_MAIN
       + '<p class="landing-subtext">Gökyüzünün derinliklerinde aniden parlayan'
       " bir yıldız gibidir dönüşüm... Karanlık suları aşan bir kuğunun asil"
@@ -557,11 +550,6 @@ else:
 
   st.sidebar.markdown(LOGO_SIDEBAR, unsafe_allow_html=True)
 
-  c_mid1, c_mid2, c_mid3 = st.sidebar.columns([1, 1.2, 1])
-  with c_mid2:
-    if os.path.exists(AMBLEM_PATH):
-      st.image(AMBLEM_PATH, use_container_width=True)
-
   st.sidebar.markdown(
       f"""
       <div class="sidebar-user-card">
@@ -603,12 +591,7 @@ else:
   # GÜNLÜK TAKİP PANELİ
   # ----------------------------------------------------
   if menu == "Günlük Takip Paneli":
-    c_title1, c_title2 = st.columns([1, 15])
-    with c_title1:
-      if os.path.exists(AMBLEM_PATH):
-        st.image(AMBLEM_PATH, width=50)
-    with c_title2:
-      st.header(f"Günlük Beslenme ve Aktivite — {aktif_user.title()}")
+    st.header(f"Günlük Beslenme ve Aktivite — {aktif_user.title()}")
 
     secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
 
