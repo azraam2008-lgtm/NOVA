@@ -5,14 +5,29 @@ import os
 import pandas as pd
 import streamlit as st
 
+# 1. SAYFA KONFİGÜRASYONU
+AMBLEM_DOSYA = "amblem.jpg"
+
 st.set_page_config(
     page_title="Nova — Diyet ve Aktivite Asistanı",
+    page_icon=AMBLEM_DOSYA if os.path.exists(AMBLEM_DOSYA) else "✨",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
+# Safari ve Ana Ekrana Ekle için Özel Apple İkon Tanımlaması
+st.markdown(
+    f"""
+    <head>
+        <link rel="apple-touch-icon" href="{AMBLEM_DOSYA}">
+        <link rel="icon" type="image/jpeg" href="{AMBLEM_DOSYA}">
+    </head>
+""",
+    unsafe_allow_html=True,
+)
+
 # ----------------------------------------------------
-# 1. GENEL STİLLER & CSS
+# 2. GENEL STİLLER & CSS
 # ----------------------------------------------------
 st.markdown(
     """
@@ -163,7 +178,7 @@ st.markdown(
 )
 
 USERS_FILE = "kullanicilar.json"
-AMBLEM_PATH = "watermarked_img_10875607693201107735.jpg"
+AMBLEM_PATH = AMBLEM_DOSYA
 
 LOGO_MAIN = """
 <div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #ffffff; margin-bottom: 5px;">
@@ -456,7 +471,7 @@ def verileri_kaydet(username):
 
 
 # ----------------------------------------------------
-# 1. OTURUM KONTROLÜ VE GİRİŞ EKRANI
+# 3. OTURUM KONTROLÜ VE GİRİŞ EKRANI
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state:
   st.session_state.giris_yapildi = False
@@ -536,7 +551,7 @@ if not st.session_state.giris_yapildi:
 
 else:
   # ----------------------------------------------------
-  # 2. ANA UYGULAMA PANELİ
+  # 4. ANA UYGULAMA PANELİ
   # ----------------------------------------------------
   aktif_user = st.session_state.aktif_kullanici
 
@@ -820,7 +835,6 @@ else:
           unsafe_allow_html=True,
       )
 
-      # Öğün türüne göre özel neon/pastel renk temaları
       ogun_renkleri = {
           "Kahvaltı": {
               "bg": "linear-gradient(135deg, rgba(28, 37, 65, 0.95) 0%, rgba(72, 202, 228, 0.15) 100%)",
@@ -1217,7 +1231,7 @@ else:
         st.session_state.profil["hedef_kalori"] = round(tdee)
         st.session_state.profil["setup_tamamlandi"] = True
         st.success(
-            "Mevcut kilonuz dan hedef kilonuz aynı! Kilonuzu korumak için"
+            "Mevcut kilonuz ve hedef kilonuz aynı! Kilonuzu korumak için"
             " günlük kalori hedefiniz TDEE ile aynı ayarlandı."
         )
 
