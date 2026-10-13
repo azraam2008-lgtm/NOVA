@@ -7,7 +7,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Nova — Diyet ve Aktivite Asistanı",
-    page_icon="kuğu_amblem.jpg",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -164,7 +163,7 @@ st.markdown(
 )
 
 USERS_FILE = "kullanicilar.json"
-AMBLEM_PATH = "kuğu_amblem.jpg"
+AMBLEM_PATH = "watermarked_img_10875607693201107735.jpg"
 
 LOGO_MAIN = """
 <div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #ffffff; margin-bottom: 5px;">
@@ -821,6 +820,7 @@ else:
           unsafe_allow_html=True,
       )
 
+      # Öğün türüne göre özel neon/pastel renk temaları
       ogun_renkleri = {
           "Kahvaltı": {
               "bg": "linear-gradient(135deg, rgba(28, 37, 65, 0.95) 0%, rgba(72, 202, 228, 0.15) 100%)",
@@ -1217,7 +1217,7 @@ else:
         st.session_state.profil["hedef_kalori"] = round(tdee)
         st.session_state.profil["setup_tamamlandi"] = True
         st.success(
-            "Mevcut kilonuz ve hedef kilonuz aynı! Kilonuzu korumak için"
+            "Mevcut kilonuz dan hedef kilonuz aynı! Kilonuzu korumak için"
             " günlük kalori hedefiniz TDEE ile aynı ayarlandı."
         )
 
