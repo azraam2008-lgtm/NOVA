@@ -5,6 +5,33 @@ import os
 import pandas as pd
 import streamlit as st
 
+# 1. BİLGİSAYAR VE TELEFONDAKİ SİMGE (AMBLEM) İÇİN KESİN URL
+# (GitHub deponuzdaki amblem.jpg görselinin doğrudan ham bağlantısı)
+AMBLEM_URL = "https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/amblem.jpg"
+
+st.set_page_config(
+    page_title="Nova — Diyet ve Aktivite Asistanı",
+    page_icon=AMBLEM_URL,
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Mac "Add to Dock" ve iPhone "Ana Ekrana Ekle" (PWA) İkonu İçin Doğrudan Link
+st.markdown(
+    f"""
+    <head>
+        <link rel="apple-touch-icon" href="{AMBLEM_URL}">
+        <link rel="icon" type="image/jpeg" href="{AMBLEM_URL}">
+    </head>
+""",
+    unsafe_allow_html=True,
+)import datetime
+import hashlib
+import json
+import os
+import pandas as pd
+import streamlit as st
+
 # 1. SAYFA KONFİGÜRASYONU & SEKME İKONU (AMBLEM)
 AMBLEM_DOSYA = "amblem.jpg"
 
