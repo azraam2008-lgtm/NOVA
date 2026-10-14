@@ -5,8 +5,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-# 1. BİLGİSAYAR VE TELEFONDAKİ SİMGE (AMBLEM) İÇİN KESİN URL
-# (GitHub deponuzdaki amblem.jpg görselinin doğrudan ham bağlantısı)
+# 1. SAYFA KONFİGÜRASYONU & AMBLEM BAĞLANTISI
 AMBLEM_URL = "https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/amblem.jpg"
 
 st.set_page_config(
@@ -16,38 +15,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Mac "Add to Dock" ve iPhone "Ana Ekrana Ekle" (PWA) İkonu İçin Doğrudan Link
 st.markdown(
     f"""
     <head>
         <link rel="apple-touch-icon" href="{AMBLEM_URL}">
         <link rel="icon" type="image/jpeg" href="{AMBLEM_URL}">
-    </head>
-""",
-    unsafe_allow_html=True,
-)import datetime
-import hashlib
-import json
-import os
-import pandas as pd
-import streamlit as st
-
-# 1. SAYFA KONFİGÜRASYONU & SEKME İKONU (AMBLEM)
-AMBLEM_DOSYA = "amblem.jpg"
-
-st.set_page_config(
-    page_title="Nova — Diyet ve Aktivite Asistanı",
-    page_icon=AMBLEM_DOSYA if os.path.exists(AMBLEM_DOSYA) else "✨",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# Safari ve PWA / Ana Ekran İkonu İçin Meta Etiketi
-st.markdown(
-    f"""
-    <head>
-        <link rel="apple-touch-icon" href="{AMBLEM_DOSYA}">
-        <link rel="icon" type="image/jpeg" href="{AMBLEM_DOSYA}">
     </head>
 """,
     unsafe_allow_html=True,
@@ -437,7 +409,7 @@ def verileri_yukle(username):
           "Baklava (1 Dilim)": {"baklava": 50},
           "Sütlaç (1 Porsiyon)": {"sutlac": 200},
           "Waffle (Standart Porsiyon)": {"waffle": 250},
-          "Spoonful Tatlısı (1 Porsiyon)": {"spoonful tatlisi": 150},
+          "Spoonful Tatlisi (1 Porsiyon)": {"spoonful tatlisi": 150},
           "Küçük Boy Pancake": {"pancake": 100},
       },
       "gunluk_kayitlar": [],
