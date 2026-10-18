@@ -27,11 +27,10 @@ st.markdown(
 
 
 # ----------------------------------------------------
-# 2. DİNAMİK TEMA & CSS YÖNETİMİ
+# 2. GELİŞMİŞ SONBAHAR VE KASKO TEMA YÖNETİMİ
 # ----------------------------------------------------
 def get_theme_styles(tema_adi):
   if "Gece" in tema_adi or "Mavi" in tema_adi:
-    # Gece / Kuğu Mavisi Teması
     return {
         "bg": "#0b132b",
         "card_bg": "linear-gradient(135deg, rgba(28, 37, 65, 0.95) 0%, rgba(11, 19, 43, 0.95) 100%)",
@@ -40,9 +39,23 @@ def get_theme_styles(tema_adi):
         "sidebar_bg": "#1c2541",
         "accent": "#48cae4",
         "border": "#3a506b",
+        "ring_adim": "#48cae4",
+        "ring_su": "#90e0ef",
+    }
+  elif "Kahve" in tema_adi or "Toprak" in tema_adi:
+    return {
+        "bg": "#eedecc",
+        "card_bg": "linear-gradient(135deg, #f7f0ea 0%, #ecdcd0 100%)",
+        "text": "#2c221e",
+        "heading": "#3d2c23",
+        "sidebar_bg": "#d6c2b0",
+        "accent": "#7f5539",
+        "border": "#b08968",
+        "ring_adim": "#9c6644",
+        "ring_su": "#b08968",
     }
   else:
-    # Sonbahar Kremi Teması (Varsayılan)
+    # Sonbahar Kremi (Varsayılan)
     return {
         "bg": "#f7f3ee",
         "card_bg": "linear-gradient(135deg, #fffdfa 0%, #f4efe9 100%)",
@@ -51,10 +64,11 @@ def get_theme_styles(tema_adi):
         "sidebar_bg": "#eaddca",
         "accent": "#b08968",
         "border": "#d4c5b9",
+        "ring_adim": "#b08968",
+        "ring_su": "#9c7553",
     }
 
 
-# Kullanıcının tema tercihini yüklemeden önce varsayılan veya kayıtlı tema
 def load_user_theme(username):
   user_file = f"veriler_{username.lower().strip()}.json"
   if os.path.exists(user_file):
@@ -67,7 +81,6 @@ def load_user_theme(username):
   return "Sonbahar Kremi"
 
 
-# Aktif kullanıcı varsa temasını al (Giriş öncesi varsayılan)
 aktif_kullanici_temp = st.session_state.get("aktif_kullanici", "")
 secilen_tema_adi = (
     load_user_theme(aktif_kullanici_temp) if aktif_kullanici_temp else "Sonbahar Kremi"
@@ -545,7 +558,7 @@ else:
     )
 
   # ----------------------------------------------------
-  # GÜNLÜK TAKİP & ANA SAYFA (APPLE FİTNESS TARZI ORTA BOY İÇ İÇE HALKALAR)
+  # GÜNLÜK TAKİP & ANA SAYFA
   # ----------------------------------------------------
   if menu == "Günlük Takip & Ana Sayfa":
     st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
@@ -561,12 +574,11 @@ else:
 
     curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-    # --- APPLE FITNESS TARZI İÇ İÇE ÇİFT RİNG (ADIM VE SU) ---
-    st.subheader(" Apple Fitness Tarzı Günlük Halkalar (Rings)")
+    # --- GÜNLÜK SU VE ADIM TAKİBİ HALKALARI (SONBAHAR RENKLERİYLE) ---
+    st.subheader("🍂 Günlük Su ve Adım Takibi")
 
     col_ring_sol, col_ring_sag = st.columns(2)
 
-    # 1. RİNG: ADIM (Hedef: 10.000 adım)
     with col_ring_sol:
       adim_hedef = 10000
       adim_oran = min(1.0, curr_aktivite["adim"] / adim_hedef)
@@ -578,12 +590,12 @@ else:
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 16px; border: 1px solid {t['border']};">
                 <div style="position: relative; width: 110px; height: 110px;">
                     <svg width="110" height="110" style="transform: rotate(-90deg);">
-                        <circle cx="55" cy="55" r="42" stroke="#2c2c2e" stroke-width="10" fill="transparent"/>
-                        <circle cx="55" cy="55" r="42" stroke="#ff2d55" stroke-width="10" stroke-dasharray="{adim_circ}" stroke-dashoffset="{adim_offset}" stroke-linecap="round" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="rgba(0,0,0,0.1)" stroke-width="10" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="{t['ring_adim']}" stroke-width="10" stroke-dasharray="{adim_circ}" stroke-dashoffset="{adim_offset}" stroke-linecap="round" fill="transparent"/>
                     </svg>
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <span style="font-size: 16px; font-weight: 700; color: {t['heading']};">{curr_aktivite['adim']}</span>
-                        <span style="font-size: 10px; color: #ff2d55; font-weight: 700; letter-spacing: 0.5px;">ADIM RİNGİ</span>
+                        <span style="font-size: 10px; color: {t['ring_adim']}; font-weight: 700; letter-spacing: 0.5px;">ADIM RİNGİ</span>
                     </div>
                 </div>
             </div>
@@ -603,7 +615,6 @@ else:
         verileri_kaydet(aktif_user)
         st.success("Adım halkası güncellendi!")
 
-    # 2. RİNG: SU (Hedef: 3.0 Litre)
     with col_ring_sag:
       su_hedef = 3.0
       su_oran = min(1.0, curr_aktivite["su"] / su_hedef)
@@ -615,12 +626,12 @@ else:
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 16px; border: 1px solid {t['border']};">
                 <div style="position: relative; width: 110px; height: 110px;">
                     <svg width="110" height="110" style="transform: rotate(-90deg);">
-                        <circle cx="55" cy="55" r="42" stroke="#2c2c2e" stroke-width="10" fill="transparent"/>
-                        <circle cx="55" cy="55" r="42" stroke="#00f0ff" stroke-width="10" stroke-dasharray="{su_circ}" stroke-dashoffset="{su_offset}" stroke-linecap="round" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="rgba(0,0,0,0.1)" stroke-width="10" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="{t['ring_su']}" stroke-width="10" stroke-dasharray="{su_circ}" stroke-dashoffset="{su_offset}" stroke-linecap="round" fill="transparent"/>
                     </svg>
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <span style="font-size: 16px; font-weight: 700; color: {t['heading']};">{curr_aktivite['su']:.2f}L</span>
-                        <span style="font-size: 10px; color: #00f0ff; font-weight: 700; letter-spacing: 0.5px;">SU RİNGİ</span>
+                        <span style="font-size: 10px; color: {t['ring_su']}; font-weight: 700; letter-spacing: 0.5px;">SU RİNGİ</span>
                     </div>
                 </div>
             </div>
@@ -784,7 +795,7 @@ else:
   # TARİF & MALZEME YÖNETİMİ
   # ----------------------------------------------------
   elif menu == "Tarif & Malzeme Yönetimi":
-    st.header("Tarif ve Malzeme Yönetim Paneli")
+    st.header("Tarif dan Malzeme Yönetim Paneli")
     tab_m, tab_t = st.tabs(
         ["1. Yeni Malzeme Ekle", "2. Gramaj Esaslı Tarif Oluştur"]
     )
@@ -833,12 +844,16 @@ else:
 
     p = st.session_state.profil
 
-    # TEMA SEÇİMİ KISMI
     mevcut_tema = p.get("tema", "Sonbahar Kremi")
     secilen_tema = st.selectbox(
         "Uygulama Tema Paleti",
-        ["Sonbahar Kremi", "Gece / Kuğu Mavisi"],
-        index=0 if mevcut_tema == "Sonbahar Kremi" else 1,
+        ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi"],
+        index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi"].index(
+            mevcut_tema
+        )
+        if mevcut_tema
+        in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi"]
+        else 0,
     )
 
     st.divider()
@@ -883,7 +898,6 @@ else:
     )
 
     if st.button("Temayı ve Hedefleri Güncelle"):
-      # BMR Hesaplama (Mifflin-St Jeor)
       if cinsiyet == "Kadın":
         bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
       else:
@@ -907,7 +921,10 @@ else:
       st.session_state.profil["setup_tamamlandi"] = True
 
       verileri_kaydet(aktif_user)
-      st.success("Tema ve profil ayarlarınız başarıyla güncellendi! ✨")
+      st.success(
+          "Tema ve profil ayarlarınız kaydedildi! Ana sayfaya"
+          " yönlendiriliyorsunuz..."
+      )
       st.rerun()
 
     st.markdown("---")
