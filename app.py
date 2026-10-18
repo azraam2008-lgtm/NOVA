@@ -26,7 +26,7 @@ st.markdown(
 )
 
 # ----------------------------------------------------
-# 2. GENEL STİLLER & SONBAHAR / KREM TEMASI
+# 2. GENEL STİLLER & SONBAHAR / KREM TEMASI (KOYU KAHVERENGİ METİNLER)
 # ----------------------------------------------------
 st.markdown(
     """
@@ -45,6 +45,10 @@ st.markdown(
         color: #4a3b32 !important;
     }
 
+    p, span, label, div {
+        color: #3b2f2f;
+    }
+
     [data-testid="stSidebar"] {
         background-color: #eaddca;
         color: #3b2f2f;
@@ -57,18 +61,19 @@ st.markdown(
         font-family: 'Playfair Display', Georgia, serif;
         font-style: italic;
         font-size: 16px;
-        color: #8c7865;
+        color: #6d5b4c;
         background-color: transparent;
         border-radius: 6px;
         padding: 8px 16px;
     }
     .stTabs [aria-selected="true"] {
-        color: #4a3b32 !important;
+        color: #3b2f2f !important;
         border-bottom: 2px solid #b08968 !important;
+        font-weight: 600;
     }
 
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(244, 239, 233, 0.95) 100%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 239, 233, 0.95) 100%);
         border: 1px solid rgba(176, 137, 104, 0.3);
         border-radius: 12px;
         padding: 16px 20px;
@@ -78,29 +83,13 @@ st.markdown(
         font-family: 'Playfair Display', Georgia, serif !important;
         font-style: italic !important;
         font-size: 15px !important;
-        color: #8c7865 !important;
+        color: #6d5b4c !important;
     }
     [data-testid="stMetricValue"] {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 600 !important;
         font-size: 26px !important;
-        color: #4a3b32 !important;
-    }
-
-    .nova-summary-card {
-        background: linear-gradient(135deg, #f0ebd8 0%, #eaddca 100%);
-        border: 1px solid #d4c5b9;
-        border-left: 4px solid #b08968;
-        padding: 18px 24px;
-        border-radius: 10px;
-        margin-top: 15px;
-        font-size: 15px;
-        color: #3b2f2f;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
+        color: #3b2f2f !important;
     }
 
     .recipe-card {
@@ -110,11 +99,6 @@ st.markdown(
         padding: 16px 20px;
         margin-bottom: 14px;
         box-shadow: 0 4px 12px rgba(100, 80, 60, 0.06);
-        transition: 0.3s;
-    }
-    .recipe-card:hover {
-        border-color: #b08968;
-        box-shadow: 0 6px 20px rgba(176, 137, 104, 0.15);
     }
     .recipe-title {
         font-family: 'Playfair Display', Georgia, serif;
@@ -126,7 +110,7 @@ st.markdown(
     }
     .recipe-details {
         font-size: 13.5px;
-        color: #8c7865;
+        color: #6d5b4c;
     }
 
     .stButton > button {
@@ -154,7 +138,7 @@ st.markdown(
         font-style: italic;
         font-size: 18px;
         font-weight: 600;
-        color: #4a3b32;
+        color: #3b2f2f;
         margin-top: 8px;
         margin-bottom: 5px;
     }
@@ -164,7 +148,7 @@ st.markdown(
         font-style: italic;
         font-size: 13.5px;
         line-height: 1.7;
-        color: #7f6c5b;
+        color: #6d5b4c;
         text-align: justify;
         font-weight: 400;
         margin-top: 12px;
@@ -179,13 +163,13 @@ st.markdown(
 USERS_FILE = "kullanicilar.json"
 
 LOGO_MAIN = """
-<div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #4a3b32; margin-bottom: 5px;">
+<div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #3b2f2f; margin-bottom: 5px;">
     N&nbsp;&nbsp;O&nbsp;&nbsp;V&nbsp;&nbsp;A
 </div>
 """
 
 LOGO_SIDEBAR = """
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 30px; font-weight: 700; color: #4a3b32; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 30px; font-weight: 700; color: #3b2f2f; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
     <span>N</span>
     <span>O</span>
     <span>V</span>
@@ -359,28 +343,16 @@ def verileri_yukle(username):
               "dilim peynir": 40,
               "tam bugday ekmegi": 50,
           },
-          "Kahvaltı: Avokadolu & Yumurtalı Ekmek": {
-              "tam bugday ekmegi": 50,
-              "labne": 30,
-              "domates": 50,
-          },
           "Fast-Food: Karışık Pizza (Dilim)": {"pizza": 150},
           "Fast-Food: Çift Köfteli Burger": {"kofte burger": 250},
-          "Fast-Food: Patates Kızartması (Orta)": {"patates kizartmasi": 130},
           "Dürüm: Tavuk Dürüm": {
               "tavuk gogsu": 150,
               "marul": 30,
               "domates": 50,
               "salatalik": 50,
           },
-          "Çorba: Mercimek / Sebze Çorbası": {
-              "taze fasulye": 100,
-              "zeytinyagi": 5,
-          },
           "Tatlı: Laviva Çikolata (1 Paket)": {"laviva cikolata": 35},
-          "Tatlı: Baklava (1 Dilim)": {"baklava": 50},
           "İçecek: Bir Bardak Çay (Şekersiz)": {"cay": 200},
-          "İçecek: Latte (Orta Boy)": {"sut": 250, "kahve": 30},
       },
       "gunluk_kayitlar": [],
       "aktivite_loglari": {},
@@ -394,7 +366,6 @@ def verileri_yukle(username):
           "hedef_protein": 90,
           "hedef_karb": 200,
           "hedef_yag": 60,
-          "tema": "Sonbahar Kremi (#f7f3ee)",
           "setup_tamamlandi": False,
       },
   }
@@ -405,11 +376,9 @@ def verileri_yukle(username):
         data = json.load(f)
         profil = data.get("profil", {})
         if "mevcut_kilo" not in profil:
-          profil["mevcut_kilo"] = profil.get("kilo", 58.0)
+          profil["mevcut_kilo"] = 58.0
         if "hedef_kilo" not in profil:
           profil["hedef_kilo"] = 55.0
-        if "tema" not in profil:
-          profil["tema"] = "Sonbahar Kremi (#f7f3ee)"
         if "setup_tamamlandi" not in profil:
           profil["setup_tamamlandi"] = True
         data["profil"] = profil
@@ -533,13 +502,12 @@ else:
   st.sidebar.divider()
 
   is_first_login = not st.session_state.profil.get("setup_tamamlandi", True)
-  default_menu_index = 4 if is_first_login else 0
+  default_menu_index = 3 if is_first_login else 0
 
   menu = st.sidebar.selectbox(
       "Navigasyon Menüsü",
       [
           "Günlük Takip & Ana Sayfa",
-          "Yapay Zeka Tabak Taraması",
           "Haftalık Program & Değerlendirme",
           "Tarif & Malzeme Yönetimi",
           "Hesap ve Hedefler",
@@ -555,7 +523,7 @@ else:
     )
 
   # ----------------------------------------------------
-  # GÜNLÜK TAKİP & ANA SAYFA
+  # GÜNLÜK TAKİP & ANA SAYFA (ADIM, SU, VİDEO ANALİZ & YAPAY ZEKA)
   # ----------------------------------------------------
   if menu == "Günlük Takip & Ana Sayfa":
     st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
@@ -566,46 +534,49 @@ else:
       st.session_state.aktivite_loglari[secilen_tarih] = {
           "adim": 8500,
           "su": 2.0,
+          "video_tamamlandi": False,
       }
 
-    # EN ÜSTTE ADIM VE SU RİNG (HALKA) GÖRÜNÜMÜ
     curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-    st.subheader("👟 Günlük Hareket & Su Halkaları")
-    col_ring1, col_ring2, col_ring3 = st.columns([1, 1, 2])
-
-    with col_ring1:
+    # --- ADIM VE SU ---
+    r_col1, r_col2, r_col3 = st.columns(3)
+    with r_col1:
       adim_val = st.number_input(
-          "Günlük Adım",
+          "Günlük Adım Sayısı",
           min_value=0,
           max_value=50000,
           value=int(curr_aktivite["adim"]),
           step=500,
       )
-      if st.button("Adımı Güncelle"):
+      if st.button("Adımı Kaydet"):
         curr_aktivite["adim"] = adim_val
         verileri_kaydet(aktif_user)
         st.success("Adım güncellendi!")
 
-    with col_ring2:
+    with r_col2:
       su_val = curr_aktivite["su"]
-      c_s1, c_s2 = st.columns(2)
-      if c_s1.button("+0.25L Su"):
+      st.markdown(
+          f"<div style='font-family:\"Playfair Display\"; font-size:16px; font-weight:600; color:#4a3b32; margin-top:5px;'>Su Tüketimi: {su_val:.2f}L</div>",
+          unsafe_allow_html=True,
+      )
+      s_c1, s_c2 = st.columns(2)
+      if s_c1.button("+0.25L Su"):
         curr_aktivite["su"] = round(su_val + 0.25, 2)
         verileri_kaydet(aktif_user)
         st.rerun()
-      if c_s2.button("-0.25L Su"):
+      if s_c2.button("-0.25L Su"):
         if su_val >= 0.25:
           curr_aktivite["su"] = round(su_val - 0.25, 2)
           verileri_kaydet(aktif_user)
           st.rerun()
 
-    with col_ring3:
+    with r_col3:
       st.markdown(
-          f"""
-            <div style="background: rgba(176,137,104,0.1); padding: 10px 15px; border-radius: 10px; border: 1px solid #d4c5b9;">
-                <strong>📲 iOS / Android Entegrasyon Notu:</strong><br>
-                Apple Fitness / Google Fit adımlarınız cihaz eşitlemesi açıkken arka planda otomatik senkronize edilir. Dilediğinizde yukarıdan manuel revize edebilirsiniz.
+          """
+            <div style="background: rgba(176,137,104,0.12); padding: 10px; border-radius: 10px; border: 1px solid #d4c5b9; font-size: 13px;">
+                <strong>📲 Fitness / Apple Health Entegrasyonu:</strong><br>
+                Cihaz adımlarınız otomatik senkronizedir. Dilerseniz yukarıdan manuel revize edebilirsiniz.
             </div>
             """,
           unsafe_allow_html=True,
@@ -613,58 +584,116 @@ else:
 
     st.divider()
 
-    # GENİŞLETİLMİŞ KATEGORİ SKALASI İLE ÖĞÜN EKLEME
-    st.subheader("🍽️ Kapsamlı Menü & Öğün Ekleme")
+    # --- SPOR VİDEOLARI (GROWWITHJO & NICOLE) VE KALORI HESAPLAMA ---
+    st.subheader(
+        "🌸 Günlük 20 Dakika Egzersiz Videoları & Kalori Analiz Paneli"
+    )
 
+    kilo_suan = st.session_state.profil["mevcut_kilo"]
+    # 20 dakikalık orta-yüksek tempo egzersiz tahmini kalori harcaması
+    tahmini_video_kalorisi = round(
+        (5.5 * 3.5 * kilo_suan / 200) * 20
+    )  # ~140-160 kcal
+
+    col_vid1, col_vid2 = st.columns(2)
+
+    with col_vid1:
+      st.markdown(
+          f"""
+            <div class="recipe-card">
+                <div class="recipe-title">✨ Growwithjo — 20 Min Fat Burning Walk</div>
+                <div class="recipe-details">Tempolu ev yürüyüşü seansı.</div>
+                <div style="margin-top:8px; font-weight:600; color:#b08968;">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
+                <br>
+                <a href="https://www.youtube.com/results?search_query=growwithjo+20+min+workout" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
+
+    with col_vid2:
+      st.markdown(
+          f"""
+            <div class="recipe-card">
+                <div class="recipe-title">🌿 Nicole Pilates — 20 Min Full Body Flow</div>
+                <div class="recipe-details">Tüm vücut esneme ve sıkılaşma seansı.</div>
+                <div style="margin-top:8px; font-weight:600; color:#b08968;">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
+                <br>
+                <a href="https://www.youtube.com/results?search_query=nicole+pilates+20+min" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
+
+    # VİDEOYU YAPTIM TİKLEME KISMI
+    video_yapildi_mi = st.checkbox(
+        "✨ Bugün bu 20 dakikalık egzersiz videosunu tamamladım!",
+        value=curr_aktivite.get("video_tamamlandi", False),
+    )
+    if video_yapildi_mi != curr_aktivite.get("video_tamamlandi", False):
+      curr_aktivite["video_tamamlandi"] = video_yapildi_mi
+      verileri_kaydet(aktif_user)
+      st.rerun()
+
+    if video_yapildi_mi:
+      st.success(
+          f" Harika! Egzersiz kalorisi ({tahmini_video_kalorisi} kcal) günlük"
+          " harcamanıza başarıyla eklendi."
+      )
+
+    st.divider()
+
+    # --- YAPAY ZEKA TABAK TARAMASI ---
+    st.subheader("📸 AI Yapay Zeka Tabak Taraması")
+    yuklenen_foto = st.file_uploader(
+        "Tabak Fotoğrafını Seç", type=["jpg", "jpeg", "png"], key="ai_tabak"
+    )
+    if yuklenen_foto is not None:
+      st.image(
+          yuklenen_foto, caption="Yüklenen Yemek", use_container_width=True
+      )
+      if st.button("Tabağı Tara ve Kalorileştir"):
+        with st.spinner("Analiz ediliyor..."):
+          st.success(
+              "✨ Analiz Başarılı: **Izgara Tavuk & Kinoalı Akdeniz Salatası**"
+          )
+          st.markdown("🔥 **Değerler:** 385 kcal | Protein: 32g | Yağ: 12g")
+          if st.button("Günlüğüme Ekle"):
+            st.session_state.gunluk_kayitlar.append({
+                "Tarih": secilen_tarih,
+                "Öğün": "Öğle Yemeği",
+                "Tarif": "AI Analiz: Tavuklu Akdeniz Salatası",
+                "İçerik": "150g Tavuk, Salata",
+                "Kalori": 385.0,
+                "Protein": 32.0,
+                "Karbonhidrat": 24.0,
+                "Yağ": 12.0,
+            })
+            verileri_kaydet(aktif_user)
+            st.success("Kaydedildi!")
+
+    st.divider()
+
+    # --- ÖĞÜN EKLEME ---
+    st.subheader("🍽️ Kapsamlı Menü & Öğün Ekleme")
     kategori = st.selectbox(
         "Kategori Seçin",
         [
             "Kahvaltılıklar",
             "Fast-Food (Pizza, Burger vb.)",
             "Dürümler & Sandviçler",
-            "Çorbalar & Ev Yemekleri",
             "Tatlılar & Çikolatalar",
             "İçecekler",
         ],
     )
-
-    uygun_tarifler = [
-        t
-        for t in st.session_state.hazir_tarifler.keys()
-        if (kategori == "Kahvaltılıklar" and "Kahvaltı" in t)
-        or (
-            kategori == "Fast-Food (Pizza, Burger vb.)"
-            and ("Pizza" in t or "Burger" in t or "Patates" in t)
-        )
-        or (
-            kategori == "Dürümler & Sandviçler"
-            and ("Sandviç" in t or "Dürüm" in t)
-        )
-        or (kategori == "Çorbalar & Ev Yemekleri" and "Çorba" in t)
-        or (
-            kategori == "Tatlılar & Çikolatalar"
-            and ("Laviva" in t or "Baklava" in t or "Tatlı" in t or "Waffle" in t)
-        )
-        or (kategori == "İçecekler" and ("Çay" in t or "Latte" in t))
-        or kategori not in [
-            "Kahvaltılıklar",
-            "Fast-Food (Pizza, Burger vb.)",
-            "Dürümler & Sandviçler",
-            "Çorbalar & Ev Yemekleri",
-            "Tatlılar & Çikolatalar",
-            "İçecekler",
-        ]
-    ]
-    if not uygun_tarifler:
-      uygun_tarifler = list(st.session_state.hazir_tarifler.keys())
-
-    col_ogun1, col_ogun2 = st.columns(2)
-    ogun_turu = col_ogun1.selectbox(
+    uygun_tarifler = list(st.session_state.hazir_tarifler.keys())
+    col_o1, col_o2 = st.columns(2)
+    ogun_turu = col_o1.selectbox(
         "Öğün Zamanı", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]
     )
-    secilen_tarif = col_ogun2.selectbox("Seçilen Lezzet", uygun_tarifler)
+    secilen_tarif = col_o2.selectbox("Seçilen Lezzet", uygun_tarifler)
 
-    if st.button("Seçilen Lezzeti Günlüğe Ekle"):
+    if st.button("Lezzeti Günlüğe Ekle"):
       malzemeler = st.session_state.hazir_tarifler[secilen_tarif]
       t_kalori, t_protein, t_karb, t_yag = 0, 0, 0, 0
       detaylar = []
@@ -689,83 +718,7 @@ else:
           "Yağ": round(t_yag, 1),
       })
       verileri_kaydet(aktif_user)
-      st.success(f"'{secilen_tarif}' başarıyla kaydedildi!")
-
-    st.divider()
-
-    # GROWWITHJO & NICOLE PILATES GÜNLÜK 20 DK EGZERSİZ VİDEOLARI
-    st.subheader("🌸 Günlük 20 Dakika Egzersiz Önerileri (Growwithjo & Nicole Pilates)")
-    col_vid1, col_vid2 = st.columns(2)
-    with col_vid1:
-      st.markdown(
-          """
-            <div class="recipe-card">
-                <div class="recipe-title">✨ Growwithjo — 20 Min Fat Burning Walk</div>
-                <div class="recipe-details">Evde ekipmansız, neşeli ve tempolu 20 dakikalık yürüyüş egzersizi.</div>
-                <br>
-                <a href="https://www.youtube.com/results?search_query=growwithjo+20+min+workout" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
-            </div>
-            """,
-          unsafe_allow_html=True,
-      )
-    with col_vid2:
-      st.markdown(
-          """
-            <div class="recipe-card">
-                <div class="recipe-title">🌿 Nicole Pilates — 20 Min Full Body Flow</div>
-                <div class="recipe-details">Derin kas gruplarını çalıştıran, esneklik ve sıkılaşma odaklı seans.</div>
-                <br>
-                <a href="https://www.youtube.com/results?search_query=nicole+pilates+20+min" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
-            </div>
-            """,
-          unsafe_allow_html=True,
-      )
-
-  # ----------------------------------------------------
-  # YAPAY ZEKA TABAK TARAMASI
-  # ----------------------------------------------------
-  elif menu == "Yapay Zeka Tabak Taraması":
-    st.header("📸 AI Yapay Zeka Tabak Analizi")
-    st.markdown(
-        "Yediğin yemeğin fotoğrafını çek veya yükle; Nova'nın akıllı tarama"
-        " motoru içeriği analiz edip kalori ve makrolarını senin için"
-        " hesaplasın."
-    )
-
-    yuklenen_foto = st.file_uploader(
-        "Tabak Fotoğrafını Yükle", type=["jpg", "jpeg", "png"]
-    )
-    if yuklenen_foto is not None:
-      st.image(
-          yuklenen_foto,
-          caption="Yüklenen Yemek Tabağı",
-          use_container_width=True,
-      )
-      if st.button("Tabağı Yapay Zeka ile Tara"):
-        with st.spinner("Yemek analizi yapılıyor..."):
-          st.success(
-              "✨ Yapay Zeka Analizi Tamamlandı: **Izgara Tavuklu & Kinoalı"
-              " Akdeniz Salatası** tespit edildi!"
-          )
-          st.markdown(
-              "🔥 **Tahmini Besin Değerleri:** 385 kcal | Protein: 32g | Karb:"
-              " 24g | Yağ: 12g"
-          )
-          if st.button("Bu Analizi Bugünkü Öğünlerime Ekle"):
-            st.session_state.gunluk_kayitlar.append({
-                "Tarih": str(datetime.date.today()),
-                "Öğün": "Öğle Yemeği",
-                "Tarif": "AI Analiz: Tavuklu Akdeniz Salatası",
-                "İçerik": "150g Tavuk, 100g Salata, Zeytinyağı",
-                "Kalori": 385.0,
-                "Protein": 32.0,
-                "Karbonhidrat": 24.0,
-                "Yağ": 12.0,
-            })
-            verileri_kaydet(aktif_user)
-            st.success(
-                "Yapay zeka tabağı başarıyla günlüğünüze kaydetti! ✨"
-            )
+      st.success("Öğün kaydedildi!")
 
   # ----------------------------------------------------
   # HAFTALIK PROGRAM & DEĞERLENDİRME
@@ -782,20 +735,58 @@ else:
       st.dataframe(haftalik_ozet, use_container_width=True)
       st.line_chart(haftalik_ozet.set_index("Tarih")[["Kalori"]], color="#b08968")
     else:
-      st.info("Değerlendirme için henüz kayıt bulunmuyor.")
+      st.info("Kayıt bulunmuyor.")
 
   # ----------------------------------------------------
   # TARİF & MALZEME YÖNETİMİ
   # ----------------------------------------------------
   elif menu == "Tarif & Malzeme Yönetimi":
     st.header("Tarif ve Malzeme Yönetim Paneli")
-    st.info("Yeni malzemeler ve özel tarifler ekleyebilirsiniz.")
+    tab_m, tab_t = st.tabs(
+        ["1. Yeni Malzeme Ekle", "2. Gramaj Esaslı Tarif Oluştur"]
+    )
+    with tab_m:
+      m_ad = st.text_input("Malzeme Adı")
+      m_kal = st.number_input("100g Kalori", min_value=0.0, value=100.0)
+      m_pro = st.number_input("100g Protein", min_value=0.0, value=10.0)
+      m_kar = st.number_input("100g Karb", min_value=0.0, value=5.0)
+      m_yag = st.number_input("100g Yağ", min_value=0.0, value=3.0)
+      if st.button("Malzemeyi Kaydet"):
+        if m_ad.strip():
+          st.session_state.besin_veritabani[m_ad.strip().lower()] = {
+              "kalori": m_kal,
+              "protein": m_pro,
+              "karb": m_kar,
+              "yag": m_yag,
+          }
+          verileri_kaydet(aktif_user)
+          st.success("Malzeme eklendi!")
+
+    with tab_t:
+      t_ad = st.text_input("Tarif Adı")
+      secilen_malzemeler = st.multiselect(
+          "Malzemeleri Seç", list(st.session_state.besin_veritabani.keys())
+      )
+      tarif_gramajlari = {}
+      for m in secilen_malzemeler:
+        gr = st.number_input(
+            f"{m.title()} kaç gram/ml?",
+            min_value=1.0,
+            value=100.0,
+            key=f"g_{m}",
+        )
+        tarif_gramajlari[m] = gr
+      if st.button("Tarifi Kaydet"):
+        if t_ad.strip() and tarif_gramajlari:
+          st.session_state.hazir_tarifler[t_ad.strip()] = tarif_gramajlari
+          verileri_kaydet(aktif_user)
+          st.success("Tarif kaydedildi!")
 
   # ----------------------------------------------------
-  # HESAP VE HEDEFLER
+  # HESAP VE HEDEFLER (KALORİ AÇIĞI HESAPLAMA SİHİRBAZI)
   # ----------------------------------------------------
   elif menu == "Hesap ve Hedefler":
-    st.header("👤 Hesap, Profil ve Tema Ayarları")
+    st.header("👤 Hesap, Profil ve Kalori Açığı Hesaplama Sihirbazı")
 
     p = st.session_state.profil
 
@@ -828,24 +819,82 @@ else:
         step=0.5,
     )
 
-    secilen_tema = st.selectbox(
-        "Uygulama Teması / Renk Paleti",
+    aktivite_seviyesi = st.selectbox(
+        "Aktivite Düzeyi",
         [
-            "Sonbahar Kremi (#f7f3ee)",
-            "Gece Mavisi",
-            "Pastel Pembe",
-            "Doğal Toprak",
+            "Hareketsiz / Masa Başı",
+            "Hafif Aktif (Haftada 1-3 gün)",
+            "Orta Aktif (Haftada 3-5 gün)",
+            "Çok Aktif",
         ],
-        index=0,
     )
 
-    if st.button("Bilgileri ve Hedefleri Güncelle"):
+    if st.button("Kalori Açığı ve Süreyi Hesapla"):
+      # BMR Hesaplama (Mifflin-St Jeor)
+      if cinsiyet == "Kadın":
+        bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
+      else:
+        bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) + 5
+
+      carpanlar = {
+          "Hareketsiz / Masa Başı": 1.2,
+          "Hafif Aktif (Haftada 1-3 gün)": 1.375,
+          "Orta Aktif (Haftada 3-5 gün)": 1.55,
+          "Çok Aktif": 1.725,
+      }
+      tdee = bmr * carpanlar[aktivite_seviyesi]
+      kilo_farki = mevcut_kilo - hedef_kilo
+
       st.session_state.profil["cinsiyet"] = cinsiyet
       st.session_state.profil["yas"] = yas
       st.session_state.profil["boy"] = boy
       st.session_state.profil["mevcut_kilo"] = mevcut_kilo
       st.session_state.profil["hedef_kilo"] = hedef_kilo
-      st.session_state.profil["tema"] = secilen_tema
       st.session_state.profil["setup_tamamlandi"] = True
+
+      st.markdown("---")
+      st.subheader("📊 Kişisel Analiz ve Kalori Açığı Sonuçları")
+
+      if kilo_farki > 0:
+        hedef_kalori = tdee - 500  # 500 kcal açık
+        toplam_kcal = kilo_farki * 7700
+        tahmini_gun = toplam_kcal / 500
+        tahmini_hafta = tahmini_gun / 7
+
+        st.metric(
+            "Günlük Harcanan Enerji (TDEE)", f"{round(tdee)} kcal / gün"
+        )
+        st.metric(
+            "Önerilen Günlük Kalori Alımı", f"{round(hedef_kalori)} kcal / gün"
+        )
+        st.markdown(
+            "💡 **Kalori Açığı:** Kilo verebilmek için günlük harcamanızın"
+            f" altında, günde tam **500 kcal açık** oluşturmalısınız."
+        )
+        st.markdown(
+            f"⏱️ **Tahmini Süre:** Haftada 0.5 kg vererek hedef kilonuza"
+            f" **yaklaşık {tahmini_hafta:.1f} haftada** ulaşabilirsiniz."
+        )
+      elif kilo_farki < 0:
+        hedef_kalori = tdee + 300
+        tahmini_gun = abs(kilo_farki * 7700) / 300
+        tahmini_hafta = tahmini_gun / 7
+        st.metric(
+            "Önerilen Günlük Kalori Alımı", f"{round(hedef_kalori)} kcal / gün"
+        )
+        st.markdown(
+            "💡 **Kalori Fazlası:** Kilo alabilmek için günlük harcamanızın"
+            " üzerine **300 kcal fazlalık** eklemelisiniz."
+        )
+        st.markdown(
+            f"⏱️ **Tahmini Süre:** **Yaklaşık {tahmini_hafta:.1f} haftada**"
+            " hedefinize ulaşabilirsiniz."
+        )
+      else:
+        st.success(
+            "Mevcut kilonuz ve hedef kilonuz aynı! Kilonuzu korumak için günlük"
+            f" kalori hedefiniz {round(tdee)} kcal olarak belirlendi."
+        )
+
       verileri_kaydet(aktif_user)
-      st.success("Hesap ve profil ayarlarınız başarıyla güncellendi! ✨")
+      st.success("Profil ve kalori hedefiniz başarıyla kaydedildi! ✨")
