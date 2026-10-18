@@ -25,136 +25,162 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
 # ----------------------------------------------------
-# 2. GENEL STİLLER & SONBAHAR / KREM TEMASI (KOYU KAHVERENGİ METİNLER)
+# 2. DİNAMİK TEMA & CSS YÖNETİMİ
 # ----------------------------------------------------
+def get_theme_styles(tema_adi):
+  if "Gece" in tema_adi or "Mavi" in tema_adi:
+    # Gece / Kuğu Mavisi Teması
+    return {
+        "bg": "#0b132b",
+        "card_bg": "linear-gradient(135deg, rgba(28, 37, 65, 0.95) 0%, rgba(11, 19, 43, 0.95) 100%)",
+        "text": "#e0e1dd",
+        "heading": "#ffffff",
+        "sidebar_bg": "#1c2541",
+        "accent": "#48cae4",
+        "border": "#3a506b",
+    }
+  else:
+    # Sonbahar Kremi Teması (Varsayılan)
+    return {
+        "bg": "#f7f3ee",
+        "card_bg": "linear-gradient(135deg, #fffdfa 0%, #f4efe9 100%)",
+        "text": "#3b2f2f",
+        "heading": "#4a3b32",
+        "sidebar_bg": "#eaddca",
+        "accent": "#b08968",
+        "border": "#d4c5b9",
+    }
+
+
+# Kullanıcının tema tercihini yüklemeden önce varsayılan veya kayıtlı tema
+def load_user_theme(username):
+  user_file = f"veriler_{username.lower().strip()}.json"
+  if os.path.exists(user_file):
+    try:
+      with open(user_file, "r", encoding="utf-8") as f:
+        d = json.load(f)
+        return d.get("profil", {}).get("tema", "Sonbahar Kremi")
+    except:
+      pass
+  return "Sonbahar Kremi"
+
+
+# Aktif kullanıcı varsa temasını al (Giriş öncesi varsayılan)
+aktif_kullanici_temp = st.session_state.get("aktif_kullanici", "")
+secilen_tema_adi = (
+    load_user_theme(aktif_kullanici_temp) if aktif_kullanici_temp else "Sonbahar Kremi"
+)
+t = get_theme_styles(secilen_tema_adi)
+
 st.markdown(
-    """
+    f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap');
 
-    .stApp {
-        background-color: #f7f3ee;
-        color: #3b2f2f;
+    .stApp {{
+        background-color: {t['bg']};
+        color: {t['text']};
         font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+    }}
 
-    h1, h2, h3, h4, h5, h6 {
+    h1, h2, h3, h4, h5, h6 {{
         font-family: 'Playfair Display', Georgia, serif !important;
         letter-spacing: 0.5px;
-        color: #4a3b32 !important;
-    }
+        color: {t['heading']} !important;
+    }}
 
-    p, span, label, div {
-        color: #3b2f2f;
-    }
+    p, span, label, div {{
+        color: {t['text']};
+    }}
 
-    [data-testid="stSidebar"] {
-        background-color: #eaddca;
-        color: #3b2f2f;
-    }
+    [data-testid="stSidebar"] {{
+        background-color: {t['sidebar_bg']};
+        color: {t['text']};
+    }}
 
-    .stTabs [data-baseweb="tab-list"] {
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 12px;
-    }
-    .stTabs [data-baseweb="tab"] {
+    }}
+    .stTabs [data-baseweb="tab"] {{
         font-family: 'Playfair Display', Georgia, serif;
         font-style: italic;
         font-size: 16px;
-        color: #6d5b4c;
+        color: {t['accent']};
         background-color: transparent;
         border-radius: 6px;
         padding: 8px 16px;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #3b2f2f !important;
-        border-bottom: 2px solid #b08968 !important;
+    }}
+    .stTabs [aria-selected="true"] {{
+        color: {t['heading']} !important;
+        border-bottom: 2px solid {t['accent']} !important;
         font-weight: 600;
-    }
+    }}
 
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 239, 233, 0.95) 100%);
-        border: 1px solid rgba(176, 137, 104, 0.3);
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(100, 80, 60, 0.08);
-    }
-    [data-testid="stMetricLabel"] {
-        font-family: 'Playfair Display', Georgia, serif !important;
-        font-style: italic !important;
-        font-size: 15px !important;
-        color: #6d5b4c !important;
-    }
-    [data-testid="stMetricValue"] {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-weight: 600 !important;
-        font-size: 26px !important;
-        color: #3b2f2f !important;
-    }
-
-    .recipe-card {
-        background: linear-gradient(135deg, #fffdfa 0%, #f4efe9 100%);
-        border: 1px solid rgba(176, 137, 104, 0.3);
+    .recipe-card {{
+        background: {t['card_bg']};
+        border: 1px solid {t['border']};
         border-radius: 12px;
         padding: 16px 20px;
         margin-bottom: 14px;
         box-shadow: 0 4px 12px rgba(100, 80, 60, 0.06);
-    }
-    .recipe-title {
+    }}
+    .recipe-title {{
         font-family: 'Playfair Display', Georgia, serif;
         font-style: italic;
         font-size: 18px;
         font-weight: 600;
-        color: #b08968;
+        color: {t['accent']};
         margin-bottom: 6px;
-    }
-    .recipe-details {
+    }}
+    .recipe-details {{
         font-size: 13.5px;
-        color: #6d5b4c;
-    }
+        color: {t['text']};
+        opacity: 0.85;
+    }}
 
-    .stButton > button {
-        background-color: #b08968;
+    .stButton > button {{
+        background-color: {t['accent']};
         color: #ffffff;
-        border: 1px solid #9c7553;
+        border: 1px solid {t['border']};
         border-radius: 8px;
         font-family: 'Plus Jakarta Sans', sans-serif;
         font-weight: 500;
         transition: 0.3s;
-    }
-    .stButton > button:hover {
-        background-color: #9c7553;
+    }}
+    .stButton > button:hover {{
+        opacity: 0.9;
         color: #ffffff;
-        border-color: #8c7865;
-    }
+    }}
 
-    .sidebar-user-card {
+    .sidebar-user-card {{
         text-align: center;
         margin-top: 10px;
         margin-bottom: 15px;
-    }
-    .sidebar-user-name {
+    }}
+    .sidebar-user-name {{
         font-family: 'Playfair Display', Georgia, serif;
         font-style: italic;
         font-size: 18px;
         font-weight: 600;
-        color: #3b2f2f;
+        color: {t['heading']};
         margin-top: 8px;
         margin-bottom: 5px;
-    }
+    }}
 
-    .landing-subtext {
+    .landing-subtext {{
         font-family: 'Playfair Display', Georgia, serif;
         font-style: italic;
         font-size: 13.5px;
         line-height: 1.7;
-        color: #6d5b4c;
+        color: {t['text']};
         text-align: justify;
         font-weight: 400;
         margin-top: 12px;
         margin-bottom: 20px;
         letter-spacing: 0.2px;
-    }
+    }}
     </style>
 """,
     unsafe_allow_html=True,
@@ -162,14 +188,14 @@ st.markdown(
 
 USERS_FILE = "kullanicilar.json"
 
-LOGO_MAIN = """
-<div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: #3b2f2f; margin-bottom: 5px;">
+LOGO_MAIN = f"""
+<div style="text-align: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 44px; font-weight: 700; letter-spacing: 22px; color: {t['heading']}; margin-bottom: 5px;">
     N&nbsp;&nbsp;O&nbsp;&nbsp;V&nbsp;&nbsp;A
 </div>
 """
 
-LOGO_SIDEBAR = """
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 30px; font-weight: 700; color: #3b2f2f; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
+LOGO_SIDEBAR = f"""
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 30px; font-weight: 700; color: {t['heading']}; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
     <span>N</span>
     <span>O</span>
     <span>V</span>
@@ -179,7 +205,7 @@ LOGO_SIDEBAR = """
 
 
 # ----------------------------------------------------
-# KULLANICI YÖNETİMİ & VERİTABANI
+# 3. KULLANICI YÖNETİMİ & VERİTABANI
 # ----------------------------------------------------
 def sifre_hashle(sifre):
   return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
@@ -363,9 +389,7 @@ def verileri_yukle(username):
           "mevcut_kilo": 58.0,
           "hedef_kilo": 55.0,
           "hedef_kalori": 1800,
-          "hedef_protein": 90,
-          "hedef_karb": 200,
-          "hedef_yag": 60,
+          "tema": "Sonbahar Kremi",
           "setup_tamamlandi": False,
       },
   }
@@ -375,10 +399,8 @@ def verileri_yukle(username):
       with open(user_file, "r", encoding="utf-8") as f:
         data = json.load(f)
         profil = data.get("profil", {})
-        if "mevcut_kilo" not in profil:
-          profil["mevcut_kilo"] = 58.0
-        if "hedef_kilo" not in profil:
-          profil["hedef_kilo"] = 55.0
+        if "tema" not in profil:
+          profil["tema"] = "Sonbahar Kremi"
         if "setup_tamamlandi" not in profil:
           profil["setup_tamamlandi"] = True
         data["profil"] = profil
@@ -411,7 +433,7 @@ def verileri_kaydet(username):
 
 
 # ----------------------------------------------------
-# 3. OTURUM KONTROLÜ VE GİRİŞ EKRANI
+# 4. OTURUM KONTROLÜ VE GİRİŞ EKRANI
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state:
   st.session_state.giris_yapildi = False
@@ -479,7 +501,7 @@ if not st.session_state.giris_yapildi:
 
 else:
   # ----------------------------------------------------
-  # 4. ANA UYGULAMA PANELİ
+  # 5. ANA UYGULAMA PANELİ
   # ----------------------------------------------------
   aktif_user = st.session_state.aktif_kullanici
 
@@ -518,12 +540,12 @@ else:
   if is_first_login:
     st.info(
         "✨ **Nova'ya Hoş Geldin!** Yolculuğuna kusursuz başlayabilmek için"
-        " lütfen **Hesap ve Hedefler** sekmesinden boyunu, kilonu ve hedeflerini"
+        " lütfen **Hesap ve Hedefler** sekmesinden profilini ve temanı"
         " belirle."
     )
 
   # ----------------------------------------------------
-  # GÜNLÜK TAKİP & ANA SAYFA (ADIM, SU, VİDEO ANALİZ & YAPAY ZEKA)
+  # GÜNLÜK TAKİP & ANA SAYFA (APPLE FİTNESS TARZI ORTA BOY İÇ İÇE HALKALAR)
   # ----------------------------------------------------
   if menu == "Günlük Takip & Ana Sayfa":
     st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
@@ -539,93 +561,120 @@ else:
 
     curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-    # --- ADIM VE SU ---
-    r_col1, r_col2, r_col3 = st.columns(3)
-    with r_col1:
-      adim_val = st.number_input(
-          "Günlük Adım Sayısı",
-          min_value=0,
-          max_value=50000,
-          value=int(curr_aktivite["adim"]),
-          step=500,
-      )
-      if st.button("Adımı Kaydet"):
-        curr_aktivite["adim"] = adim_val
-        verileri_kaydet(aktif_user)
-        st.success("Adım güncellendi!")
+    # --- APPLE FITNESS TARZI İÇ İÇE ÇİFT RİNG (ADIM VE SU) ---
+    st.subheader(" Apple Fitness Tarzı Günlük Halkalar (Rings)")
 
-    with r_col2:
-      su_val = curr_aktivite["su"]
-      st.markdown(
-          f"<div style='font-family:\"Playfair Display\"; font-size:16px; font-weight:600; color:#4a3b32; margin-top:5px;'>Su Tüketimi: {su_val:.2f}L</div>",
-          unsafe_allow_html=True,
-      )
-      s_c1, s_c2 = st.columns(2)
-      if s_c1.button("+0.25L Su"):
-        curr_aktivite["su"] = round(su_val + 0.25, 2)
-        verileri_kaydet(aktif_user)
-        st.rerun()
-      if s_c2.button("-0.25L Su"):
-        if su_val >= 0.25:
-          curr_aktivite["su"] = round(su_val - 0.25, 2)
-          verileri_kaydet(aktif_user)
-          st.rerun()
+    col_ring_sol, col_ring_sag = st.columns(2)
 
-    with r_col3:
+    # 1. RİNG: ADIM (Hedef: 10.000 adım)
+    with col_ring_sol:
+      adim_hedef = 10000
+      adim_oran = min(1.0, curr_aktivite["adim"] / adim_hedef)
+      adim_circ = 2 * 3.14159 * 42
+      adim_offset = adim_circ * (1 - adim_oran)
+
       st.markdown(
-          """
-            <div style="background: rgba(176,137,104,0.12); padding: 10px; border-radius: 10px; border: 1px solid #d4c5b9; font-size: 13px;">
-                <strong>📲 Fitness / Apple Health Entegrasyonu:</strong><br>
-                Cihaz adımlarınız otomatik senkronizedir. Dilerseniz yukarıdan manuel revize edebilirsiniz.
+          f"""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 16px; border: 1px solid {t['border']};">
+                <div style="position: relative; width: 110px; height: 110px;">
+                    <svg width="110" height="110" style="transform: rotate(-90deg);">
+                        <circle cx="55" cy="55" r="42" stroke="#2c2c2e" stroke-width="10" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="#ff2d55" stroke-width="10" stroke-dasharray="{adim_circ}" stroke-dashoffset="{adim_offset}" stroke-linecap="round" fill="transparent"/>
+                    </svg>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 16px; font-weight: 700; color: {t['heading']};">{curr_aktivite['adim']}</span>
+                        <span style="font-size: 10px; color: #ff2d55; font-weight: 700; letter-spacing: 0.5px;">ADIM RİNGİ</span>
+                    </div>
+                </div>
             </div>
             """,
           unsafe_allow_html=True,
       )
+      yeni_adim = st.number_input(
+          "Adım Güncelle",
+          min_value=0,
+          max_value=50000,
+          value=int(curr_aktivite["adim"]),
+          step=500,
+          key="inp_adim_ring",
+      )
+      if st.button("Adımı Kaydet"):
+        curr_aktivite["adim"] = yeni_adim
+        verileri_kaydet(aktif_user)
+        st.success("Adım halkası güncellendi!")
+
+    # 2. RİNG: SU (Hedef: 3.0 Litre)
+    with col_ring_sag:
+      su_hedef = 3.0
+      su_oran = min(1.0, curr_aktivite["su"] / su_hedef)
+      su_circ = 2 * 3.14159 * 42
+      su_offset = su_circ * (1 - su_oran)
+
+      st.markdown(
+          f"""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); padding: 15px; border-radius: 16px; border: 1px solid {t['border']};">
+                <div style="position: relative; width: 110px; height: 110px;">
+                    <svg width="110" height="110" style="transform: rotate(-90deg);">
+                        <circle cx="55" cy="55" r="42" stroke="#2c2c2e" stroke-width="10" fill="transparent"/>
+                        <circle cx="55" cy="55" r="42" stroke="#00f0ff" stroke-width="10" stroke-dasharray="{su_circ}" stroke-dashoffset="{su_offset}" stroke-linecap="round" fill="transparent"/>
+                    </svg>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 16px; font-weight: 700; color: {t['heading']};">{curr_aktivite['su']:.2f}L</span>
+                        <span style="font-size: 10px; color: #00f0ff; font-weight: 700; letter-spacing: 0.5px;">SU RİNGİ</span>
+                    </div>
+                </div>
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
+      sc1, sc2 = st.columns(2)
+      if sc1.button("+0.25L Su"):
+        curr_aktivite["su"] = round(curr_aktivite["su"] + 0.25, 2)
+        verileri_kaydet(aktif_user)
+        st.rerun()
+      if sc2.button("-0.25L Su"):
+        if curr_aktivite["su"] >= 0.25:
+          curr_aktivite["su"] = round(curr_aktivite["su"] - 0.25, 2)
+          verileri_kaydet(aktif_user)
+          st.rerun()
 
     st.divider()
 
-    # --- SPOR VİDEOLARI (GROWWITHJO & NICOLE) VE KALORI HESAPLAMA ---
+    # --- SPOR VİDEOLARI VE KALORİ ANALİZİ ---
     st.subheader(
         "🌸 Günlük 20 Dakika Egzersiz Videoları & Kalori Analiz Paneli"
     )
-
     kilo_suan = st.session_state.profil["mevcut_kilo"]
-    # 20 dakikalık orta-yüksek tempo egzersiz tahmini kalori harcaması
-    tahmini_video_kalorisi = round(
-        (5.5 * 3.5 * kilo_suan / 200) * 20
-    )  # ~140-160 kcal
+    tahmini_video_kalorisi = round((5.5 * 3.5 * kilo_suan / 200) * 20)
 
-    col_vid1, col_vid2 = st.columns(2)
-
-    with col_vid1:
+    cv1, cv2 = st.columns(2)
+    with cv1:
       st.markdown(
           f"""
             <div class="recipe-card">
                 <div class="recipe-title">✨ Growwithjo — 20 Min Fat Burning Walk</div>
                 <div class="recipe-details">Tempolu ev yürüyüşü seansı.</div>
-                <div style="margin-top:8px; font-weight:600; color:#b08968;">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
+                <div style="margin-top:8px; font-weight:600; color:{t['accent']};">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
                 <br>
-                <a href="https://www.youtube.com/results?search_query=growwithjo+20+min+workout" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
+                <a href="https://www.youtube.com/results?search_query=growwithjo+20+min+workout" target="_blank" style="color: {t['accent']}; font-weight:600;">Videoyu Aç ➔</a>
             </div>
             """,
           unsafe_allow_html=True,
       )
-
-    with col_vid2:
+    with cv2:
       st.markdown(
           f"""
             <div class="recipe-card">
                 <div class="recipe-title">🌿 Nicole Pilates — 20 Min Full Body Flow</div>
                 <div class="recipe-details">Tüm vücut esneme ve sıkılaşma seansı.</div>
-                <div style="margin-top:8px; font-weight:600; color:#b08968;">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
+                <div style="margin-top:8px; font-weight:600; color:{t['accent']};">🔥 Bu videoyu tamamlarsan yaklaşık <strong>{tahmini_video_kalorisi} kcal</strong> harcarsın!</div>
                 <br>
-                <a href="https://www.youtube.com/results?search_query=nicole+pilates+20+min" target="_blank" style="color: #b08968; font-weight:600;">Videoyu Aç ➔</a>
+                <a href="https://www.youtube.com/results?search_query=nicole+pilates+20+min" target="_blank" style="color: {t['accent']}; font-weight:600;">Videoyu Aç ➔</a>
             </div>
             """,
           unsafe_allow_html=True,
       )
 
-    # VİDEOYU YAPTIM TİKLEME KISMI
     video_yapildi_mi = st.checkbox(
         "✨ Bugün bu 20 dakikalık egzersiz videosunu tamamladım!",
         value=curr_aktivite.get("video_tamamlandi", False),
@@ -635,18 +684,12 @@ else:
       verileri_kaydet(aktif_user)
       st.rerun()
 
-    if video_yapildi_mi:
-      st.success(
-          f" Harika! Egzersiz kalorisi ({tahmini_video_kalorisi} kcal) günlük"
-          " harcamanıza başarıyla eklendi."
-      )
-
     st.divider()
 
-    # --- YAPAY ZEKA TABAK TARAMASI ---
+    # --- YAPAY ZEKA TABAK TARAMASI & ÖĞÜN EKLEME ---
     st.subheader("📸 AI Yapay Zeka Tabak Taraması")
     yuklenen_foto = st.file_uploader(
-        "Tabak Fotoğrafını Seç", type=["jpg", "jpeg", "png"], key="ai_tabak"
+        "Tabak Fotoğrafını Seç", type=["jpg", "jpeg", "png"], key="ai_tabak_ana"
     )
     if yuklenen_foto is not None:
       st.image(
@@ -673,8 +716,6 @@ else:
             st.success("Kaydedildi!")
 
     st.divider()
-
-    # --- ÖĞÜN EKLEME ---
     st.subheader("🍽️ Kapsamlı Menü & Öğün Ekleme")
     kategori = st.selectbox(
         "Kategori Seçin",
@@ -733,7 +774,9 @@ else:
           .reset_index()
       )
       st.dataframe(haftalik_ozet, use_container_width=True)
-      st.line_chart(haftalik_ozet.set_index("Tarih")[["Kalori"]], color="#b08968")
+      st.line_chart(
+          haftalik_ozet.set_index("Tarih")[["Kalori"]], color=t["accent"]
+      )
     else:
       st.info("Kayıt bulunmuyor.")
 
@@ -783,12 +826,22 @@ else:
           st.success("Tarif kaydedildi!")
 
   # ----------------------------------------------------
-  # HESAP VE HEDEFLER (KALORİ AÇIĞI HESAPLAMA SİHİRBAZI)
+  # HESAP, TEMA SEÇİMİ VE KALORİ AÇIĞI SİHİRBAZI
   # ----------------------------------------------------
   elif menu == "Hesap ve Hedefler":
-    st.header("👤 Hesap, Profil ve Kalori Açığı Hesaplama Sihirbazı")
+    st.header("👤 Hesap, Tema Ayarları ve Kalori Açığı Sihirbazı")
 
     p = st.session_state.profil
+
+    # TEMA SEÇİMİ KISMI
+    mevcut_tema = p.get("tema", "Sonbahar Kremi")
+    secilen_tema = st.selectbox(
+        "Uygulama Tema Paleti",
+        ["Sonbahar Kremi", "Gece / Kuğu Mavisi"],
+        index=0 if mevcut_tema == "Sonbahar Kremi" else 1,
+    )
+
+    st.divider()
 
     c1, c2, c3 = st.columns(3)
     cinsiyet = c1.selectbox(
@@ -829,7 +882,7 @@ else:
         ],
     )
 
-    if st.button("Kalori Açığı ve Süreyi Hesapla"):
+    if st.button("Temayı ve Hedefleri Güncelle"):
       # BMR Hesaplama (Mifflin-St Jeor)
       if cinsiyet == "Kadın":
         bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
@@ -850,51 +903,28 @@ else:
       st.session_state.profil["boy"] = boy
       st.session_state.profil["mevcut_kilo"] = mevcut_kilo
       st.session_state.profil["hedef_kilo"] = hedef_kilo
+      st.session_state.profil["tema"] = secilen_tema
       st.session_state.profil["setup_tamamlandi"] = True
 
-      st.markdown("---")
-      st.subheader("📊 Kişisel Analiz ve Kalori Açığı Sonuçları")
-
-      if kilo_farki > 0:
-        hedef_kalori = tdee - 500  # 500 kcal açık
-        toplam_kcal = kilo_farki * 7700
-        tahmini_gun = toplam_kcal / 500
-        tahmini_hafta = tahmini_gun / 7
-
-        st.metric(
-            "Günlük Harcanan Enerji (TDEE)", f"{round(tdee)} kcal / gün"
-        )
-        st.metric(
-            "Önerilen Günlük Kalori Alımı", f"{round(hedef_kalori)} kcal / gün"
-        )
-        st.markdown(
-            "💡 **Kalori Açığı:** Kilo verebilmek için günlük harcamanızın"
-            f" altında, günde tam **500 kcal açık** oluşturmalısınız."
-        )
-        st.markdown(
-            f"⏱️ **Tahmini Süre:** Haftada 0.5 kg vererek hedef kilonuza"
-            f" **yaklaşık {tahmini_hafta:.1f} haftada** ulaşabilirsiniz."
-        )
-      elif kilo_farki < 0:
-        hedef_kalori = tdee + 300
-        tahmini_gun = abs(kilo_farki * 7700) / 300
-        tahmini_hafta = tahmini_gun / 7
-        st.metric(
-            "Önerilen Günlük Kalori Alımı", f"{round(hedef_kalori)} kcal / gün"
-        )
-        st.markdown(
-            "💡 **Kalori Fazlası:** Kilo alabilmek için günlük harcamanızın"
-            " üzerine **300 kcal fazlalık** eklemelisiniz."
-        )
-        st.markdown(
-            f"⏱️ **Tahmini Süre:** **Yaklaşık {tahmini_hafta:.1f} haftada**"
-            " hedefinize ulaşabilirsiniz."
-        )
-      else:
-        st.success(
-            "Mevcut kilonuz ve hedef kilonuz aynı! Kilonuzu korumak için günlük"
-            f" kalori hedefiniz {round(tdee)} kcal olarak belirlendi."
-        )
-
       verileri_kaydet(aktif_user)
-      st.success("Profil ve kalori hedefiniz başarıyla kaydedildi! ✨")
+      st.success("Tema ve profil ayarlarınız başarıyla güncellendi! ✨")
+      st.rerun()
+
+    st.markdown("---")
+    st.subheader("📊 Kalori Açığı ve Hedef Analizi")
+    if cinsiyet == "Kadın":
+      bmr_k = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
+    else:
+      bmr_k = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) + 5
+    tdee_k = bmr_k * 1.375
+    kf = mevcut_kilo - hedef_kilo
+    if kf > 0:
+      hk = tdee_k - 500
+      gun = (kf * 7700) / 500
+      st.markdown(
+          f"💡 **Önerilen Kalori Açığı:** Kilo verebilmek için günde ortalama"
+          f" **{round(hk)} kcal** almalı ve 500 kcal açık"
+          f" oluşturmalısınız.<br>⏱️ **Tahmini Süre:** Yaklaşık"
+          f" **{gun/7:.1f} haftada** hedefinize ulaşabilirsiniz.",
+          unsafe_allow_html=True,
+      )
