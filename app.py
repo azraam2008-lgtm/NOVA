@@ -30,805 +30,155 @@ st.markdown(
 # ----------------------------------------------------
 GENIS_MENU_VERITABASI = {
     "A. 🥐 Kahvaltılıklar ve Sabah Öğünü": {
-        "Serpme Kahvaltı (Tek Kişilik)": {
-            "kalori": 650,
-            "protein": 24.0,
-            "karb": 55.0,
-            "yag": 36.0,
-        },
-        "Serpme Kahvaltı (İki Kişilik)": {
-            "kalori": 1300,
-            "protein": 48.0,
-            "karb": 110.0,
-            "yag": 72.0,
-        },
-        "Standart Kahvaltı Tabağı": {
-            "kalori": 420,
-            "protein": 18.0,
-            "karb": 35.0,
-            "yag": 22.0,
-        },
-        "Zenginleştirilmiş Kahvaltı Tabağı": {
-            "kalori": 580,
-            "protein": 25.0,
-            "karb": 48.0,
-            "yag": 31.0,
-        },
-        "Sade Menemen (Küçük Porsiyon)": {
-            "kalori": 140,
-            "protein": 7.0,
-            "karb": 6.0,
-            "yag": 10.0,
-        },
-        "Sade Menemen (Orta Porsiyon)": {
-            "kalori": 210,
-            "protein": 11.0,
-            "karb": 9.0,
-            "yag": 15.0,
-        },
-        "Sade Menemen (Büyük Porsiyon)": {
-            "kalori": 310,
-            "protein": 16.0,
-            "karb": 13.0,
-            "yag": 22.0,
-        },
-        "Kaşarlı Menemen (Küçük Porsiyon)": {
-            "kalori": 220,
-            "protein": 12.0,
-            "karb": 7.0,
-            "yag": 16.0,
-        },
-        "Kaşarlı Menemen (Orta Porsiyon)": {
-            "kalori": 320,
-            "protein": 18.0,
-            "karb": 10.0,
-            "yag": 23.0,
-        },
-        "Kaşarlı Menemen (Büyük Porsiyon)": {
-            "kalori": 450,
-            "protein": 25.0,
-            "karb": 14.0,
-            "yag": 33.0,
-        },
-        "Sucuklu Yumurta (Standart Porsiyon)": {
-            "kalori": 380,
-            "protein": 19.0,
-            "karb": 3.0,
-            "yag": 32.0,
-        },
-        "Sucuklu Yumurta (Doyurucu Porsiyon)": {
-            "kalori": 540,
-            "protein": 27.0,
-            "karb": 4.0,
-            "yag": 46.0,
-        },
-        "Peynirli Omlet (Standart Porsiyon)": {
-            "kalori": 280,
-            "protein": 17.0,
-            "karb": 2.0,
-            "yag": 22.0,
-        },
-        "Kaşarlı Tost (Tek)": {
-            "kalori": 290,
-            "protein": 12.0,
-            "karb": 30.0,
-            "yag": 13.0,
-        },
-        "Kaşarlı Tost (Duble)": {
-            "kalori": 440,
-            "protein": 20.0,
-            "karb": 42.0,
-            "yag": 21.0,
-        },
-        "Karışık Tost (Tek)": {
-            "kalori": 350,
-            "protein": 15.0,
-            "karb": 31.0,
-            "yag": 18.0,
-        },
-        "Karışık Tost (Duble)": {
-            "kalori": 520,
-            "protein": 24.0,
-            "karb": 44.0,
-            "yag": 28.0,
-        },
-        "Avokadolu Tost (Standart Porsiyon)": {
-            "kalori": 320,
-            "protein": 9.0,
-            "karb": 34.0,
-            "yag": 17.0,
-        },
-        "Beyaz Peynirli Sandviç (Standart)": {
-            "kalori": 280,
-            "protein": 13.0,
-            "karb": 36.0,
-            "yag": 9.0,
-        },
-        "Sade Kruvasan": {
-            "kalori": 270,
-            "protein": 5.0,
-            "karb": 31.0,
-            "yag": 14.0,
-        },
-        "Çikolatalı Kruvasan": {
-            "kalori": 360,
-            "protein": 6.0,
-            "karb": 42.0,
-            "yag": 19.0,
-        },
-        "Pancake (3'lü Porsiyon)": {
-            "kalori": 280,
-            "protein": 7.0,
-            "karb": 45.0,
-            "yag": 8.0,
-        },
-        "Pancake (5'li Porsiyon)": {
-            "kalori": 460,
-            "protein": 12.0,
-            "karb": 75.0,
-            "yag": 13.0,
-        },
-        "Waffle Kahvaltı Tabağı (Standart)": {
-            "kalori": 520,
-            "protein": 10.0,
-            "karb": 70.0,
-            "yag": 22.0,
-        },
-        "Granola ve Yoğurt Kasesi (Küçük Boy)": {
-            "kalori": 220,
-            "protein": 9.0,
-            "karb": 32.0,
-            "yag": 6.0,
-        },
-        "Granola ve Yoğurt Kasesi (Büyük Boy)": {
-            "kalori": 380,
-            "protein": 15.0,
-            "karb": 56.0,
-            "yag": 11.0,
-        },
-        "Meyveli Yulaf Lapası (Standart)": {
-            "kalori": 260,
-            "protein": 8.0,
-            "karb": 46.0,
-            "yag": 5.0,
-        },
-        "Fransız Tostu (Standart)": {
-            "kalori": 340,
-            "protein": 10.0,
-            "karb": 40.0,
-            "yag": 15.0,
-        },
-        "Simit ve Peynir Tabağı (Standart)": {
-            "kalori": 410,
-            "protein": 16.0,
-            "karb": 52.0,
-            "yag": 15.0,
-        },
-        "Bagel Sandviç (Standart)": {
-            "kalori": 350,
-            "protein": 14.0,
-            "karb": 48.0,
-            "yag": 11.0,
-        },
-        "Kahvaltılık Quesadilla (Standart)": {
-            "kalori": 430,
-            "protein": 19.0,
-            "karb": 38.0,
-            "yag": 22.0,
-        },
+        "Serpme Kahvaltı (Tek Kişilik)": {"kalori": 650, "protein": 24.0, "karb": 55.0, "yag": 36.0},
+        "Serpme Kahvaltı (İki Kişilik)": {"kalori": 1300, "protein": 48.0, "karb": 110.0, "yag": 72.0},
+        "Standart Kahvaltı Tabağı": {"kalori": 420, "protein": 18.0, "karb": 35.0, "yag": 22.0},
+        "Zenginleştirilmiş Kahvaltı Tabağı": {"kalori": 580, "protein": 25.0, "karb": 48.0, "yag": 31.0},
+        "Sade Menemen (Küçük Porsiyon)": {"kalori": 140, "protein": 7.0, "karb": 6.0, "yag": 10.0},
+        "Sade Menemen (Orta Porsiyon)": {"kalori": 210, "protein": 11.0, "karb": 9.0, "yag": 15.0},
+        "Sade Menemen (Büyük Porsiyon)": {"kalori": 310, "protein": 16.0, "karb": 13.0, "yag": 22.0},
+        "Kaşarlı Menemen (Küçük Porsiyon)": {"kalori": 220, "protein": 12.0, "karb": 7.0, "yag": 16.0},
+        "Kaşarlı Menemen (Orta Porsiyon)": {"kalori": 320, "protein": 18.0, "karb": 10.0, "yag": 23.0},
+        "Kaşarlı Menemen (Büyük Porsiyon)": {"kalori": 450, "protein": 25.0, "karb": 14.0, "yag": 33.0},
+        "Sucuklu Yumurta (Standart Porsiyon)": {"kalori": 380, "protein": 19.0, "karb": 3.0, "yag": 32.0},
+        "Sucuklu Yumurta (Doyurucu Porsiyon)": {"kalori": 540, "protein": 27.0, "karb": 4.0, "yag": 46.0},
+        "Peynirli Omlet (Standart Porsiyon)": {"kalori": 280, "protein": 17.0, "karb": 2.0, "yag": 22.0},
+        "Kaşarlı Tost (Tek)": {"kalori": 290, "protein": 12.0, "karb": 30.0, "yag": 13.0},
+        "Kaşarlı Tost (Duble)": {"kalori": 440, "protein": 20.0, "karb": 42.0, "yag": 21.0},
+        "Karışık Tost (Tek)": {"kalori": 350, "protein": 15.0, "karb": 31.0, "yag": 18.0},
+        "Karışık Tost (Duble)": {"kalori": 520, "protein": 24.0, "karb": 44.0, "yag": 28.0},
+        "Avokadolu Tost (Standart Porsiyon)": {"kalori": 320, "protein": 9.0, "karb": 34.0, "yag": 17.0},
+        "Beyaz Peynirli Sandviç (Standart)": {"kalori": 280, "protein": 13.0, "karb": 36.0, "yag": 9.0},
+        "Sade Kruvasan": {"kalori": 270, "protein": 5.0, "karb": 31.0, "yag": 14.0},
+        "Çikolatalı Kruvasan": {"kalori": 360, "protein": 6.0, "karb": 42.0, "yag": 19.0},
+        "Pancake (3'lü Porsiyon)": {"kalori": 280, "protein": 7.0, "karb": 45.0, "yag": 8.0},
+        "Pancake (5'li Porsiyon)": {"kalori": 460, "protein": 12.0, "karb": 75.0, "yag": 13.0},
+        "Waffle Kahvaltı Tabağı (Standart)": {"kalori": 520, "protein": 10.0, "karb": 70.0, "yag": 22.0},
+        "Granola ve Yoğurt Kasesi (Küçük Boy)": {"kalori": 220, "protein": 9.0, "karb": 32.0, "yag": 6.0},
+        "Granola ve Yoğurt Kasesi (Büyük Boy)": {"kalori": 380, "protein": 15.0, "karb": 56.0, "yag": 11.0},
+        "Meyveli Yulaf Lapası (Standart)": {"kalori": 260, "protein": 8.0, "karb": 46.0, "yag": 5.0},
+        "Fransız Tostu (Standart)": {"kalori": 340, "protein": 10.0, "karb": 40.0, "yag": 15.0},
+        "Simit ve Peynir Tabağı (Standart)": {"kalori": 410, "protein": 16.0, "karb": 52.0, "yag": 15.0},
+        "Bagel Sandviç (Standart)": {"kalori": 350, "protein": 14.0, "karb": 48.0, "yag": 11.0},
+        "Kahvaltılık Quesadilla (Standart)": {"kalori": 430, "protein": 19.0, "karb": 38.0, "yag": 22.0},
     },
     "B. 🥪 Öğle Yemeği ve Pratik Seçenekler": {
-        "Mercimek Çorbası (Kase)": {
-            "kalori": 160,
-            "protein": 8.0,
-            "karb": 22.0,
-            "yag": 4.5,
-        },
-        "Ezogelin Çorbası (Kase)": {
-            "kalori": 170,
-            "protein": 7.0,
-            "karb": 24.0,
-            "yag": 5.0,
-        },
-        "Domates Çorbası (Kase)": {
-            "kalori": 130,
-            "protein": 3.0,
-            "karb": 18.0,
-            "yag": 5.5,
-        },
-        "Kremalı Mantar Çorbası (Kase)": {
-            "kalori": 210,
-            "protein": 4.0,
-            "karb": 16.0,
-            "yag": 15.0,
-        },
-        "Tavuk Suyu Çorbası (Kase)": {
-            "kalori": 140,
-            "protein": 10.0,
-            "karb": 12.0,
-            "yag": 5.0,
-        },
-        "Yayla Çorbası (Kase)": {
-            "kalori": 150,
-            "protein": 5.0,
-            "karb": 20.0,
-            "yag": 5.5,
-        },
-        "Mevsim Salata (Standart Porsiyon)": {
-            "kalori": 90,
-            "protein": 2.0,
-            "karb": 8.0,
-            "yag": 6.0,
-        },
-        "Tavuklu Sezar Salata (Standart Porsiyon)": {
-            "kalori": 380,
-            "protein": 32.0,
-            "karb": 12.0,
-            "yag": 22.0,
-        },
-        "Ton Balıklı Salata (Standart Porsiyon)": {
-            "kalori": 290,
-            "protein": 28.0,
-            "karb": 9.0,
-            "yag": 15.0,
-        },
-        "Hellim Peynirli Salata (Standart Porsiyon)": {
-            "kalori": 360,
-            "protein": 18.0,
-            "karb": 11.0,
-            "yag": 27.0,
-        },
-        "Izgara Tavuklu Wrap (Standart)": {
-            "kalori": 420,
-            "protein": 30.0,
-            "karb": 42.0,
-            "yag": 14.0,
-        },
-        "Çıtır Tavuk Wrap (Standart)": {
-            "kalori": 530,
-            "protein": 24.0,
-            "karb": 52.0,
-            "yag": 25.0,
-        },
-        "Falafel Wrap (Standart)": {
-            "kalori": 450,
-            "protein": 14.0,
-            "karb": 58.0,
-            "yag": 18.0,
-        },
-        "Acai Bowl (Küçük Boy)": {
-            "kalori": 210,
-            "protein": 4.0,
-            "karb": 38.0,
-            "yag": 5.0,
-        },
-        "Acai Bowl (Büyük Boy)": {
-            "kalori": 360,
-            "protein": 7.0,
-            "karb": 64.0,
-            "yag": 9.0,
-        },
-        "Protein Bowl (Küçük Boy)": {
-            "kalori": 310,
-            "protein": 26.0,
-            "karb": 30.0,
-            "yag": 9.0,
-        },
-        "Protein Bowl (Büyük Boy)": {
-            "kalori": 490,
-            "protein": 42.0,
-            "karb": 48.0,
-            "yag": 15.0,
-        },
-        "Somonlu Bowl (Standart)": {
-            "kalori": 460,
-            "protein": 31.0,
-            "karb": 40.0,
-            "yag": 18.0,
-        },
-        "Hindi Fümeli Sandviç (Standart)": {
-            "kalori": 310,
-            "protein": 20.0,
-            "karb": 38.0,
-            "yag": 8.0,
-        },
-        "Club Sandwich (Standart)": {
-            "kalori": 540,
-            "protein": 26.0,
-            "karb": 45.0,
-            "yag": 28.0,
-        },
+        "Mercimek Çorbası (Kase)": {"kalori": 160, "protein": 8.0, "karb": 22.0, "yag": 4.5},
+        "Ezogelin Çorbası (Kase)": {"kalori": 170, "protein": 7.0, "karb": 24.0, "yag": 5.0},
+        "Domates Çorbası (Kase)": {"kalori": 130, "protein": 3.0, "karb": 18.0, "yag": 5.5},
+        "Kremalı Mantar Çorbası (Kase)": {"kalori": 210, "protein": 4.0, "karb": 16.0, "yag": 15.0},
+        "Tavuk Suyu Çorbası (Kase)": {"kalori": 140, "protein": 10.0, "karb": 12.0, "yag": 5.0},
+        "Yayla Çorbası (Kase)": {"kalori": 150, "protein": 5.0, "karb": 20.0, "yag": 5.5},
+        "Mevsim Salata (Standart Porsiyon)": {"kalori": 90, "protein": 2.0, "karb": 8.0, "yag": 6.0},
+        "Tavuklu Sezar Salata (Standart Porsiyon)": {"kalori": 380, "protein": 32.0, "karb": 12.0, "yag": 22.0},
+        "Ton Balıklı Salata (Standart Porsiyon)": {"kalori": 290, "protein": 28.0, "karb": 9.0, "yag": 15.0},
+        "Hellim Peynirli Salata (Standart Porsiyon)": {"kalori": 360, "protein": 18.0, "karb": 11.0, "yag": 27.0},
+        "Izgara Tavuklu Wrap (Standart)": {"kalori": 420, "protein": 30.0, "karb": 42.0, "yag": 14.0},
+        "Çıtır Tavuk Wrap (Standart)": {"kalori": 530, "protein": 24.0, "karb": 52.0, "yag": 25.0},
+        "Falafel Wrap (Standart)": {"kalori": 450, "protein": 14.0, "karb": 58.0, "yag": 18.0},
+        "Acai Bowl (Küçük Boy)": {"kalori": 210, "protein": 4.0, "karb": 38.0, "yag": 5.0},
+        "Acai Bowl (Büyük Boy)": {"kalori": 360, "protein": 7.0, "karb": 64.0, "yag": 9.0},
+        "Protein Bowl (Küçük Boy)": {"kalori": 310, "protein": 26.0, "karb": 30.0, "yag": 9.0},
+        "Protein Bowl (Büyük Boy)": {"kalori": 490, "protein": 42.0, "karb": 48.0, "yag": 15.0},
+        "Somonlu Bowl (Standart)": {"kalori": 460, "protein": 31.0, "karb": 40.0, "yag": 18.0},
+        "Hindi Fümeli Sandviç (Standart)": {"kalori": 310, "protein": 20.0, "karb": 38.0, "yag": 8.0},
+        "Club Sandwich (Standart)": {"kalori": 540, "protein": 26.0, "karb": 45.0, "yag": 28.0},
     },
     "C. 🍽️ Akşam Yemeği ve Ana Yemekler": {
-        "Izgara Tavuk (Standart Porsiyon)": {
-            "kalori": 280,
-            "protein": 42.0,
-            "karb": 0.0,
-            "yag": 12.0,
-        },
-        "Tavuk Şinitzel (Standart Porsiyon)": {
-            "kalori": 420,
-            "protein": 32.0,
-            "karb": 24.0,
-            "yag": 22.0,
-        },
-        "Izgara Köfte (Standart Porsiyon)": {
-            "kalori": 360,
-            "protein": 28.0,
-            "karb": 6.0,
-            "yag": 24.0,
-        },
-        "Dana Antrikot (Standart Porsiyon)": {
-            "kalori": 450,
-            "protein": 38.0,
-            "karb": 0.0,
-            "yag": 32.0,
-        },
-        "Izgara Somon (Standart Porsiyon)": {
-            "kalori": 380,
-            "protein": 34.0,
-            "karb": 0.0,
-            "yag": 26.0,
-        },
-        "Mantı (Standart Porsiyon)": {
-            "kalori": 480,
-            "protein": 18.0,
-            "karb": 62.0,
-            "yag": 18.0,
-        },
-        "İskender Kebap (Standart Porsiyon)": {
-            "kalori": 720,
-            "protein": 36.0,
-            "karb": 54.0,
-            "yag": 38.0,
-        },
-        "Lahmacun (Tek)": {
-            "kalori": 220,
-            "protein": 9.5,
-            "karb": 28.0,
-            "yag": 7.5,
-        },
-        "Lahmacun (Duble)": {
-            "kalori": 440,
-            "protein": 19.0,
-            "karb": 56.0,
-            "yag": 15.0,
-        },
-        "Sade Pirinç Pilavı (Küçük Porsiyon)": {
-            "kalori": 130,
-            "protein": 2.2,
-            "karb": 28.0,
-            "yag": 1.5,
-        },
-        "Sade Pirinç Pilavı (Orta Porsiyon)": {
-            "kalori": 210,
-            "protein": 3.5,
-            "karb": 44.0,
-            "yag": 2.5,
-        },
-        "Sade Pirinç Pilavı (Büyük Porsiyon)": {
-            "kalori": 320,
-            "protein": 5.2,
-            "karb": 68.0,
-            "yag": 3.8,
-        },
-        "Bulgur Pilavı (Küçük Porsiyon)": {
-            "kalori": 110,
-            "protein": 3.5,
-            "karb": 22.0,
-            "yag": 1.2,
-        },
-        "Bulgur Pilavı (Orta Porsiyon)": {
-            "kalori": 170,
-            "protein": 5.5,
-            "karb": 34.0,
-            "yag": 2.0,
-        },
-        "Bulgur Pilavı (Büyük Porsiyon)": {
-            "kalori": 260,
-            "protein": 8.5,
-            "karb": 52.0,
-            "yag": 3.0,
-        },
-        "Su Böreği (1 Dilim)": {
-            "kalori": 310,
-            "protein": 11.0,
-            "karb": 32.0,
-            "yag": 16.0,
-        },
-        "Kıymalı Börek (1 Dilim)": {
-            "kalori": 290,
-            "protein": 9.0,
-            "karb": 31.0,
-            "yag": 14.0,
-        },
-        "Peynirli Gözleme": {
-            "kalori": 380,
-            "protein": 14.0,
-            "karb": 46.0,
-            "yag": 16.0,
-        },
-        "Patatesli Gözleme": {
-            "kalori": 360,
-            "protein": 8.0,
-            "karb": 54.0,
-            "yag": 13.0,
-        },
-        "Zeytinyağlı Enginar (Standart Porsiyon)": {
-            "kalori": 160,
-            "protein": 3.0,
-            "karb": 18.0,
-            "yag": 9.0,
-        },
-        "Zeytinyağlı Yaprak Sarma (Standart Porsiyon)": {
-            "kalori": 240,
-            "protein": 4.0,
-            "karb": 36.0,
-            "yag": 9.5,
-        },
+        "Izgara Tavuk (Standart Porsiyon)": {"kalori": 280, "protein": 42.0, "karb": 0.0, "yag": 12.0},
+        "Tavuk Şinitzel (Standart Porsiyon)": {"kalori": 420, "protein": 32.0, "karb": 24.0, "yag": 22.0},
+        "Izgara Köfte (Standart Porsiyon)": {"kalori": 360, "protein": 28.0, "karb": 6.0, "yag": 24.0},
+        "Dana Antrikot (Standart Porsiyon)": {"kalori": 450, "protein": 38.0, "karb": 0.0, "yag": 32.0},
+        "Izgara Somon (Standart Porsiyon)": {"kalori": 380, "protein": 34.0, "karb": 0.0, "yag": 26.0},
+        "Mantı (Standart Porsiyon)": {"kalori": 480, "protein": 18.0, "karb": 62.0, "yag": 18.0},
+        "İskender Kebap (Standart Porsiyon)": {"kalori": 720, "protein": 36.0, "karb": 54.0, "yag": 38.0},
+        "Lahmacun (Tek)": {"kalori": 220, "protein": 9.5, "karb": 28.0, "yag": 7.5},
+        "Lahmacun (Duble)": {"kalori": 440, "protein": 19.0, "karb": 56.0, "yag": 15.0},
+        "Sade Pirinç Pilavı (Küçük Porsiyon)": {"kalori": 130, "protein": 2.2, "karb": 28.0, "yag": 1.5},
+        "Sade Pirinç Pilavı (Orta Porsiyon)": {"kalori": 210, "protein": 3.5, "karb": 44.0, "yag": 2.5},
+        "Sade Pirinç Pilavı (Büyük Porsiyon)": {"kalori": 320, "protein": 5.2, "karb": 68.0, "yag": 3.8},
+        "Bulgur Pilavı (Küçük Porsiyon)": {"kalori": 110, "protein": 3.5, "karb": 22.0, "yag": 1.2},
+        "Bulgur Pilavı (Orta Porsiyon)": {"kalori": 170, "protein": 5.5, "karb": 34.0, "yag": 2.0},
+        "Bulgur Pilavı (Büyük Porsiyon)": {"kalori": 260, "protein": 8.5, "karb": 52.0, "yag": 3.0},
+        "Su Böreği (1 Dilim)": {"kalori": 310, "protein": 11.0, "karb": 32.0, "yag": 16.0},
+        "Kıymalı Börek (1 Dilim)": {"kalori": 290, "protein": 9.0, "karb": 31.0, "yag": 14.0},
+        "Peynirli Gözleme": {"kalori": 380, "protein": 14.0, "karb": 46.0, "yag": 16.0},
+        "Patatesli Gözleme": {"kalori": 360, "protein": 8.0, "karb": 54.0, "yag": 13.0},
+        "Zeytinyağlı Enginar (Standart Porsiyon)": {"kalori": 160, "protein": 3.0, "karb": 18.0, "yag": 9.0},
+        "Zeytinyağlı Yaprak Sarma (Standart Porsiyon)": {"kalori": 240, "protein": 4.0, "karb": 36.0, "yag": 9.5},
     },
     "D. 🌯 Sokak Lezzetleri ve Fast Food": {
-        "Islak Hamburger (Tek)": {
-            "kalori": 260,
-            "protein": 11.0,
-            "karb": 28.0,
-            "yag": 12.0,
-        },
-        "Kumpir (Standart)": {
-            "kalori": 680,
-            "protein": 16.0,
-            "karb": 82.0,
-            "yag": 32.0,
-        },
-        "Kokoreç (Yarım Ekmek)": {
-            "kalori": 420,
-            "protein": 22.0,
-            "karb": 38.0,
-            "yag": 20.0,
-        },
-        "Kokoreç (Tam Ekmek)": {
-            "kalori": 780,
-            "protein": 41.0,
-            "karb": 72.0,
-            "yag": 36.0,
-        },
-        "Midye Dolma (5 Adet)": {
-            "kalori": 150,
-            "protein": 7.0,
-            "karb": 22.0,
-            "yag": 4.0,
-        },
-        "Midye Dolma (10 Adet)": {
-            "kalori": 300,
-            "protein": 14.0,
-            "karb": 44.0,
-            "yag": 8.0,
-        },
-        "Tantuni (Et - Dürüm)": {
-            "kalori": 440,
-            "protein": 26.0,
-            "karb": 40.0,
-            "yag": 20.0,
-        },
-        "Tantuni (Tavuk - Dürüm)": {
-            "kalori": 380,
-            "protein": 28.0,
-            "karb": 38.0,
-            "yag": 14.0,
-        },
-        "Patates Kızartması (Küçük Boy)": {
-            "kalori": 220,
-            "protein": 2.5,
-            "karb": 29.0,
-            "yag": 11.0,
-        },
-        "Patates Kızartması (Orta Boy)": {
-            "kalori": 330,
-            "protein": 3.8,
-            "karb": 43.0,
-            "yag": 16.0,
-        },
-        "Patates Kızartması (Büyük Boy)": {
-            "kalori": 470,
-            "protein": 5.2,
-            "karb": 61.0,
-            "yag": 23.0,
-        },
-        "Klasik Hamburger (Tek Porsiyon)": {
-            "kalori": 390,
-            "protein": 20.0,
-            "karb": 38.0,
-            "yag": 18.0,
-        },
-        "Cheeseburger (Tek Porsiyon)": {
-            "kalori": 450,
-            "protein": 24.0,
-            "karb": 39.0,
-            "yag": 22.0,
-        },
-        "Double Cheeseburger (Standart)": {
-            "kalori": 640,
-            "protein": 38.0,
-            "karb": 41.0,
-            "yag": 36.0,
-        },
-        "Margherita Pizza (Küçük Boy / 22cm)": {
-            "kalori": 480,
-            "protein": 18.0,
-            "karb": 62.0,
-            "yag": 17.0,
-        },
-        "Margherita Pizza (Orta Boy / 28cm)": {
-            "kalori": 760,
-            "protein": 29.0,
-            "karb": 98.0,
-            "yag": 27.0,
-        },
-        "Margherita Pizza (Büyük Boy / 34cm)": {
-            "kalori": 1120,
-            "protein": 42.0,
-            "karb": 144.0,
-            "yag": 40.0,
-        },
-        "Soğan Halkası (6 Adet)": {
-            "kalori": 190,
-            "protein": 2.5,
-            "karb": 24.0,
-            "yag": 9.5,
-        },
-        "Soğan Halkası (12 Adet)": {
-            "kalori": 380,
-            "protein": 5.0,
-            "karb": 48.0,
-            "yag": 19.0,
-        },
+        "Islak Hamburger (Tek)": {"kalori": 260, "protein": 11.0, "karb": 28.0, "yag": 12.0},
+        "Kumpir (Standart)": {"kalori": 680, "protein": 16.0, "karb": 82.0, "yag": 32.0},
+        "Kokoreç (Yarım Ekmek)": {"kalori": 420, "protein": 22.0, "karb": 38.0, "yag": 20.0},
+        "Kokoreç (Tam Ekmek)": {"kalori": 780, "protein": 41.0, "karb": 72.0, "yag": 36.0},
+        "Midye Dolma (5 Adet)": {"kalori": 150, "protein": 7.0, "karb": 22.0, "yag": 4.0},
+        "Midye Dolma (10 Adet)": {"kalori": 300, "protein": 14.0, "karb": 44.0, "yag": 8.0},
+        "Tantuni (Et - Dürüm)": {"kalori": 440, "protein": 26.0, "karb": 40.0, "yag": 20.0},
+        "Tantuni (Tavuk - Dürüm)": {"kalori": 380, "protein": 28.0, "karb": 38.0, "yag": 14.0},
+        "Patates Kızartması (Küçük Boy)": {"kalori": 220, "protein": 2.5, "karb": 29.0, "yag": 11.0},
+        "Patates Kızartması (Orta Boy)": {"kalori": 330, "protein": 3.8, "karb": 43.0, "yag": 16.0},
+        "Patates Kızartması (Büyük Boy)": {"kalori": 470, "protein": 5.2, "karb": 61.0, "yag": 23.0},
+        "Klasik Hamburger (Tek Porsiyon)": {"kalori": 390, "protein": 20.0, "karb": 38.0, "yag": 18.0},
+        "Cheeseburger (Tek Porsiyon)": {"kalori": 450, "protein": 24.0, "karb": 39.0, "yag": 22.0},
+        "Double Cheeseburger (Standart)": {"kalori": 640, "protein": 38.0, "karb": 41.0, "yag": 36.0},
+        "Margherita Pizza (Küçük Boy / 22cm)": {"kalori": 480, "protein": 18.0, "karb": 62.0, "yag": 17.0},
+        "Margherita Pizza (Orta Boy / 28cm)": {"kalori": 760, "protein": 29.0, "karb": 98.0, "yag": 27.0},
+        "Margherita Pizza (Büyük Boy / 34cm)": {"kalori": 1120, "protein": 42.0, "karb": 144.0, "yag": 40.0},
+        "Soğan Halkası (6 Adet)": {"kalori": 190, "protein": 2.5, "karb": 24.0, "yag": 9.5},
+        "Soğan Halkası (12 Adet)": {"kalori": 380, "protein": 5.0, "karb": 48.0, "yag": 19.0},
     },
     "E. 🍰 Tatlılar, Pastane Ürünleri ve Dondurmalar": {
-        "San Sebastian Cheesecake (1 Dilim)": {
-            "kalori": 460,
-            "protein": 8.0,
-            "karb": 34.0,
-            "yag": 32.0,
-        },
-        "Çikolatalı Sufle (Standart)": {
-            "kalori": 390,
-            "protein": 6.0,
-            "karb": 48.0,
-            "yag": 19.0,
-        },
-        "Profiterol (Standart Porsiyon)": {
-            "kalori": 340,
-            "protein": 5.0,
-            "karb": 42.0,
-            "yag": 17.0,
-        },
-        "Magnolia (Küçük Boy)": {
-            "kalori": 220,
-            "protein": 4.0,
-            "karb": 32.0,
-            "yag": 9.0,
-        },
-        "Magnolia (Büyük Boy)": {
-            "kalori": 380,
-            "protein": 7.0,
-            "karb": 56.0,
-            "yag": 15.0,
-        },
-        "Waffle (Standart)": {
-            "kalori": 540,
-            "protein": 9.0,
-            "karb": 72.0,
-            "yag": 24.0,
-        },
-        "Karamelli Trileçe (1 Dilim)": {
-            "kalori": 310,
-            "protein": 6.0,
-            "karb": 44.0,
-            "yag": 12.0,
-        },
-        "Fırın Sütlaç (Standart)": {
-            "kalori": 240,
-            "protein": 6.0,
-            "karb": 41.0,
-            "yag": 5.5,
-        },
-        "Baklava (2 Dilim)": {
-            "kalori": 330,
-            "protein": 4.0,
-            "karb": 42.0,
-            "yag": 16.0,
-        },
-        "Baklava (4 Dilim)": {
-            "kalori": 660,
-            "protein": 8.0,
-            "karb": 84.0,
-            "yag": 32.0,
-        },
-        "Vanilyalı Dondurma (Tek Top)": {
-            "kalori": 80,
-            "protein": 1.5,
-            "karb": 10.0,
-            "yag": 3.8,
-        },
-        "Vanilyalı Dondurma (Çift Top)": {
-            "kalori": 160,
-            "protein": 3.0,
-            "karb": 20.0,
-            "yag": 7.6,
-        },
-        "Çikolatalı Dondurma (Tek Top)": {
-            "kalori": 90,
-            "protein": 1.8,
-            "karb": 11.0,
-            "yag": 4.2,
-        },
-        "Çikolatalı Dondurma (Çift Top)": {
-            "kalori": 180,
-            "protein": 3.6,
-            "karb": 22.0,
-            "yag": 8.4,
-        },
-        "Poğaça (Peynirli)": {
-            "kalori": 260,
-            "protein": 7.0,
-            "karb": 28.0,
-            "yag": 13.0,
-        },
-        "Açma (Zeytinli)": {
-            "kalori": 310,
-            "protein": 6.0,
-            "karb": 38.0,
-            "yag": 15.0,
-        },
+        "San Sebastian Cheesecake (1 Dilim)": {"kalori": 460, "protein": 8.0, "karb": 34.0, "yag": 32.0},
+        "Çikolatalı Sufle (Standart)": {"kalori": 390, "protein": 6.0, "karb": 48.0, "yag": 19.0},
+        "Profiterol (Standart Porsiyon)": {"kalori": 340, "protein": 5.0, "karb": 42.0, "yag": 17.0},
+        "Magnolia (Küçük Boy)": {"kalori": 220, "protein": 4.0, "karb": 32.0, "yag": 9.0},
+        "Magnolia (Büyük Boy)": {"kalori": 380, "protein": 7.0, "karb": 56.0, "yag": 15.0},
+        "Waffle (Standart)": {"kalori": 540, "protein": 9.0, "karb": 72.0, "yag": 24.0},
+        "Karamelli Trileçe (1 Dilim)": {"kalori": 310, "protein": 6.0, "karb": 44.0, "yag": 12.0},
+        "Fırın Sütlaç (Standart)": {"kalori": 240, "protein": 6.0, "karb": 41.0, "yag": 5.5},
+        "Baklava (2 Dilim)": {"kalori": 330, "protein": 4.0, "karb": 42.0, "yag": 16.0},
+        "Baklava (4 Dilim)": {"kalori": 660, "protein": 8.0, "karb": 84.0, "yag": 32.0},
+        "Vanilyalı Dondurma (Tek Top)": {"kalori": 80, "protein": 1.5, "karb": 10.0, "yag": 3.8},
+        "Vanilyalı Dondurma (Çift Top)": {"kalori": 160, "protein": 3.0, "karb": 20.0, "yag": 7.6},
+        "Çikolatalı Dondurma (Tek Top)": {"kalori": 90, "protein": 1.8, "karb": 11.0, "yag": 4.2},
+        "Çikolatalı Dondurma (Çift Top)": {"kalori": 180, "protein": 3.6, "karb": 22.0, "yag": 8.4},
+        "Poğaça (Peynirli)": {"kalori": 260, "protein": 7.0, "karb": 28.0, "yag": 13.0},
+        "Açma (Zeytinli)": {"kalori": 310, "protein": 6.0, "karb": 38.0, "yag": 15.0},
     },
     "F. 🧋 Soğuk İçecekler, Sıcak İçecekler ve Soslar": {
-        "Su (330ml Şişe)": {
-            "kalori": 0,
-            "protein": 0.0,
-            "karb": 0.0,
-            "yag": 0.0,
-        },
-        "Su (500ml Şişe)": {
-            "kalori": 0,
-            "protein": 0.0,
-            "karb": 0.0,
-            "yag": 0.0,
-        },
-        "Maden Suyu (Küçük Şişe)": {
-            "kalori": 0,
-            "protein": 0.0,
-            "karb": 0.0,
-            "yag": 0.0,
-        },
-        "Ayran (Küçük Boy / Bardak)": {
-            "kalori": 75,
-            "protein": 4.0,
-            "karb": 5.0,
-            "yag": 4.0,
-        },
-        "Ayran (Büyük Boy / Yayık)": {
-            "kalori": 130,
-            "protein": 7.0,
-            "karb": 9.0,
-            "yag": 7.0,
-        },
-        "Limonata (Küçük Boy)": {
-            "kalori": 90,
-            "protein": 0.2,
-            "karb": 22.0,
-            "yag": 0.0,
-        },
-        "Limonata (Orta Boy)": {
-            "kalori": 140,
-            "protein": 0.3,
-            "karb": 35.0,
-            "yag": 0.0,
-        },
-        "Limonata (Büyük Boy)": {
-            "kalori": 210,
-            "protein": 0.5,
-            "karb": 52.0,
-            "yag": 0.0,
-        },
-        "Kola (Küçük Boy / 330ml Kutu)": {
-            "kalori": 139,
-            "protein": 0.0,
-            "karb": 35.0,
-            "yag": 0.0,
-        },
-        "Kola (Orta Boy / 500ml)": {
-            "kalori": 210,
-            "protein": 0.0,
-            "karb": 53.0,
-            "yag": 0.0,
-        },
-        "Kola (Büyük Boy / 1 Litre)": {
-            "kalori": 420,
-            "protein": 0.0,
-            "karb": 106.0,
-            "yag": 0.0,
-        },
-        "Şekersiz Kola (Küçük Boy)": {
-            "kalori": 1,
-            "protein": 0.0,
-            "karb": 0.0,
-            "yag": 0.0,
-        },
-        "Iced Latte (Küçük Boy)": {
-            "kalori": 90,
-            "protein": 4.5,
-            "karb": 9.0,
-            "yag": 3.8,
-        },
-        "Iced Latte (Büyük Boy)": {
-            "kalori": 160,
-            "protein": 8.0,
-            "karb": 16.0,
-            "yag": 6.8,
-        },
-        "Türk Kahvesi (Tek)": {
-            "kalori": 7,
-            "protein": 0.3,
-            "karb": 0.9,
-            "yag": 0.2,
-        },
-        "Türk Kahvesi (Çift)": {
-            "kalori": 14,
-            "protein": 0.6,
-            "karb": 1.8,
-            "yag": 0.4,
-        },
-        "Espresso (Tek / Single)": {
-            "kalori": 3,
-            "protein": 0.1,
-            "karb": 0.5,
-            "yag": 0.0,
-        },
-        "Espresso (Çift / Double)": {
-            "kalori": 6,
-            "protein": 0.2,
-            "karb": 1.0,
-            "yag": 0.0,
-        },
-        "Americano (Küçük Boy)": {
-            "kalori": 10,
-            "protein": 0.2,
-            "karb": 1.5,
-            "yag": 0.0,
-        },
-        "Americano (Büyük Boy)": {
-            "kalori": 18,
-            "protein": 0.4,
-            "karb": 2.8,
-            "yag": 0.0,
-        },
-        "Ketçap (Paket / Sosluk)": {
-            "kalori": 20,
-            "protein": 0.2,
-            "karb": 4.8,
-            "yag": 0.0,
-        },
-        "Mayonez (Paket / Sosluk)": {
-            "kalori": 90,
-            "protein": 0.1,
-            "karb": 0.5,
-            "yag": 10.0,
-        },
-        "Barbekü Sos (Sosluk)": {
-            "kalori": 35,
-            "protein": 0.2,
-            "karb": 8.0,
-            "yag": 0.1,
-        },
-        "Cheddar Sos (Sosluk)": {
-            "kalori": 80,
-            "protein": 3.0,
-            "karb": 2.0,
-            "yag": 7.0,
-        },
+        "Su (330ml Şişe)": {"kalori": 0, "protein": 0.0, "karb": 0.0, "yag": 0.0},
+        "Su (500ml Şişe)": {"kalori": 0, "protein": 0.0, "karb": 0.0, "yag": 0.0},
+        "Maden Suyu (Küçük Şişe)": {"kalori": 0, "protein": 0.0, "karb": 0.0, "yag": 0.0},
+        "Ayran (Küçük Boy / Bardak)": {"kalori": 75, "protein": 4.0, "karb": 5.0, "yag": 4.0},
+        "Ayran (Büyük Boy / Yayık)": {"kalori": 130, "protein": 7.0, "karb": 9.0, "yag": 7.0},
+        "Limonata (Küçük Boy)": {"kalori": 90, "protein": 0.2, "karb": 22.0, "yag": 0.0},
+        "Limonata (Orta Boy)": {"kalori": 140, "protein": 0.3, "karb": 35.0, "yag": 0.0},
+        "Limonata (Büyük Boy)": {"kalori": 210, "protein": 0.5, "karb": 52.0, "yag": 0.0},
+        "Kola (Küçük Boy / 330ml Kutu)": {"kalori": 139, "protein": 0.0, "karb": 35.0, "yag": 0.0},
+        "Kola (Orta Boy / 500ml)": {"kalori": 210, "protein": 0.0, "karb": 53.0, "yag": 0.0},
+        "Kola (Büyük Boy / 1 Litre)": {"kalori": 420, "protein": 0.0, "karb": 106.0, "yag": 0.0},
+        "Şekersiz Kola (Küçük Boy)": {"kalori": 1, "protein": 0.0, "karb": 0.0, "yag": 0.0},
+        "Iced Latte (Küçük Boy)": {"kalori": 90, "protein": 4.5, "karb": 9.0, "yag": 3.8},
+        "Iced Latte (Büyük Boy)": {"kalori": 160, "protein": 8.0, "karb": 16.0, "yag": 6.8},
+        "Türk Kahvesi (Tek)": {"kalori": 7, "protein": 0.3, "karb": 0.9, "yag": 0.2},
+        "Türk Kahvesi (Çift)": {"kalori": 14, "protein": 0.6, "karb": 1.8, "yag": 0.4},
+        "Espresso (Tek / Single)": {"kalori": 3, "protein": 0.1, "karb": 0.5, "yag": 0.0},
+        "Espresso (Çift / Double)": {"kalori": 6, "protein": 0.2, "karb": 1.0, "yag": 0.0},
+        "Americano (Küçük Boy)": {"kalori": 10, "protein": 0.2, "karb": 1.5, "yag": 0.0},
+        "Americano (Büyük Boy)": {"kalori": 18, "protein": 0.4, "karb": 2.8, "yag": 0.0},
+        "Ketçap (Paket / Sosluk)": {"kalori": 20, "protein": 0.2, "karb": 4.8, "yag": 0.0},
+        "Mayonez (Paket / Sosluk)": {"kalori": 90, "protein": 0.1, "karb": 0.5, "yag": 10.0},
+        "Barbekü Sos (Sosluk)": {"kalori": 35, "protein": 0.2, "karb": 8.0, "yag": 0.1},
+        "Cheddar Sos (Sosluk)": {"kalori": 80, "protein": 3.0, "karb": 2.0, "yag": 7.0},
     },
 }
 
+def hesapla_bmr(p):
+    if p["cinsiyet"] == "Kadın":
+        return (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
+    else:
+        return (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) + 5
 
 # ----------------------------------------------------
 # 3. KİŞİSELLEŞTİRİLEBİLİR TEMA TONLARI VE DİNAMİK CSS
@@ -1044,13 +394,11 @@ LOGO_SIDEBAR = f"""
 </div>
 """
 
-
 # ----------------------------------------------------
 # 4. KULLANICI YÖNETİMİ VE DOSYA İŞLEMLERİ
 # ----------------------------------------------------
 def sifre_hashle(sifre):
   return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
-
 
 def kullanicilari_yukle():
   if os.path.exists(USERS_FILE):
@@ -1061,20 +409,16 @@ def kullanicilari_yukle():
       return {}
   return {}
 
-
 def kullanicilari_kaydet(users):
   with open(USERS_FILE, "w", encoding="utf-8") as f:
     json.dump(users, f, ensure_ascii=False, indent=4)
 
-
 def kullanici_veri_dosyasi(username):
   return f"veriler_{username.lower().strip()}.json"
-
 
 def verileri_yukle(username):
   user_file = kullanici_veri_dosyasi(username)
 
-  # Varsayılan düz besin kütüphanesi
   duz_besinler = {}
   for kat_adi, urunler in GENIS_MENU_VERITABASI.items():
     for u_adi, u_vals in urunler.items():
@@ -1121,7 +465,6 @@ def verileri_yukle(username):
       return default_data
   return default_data
 
-
 def verileri_kaydet(username):
   user_file = kullanici_veri_dosyasi(username)
   data = {
@@ -1133,7 +476,6 @@ def verileri_kaydet(username):
   }
   with open(user_file, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
-
 
 # ----------------------------------------------------
 # 5. OTURUM KONTROLÜ VE GİRİŞ EKRANI
@@ -1247,25 +589,30 @@ else:
         " miktarını, egzersiz katsayını ve temanı belirle."
     )
 
+  # Ortak değişkenler
+  p = st.session_state.profil
+  bmr_kisi = hesapla_bmr(p)
+
   # ----------------------------------------------------
-  # GÜNLÜK TAKİP & ANA SAYFA (CHECKBOX'LI ÖĞÜN EKLEME & MÜKEMMEL MENÜ)
+  # GÜNLÜK TAKİP & ANA SAYFA
   # ----------------------------------------------------
   if menu == "Günlük Takip & Ana Sayfa":
     st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
 
-    secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
+    # Geçmiş günlerin verilerini tamamen bu takvime bağladık.
+    secilen_tarih = str(st.date_input("Kayıt Tarihi (Geçmiş günlere gidebilirsin)", datetime.date.today()))
 
     if secilen_tarih not in st.session_state.aktivite_loglari:
       st.session_state.aktivite_loglari[secilen_tarih] = {
-          "adim": 8500,
-          "su": 2.0,
+          "adim": 0,
+          "su": 0.0,
           "video_tamamlandi": False,
       }
 
     curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
     # --- RİNGS (ADIM VE SU) ---
-    st.subheader("🍂 Günlük Su ve Adım Takibi")
+    st.subheader(f"🍂 {secilen_tarih} - Su ve Adım Takibi")
     col_ring_sol, col_ring_sag = st.columns(2)
 
     with col_ring_sol:
@@ -1341,38 +688,28 @@ else:
     st.divider()
 
     # --- TAKVİME VE HASSAS KATSAYIYA GÖRE EGZERSİZ VİDEOLARI ---
-    st.subheader(
-        f"📅 {secilen_tarih} Tarihine Özel Günlük 20 Min Egzersiz Reçetesi"
-    )
+    st.subheader(f"📅 {secilen_tarih} Tarihine Özel Günlük 20 Min Egzersiz Reçetesi")
 
     hash_gun = int(hashlib.md5(secilen_tarih.encode("utf-8")).hexdigest(), 16) % 3
     if hash_gun == 0:
       egzersiz_adi = "Growwithjo — 20 Min Fat Burning Walk"
       egzersiz_detay = "Tempolu ev yürüyüşü ve yağ yakıcı kardiyo seansı."
-      egzersiz_link = (
-          "https://www.youtube.com/results?search_query=growwithjo+20+min+workout"
-      )
+      egzersiz_link = "https://www.youtube.com/results?search_query=growwithjo+20+min+workout"
       met_val = 5.5
     elif hash_gun == 1:
       egzersiz_adi = "Nicole Pilates — 20 Min Full Body Flow"
       egzersiz_detay = "Tüm vücut esneme, sıkılaşma ve core odaklı akış."
-      egzersiz_link = (
-          "https://www.youtube.com/results?search_query=nicole+pilates+20+min"
-      )
+      egzersiz_link = "https://www.youtube.com/results?search_query=nicole+pilates+20+min"
       met_val = 4.0
     else:
       egzersiz_adi = "Growwithjo — 20 Min Low Impact Cardio"
       egzersiz_detay = "Eklem dostu, terletici ve neşeli danslı kardiyo."
-      egzersiz_link = (
-          "https://www.youtube.com/results?search_query=growwithjo+low+impact"
-      )
+      egzersiz_link = "https://www.youtube.com/results?search_query=growwithjo+low+impact"
       met_val = 5.0
 
-    kilo_suan = st.session_state.profil["mevcut_kilo"]
-    katsayi = st.session_state.profil.get("egzersiz_katsayisi", 1.0)
-    tahmini_video_kalorisi = round(
-        ((met_val * 3.5 * kilo_suan / 200) * 20) * katsayi
-    )
+    kilo_suan = p["mevcut_kilo"]
+    katsayi = p.get("egzersiz_katsayisi", 1.0)
+    tahmini_video_kalorisi = round(((met_val * 3.5 * kilo_suan / 200) * 20) * katsayi)
 
     st.markdown(
         f"""
@@ -1399,11 +736,8 @@ else:
     st.divider()
 
     # --- KUTUCUKLU (CHECKBOX) HİYERARŞİK ÖĞÜN EKLEME ALANI ---
-    st.subheader("🍽️ Günlük Öğün Ekleme (A-F Kapsamlı Menü Listesi)")
-    st.markdown(
-        "Kategoriyi seçin, yediğiniz lezzetlerin yanındaki **kutucukları"
-        " (checkbox)** işaretleyin ve 'Öğün Ekle' butonuna basın!"
-    )
+    st.subheader("🍽️ Günlük Öğün Ekleme (Kalori/Makro Gizlendi)")
+    st.markdown("Kategoriyi seçin ve sadece **yemeğin adını** görerek yediğiniz lezzetleri işaretleyin. (Detaylar aşağıda toplanacak)")
 
     col_cat1, col_cat2 = st.columns(2)
     secilen_kategori_adi = col_cat1.selectbox(
@@ -1415,20 +749,17 @@ else:
 
     kategori_urunleri = GENIS_MENU_VERITABASI[secilen_kategori_adi]
 
-    st.markdown(
-        f"**{secilen_kategori_adi}** altındaki lezzetler:",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"**{secilen_kategori_adi}** altındaki lezzetler:", unsafe_allow_html=True)
 
     secilen_urunler_listesi = []
 
-    # Izgara şeklinde kutucuklu gösterim
+    # Izgara şeklinde kutucuklu gösterim (Sadece isimler)
     col_u1, col_u2 = st.columns(2)
     u_keys = list(kategori_urunleri.keys())
 
     for idx, u_name in enumerate(u_keys):
       u_data = kategori_urunleri[u_name]
-      label_text = f"{u_name} — {u_data['kalori']} kcal (P:{u_data['protein']}g | K:{u_data['karb']}g | Y:{u_data['yag']}g)"
+      label_text = f"{u_name}" # Sadece ismini gösteriyoruz.
 
       target_col = col_u1 if idx % 2 == 0 else col_u2
       is_checked = target_col.checkbox(label_text, key=f"chk_{idx}_{u_name}")
@@ -1452,95 +783,143 @@ else:
             "Tarih": secilen_tarih,
             "Öğün": secilen_ogun_zamani,
             "Tarif": ", ".join(eklenen_isimler),
-            "İçerik": f"{len(eklenen_isimler)} çeşit menü seçimi",
             "Kalori": round(top_k, 1),
             "Protein": round(top_p, 1),
             "Karbonhidrat": round(top_c, 1),
             "Yağ": round(top_y, 1),
         })
         verileri_kaydet(aktif_user)
-        st.success(
-            f"✨ {len(eklenen_isimler)} adet lezzet günlüğünüze eklendi!"
-            f" Toplam: **{round(top_k)} kcal**"
-        )
+        st.success("Öğün günlüğünüze başarıyla eklendi!")
+        st.rerun()
       else:
         st.warning("Lütfen eklemek istediğiniz ürünlerin kutucuğunu işaretleyin.")
 
     st.divider()
 
-    # --- SEÇİLEN TARİHE AİT ÖĞÜN ÖZET TABLOSU ---
-    st.subheader(f"📋 {secilen_tarih} Tarihli Öğün ve Besin Özeti")
+    # --- SİLİNEBİLİR GEÇMİŞ ÖĞÜN ÖZET TABLOSU ---
+    st.subheader(f"📋 {secilen_tarih} Tarihli Öğün Geçmişi ve Makrolar")
     bugun_kayitlar = [
-        k
-        for k in st.session_state.gunluk_kayitlar
+        (i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar)
         if k["Tarih"] == secilen_tarih
     ]
 
+    toplam_alinan_kalori = 0
+
     if bugun_kayitlar:
-      df_bugun = pd.DataFrame(bugun_kayitlar)
-      st.dataframe(
-          df_bugun[
-              [
-                  "Öğün",
-                  "Tarif",
-                  "Kalori",
-                  "Protein",
-                  "Karbonhidrat",
-                  "Yağ",
-              ]
-          ],
-          use_container_width=True,
-      )
-
-      sum_k = df_bugun["Kalori"].sum()
-      sum_p = df_bugun["Protein"].sum()
-      sum_c = df_bugun["Karbonhidrat"].sum()
-      sum_y = df_bugun["Yağ"].sum()
-
-      st.markdown(
-          f"""
-            <div class="recipe-card">
-                <div class="recipe-title">🔥 Günlük Toplam Makro İcmali</div>
-                <div class="recipe-details">
-                    • <strong>Toplam Kalori:</strong> <span style="font-weight:700; color:{t['accent']};">{round(sum_k, 1)} kcal</span><br>
-                    • <strong>Toplam Protein:</strong> {round(sum_p, 1)} g<br>
-                    • <strong>Toplam Karbonhidrat:</strong> {round(sum_c, 1)} g<br>
-                    • <strong>Toplam Yağ:</strong> {round(sum_y, 1)} g
-                </div>
-            </div>
-            """,
-          unsafe_allow_html=True,
-      )
+      for index, kayit in bugun_kayitlar:
+        toplam_alinan_kalori += kayit["Kalori"]
+        col_list1, col_list2 = st.columns([10, 1])
+        with col_list1:
+          st.markdown(
+              f"**{kayit['Öğün']}**: {kayit['Tarif']} <span style='color:{t['accent']}; font-weight:600;'>({kayit['Kalori']} kcal)</span>",
+              unsafe_allow_html=True
+          )
+        with col_list2:
+          # Silme Butonu (Çöp Kutusu)
+          if st.button("🗑️", key=f"sil_{index}"):
+            st.session_state.gunluk_kayitlar.pop(index)
+            verileri_kaydet(aktif_user)
+            st.rerun()
     else:
       st.info("Bu tarihe ait henüz öğün kaydı bulunmuyor.")
+
+    st.divider()
+
+    # --- YENİ EKLENEN: GÜNLÜK NET KALORİ, HARCANAN VE AÇIK HESAPLAMASI ---
+    st.subheader(f"⚖️ {secilen_tarih} Günlük Özet ve Kalori Açığı Analizi")
+
+    adim_harcanan = curr_aktivite["adim"] * 0.04
+    video_harcanan = tahmini_video_kalorisi if curr_aktivite.get("video_tamamlandi") else 0
+    toplam_harcanan = bmr_kisi + adim_harcanan + video_harcanan
+    
+    olusturulan_acik = toplam_harcanan - toplam_alinan_kalori
+    hedeflenen_acik = (p.get("verilmek_istenen_kilo", 3.0) * 7700) / p.get("hedef_gun", 45)
+
+    c_sum1, c_sum2, c_sum3 = st.columns(3)
+    c_sum1.markdown(f"**🔥 Harcanan Kalori**<br>(Bazal + Adım + Egzersiz)<br><span style='font-size:22px; color:{t['accent']}; font-weight:700;'>{round(toplam_harcanan)} kcal</span>", unsafe_allow_html=True)
+    c_sum2.markdown(f"**🍽️ Alınan Kalori**<br>(Yenilen Öğünler Toplamı)<br><span style='font-size:22px; color:{t['text']}; font-weight:700;'>{round(toplam_alinan_kalori)} kcal</span>", unsafe_allow_html=True)
+    c_sum3.markdown(f"**📉 Net Kalori Açığı**<br>(Harcanan - Alınan)<br><span style='font-size:22px; color:{t['heading']}; font-weight:700;'>{round(olusturulan_acik)} kcal</span>", unsafe_allow_html=True)
+
+    if olusturulan_acik >= hedeflenen_acik:
+      st.success(f"🎉 **Tebrikler!** Bugün hedeflenen {round(hedeflenen_acik)} kcal açığını yakaladınız (Doğru kalori açığında ilerliyorsunuz).")
+    elif olusturulan_acik > 0:
+      st.info(f"💡 Kalori açığı oluşturdunuz ({round(olusturulan_acik)} kcal) ancak günlük hedefin ({round(hedeflenen_acik)} kcal) biraz gerisindesiniz. Egzersizi artırabilirsiniz.")
+    else:
+      st.error(f"⚠️ **Maalesef** bugün hedeflenen kalori açığına ulaşamadınız. Alınan kalori harcananı aşmış durumda.")
+
 
   # ----------------------------------------------------
   # HAFTALIK PROGRAM & DEĞERLENDİRME
   # ----------------------------------------------------
   elif menu == "Haftalık Program & Değerlendirme":
-    st.header("Haftalık Program ve Kalori Değerlendirmesi")
-    if st.session_state.gunluk_kayitlar:
-      df_tum = pd.DataFrame(st.session_state.gunluk_kayitlar)
-      haftalik_ozet = (
-          df_tum.groupby("Tarih")[["Kalori", "Protein", "Karbonhidrat", "Yağ"]]
-          .sum()
-          .reset_index()
-      )
-      st.dataframe(haftalik_ozet, use_container_width=True)
-      st.line_chart(
-          haftalik_ozet.set_index("Tarih")[["Kalori"]], color=t["accent"]
-      )
+    st.header("Haftalık Geçmiş ve Planlama Paneli")
+    st.markdown("Son 7 gündeki tüm öğünleriniz, toplam aldığınız ve harcadığınız kalori dökümü burada yer alır.")
+    
+    bugun_tarihi = datetime.date.today()
+    son_7_gun = [(bugun_tarihi - datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+
+    haftalik_alinan = 0
+    haftalik_harcanan = 0
+    haftalik_yenen_listesi = []
+
+    # Öğünlerden alınan kalori ve yemek geçmişi
+    for kayit in st.session_state.gunluk_kayitlar:
+      if kayit["Tarih"] in son_7_gun:
+        haftalik_alinan += kayit["Kalori"]
+        haftalik_yenen_listesi.append(f"{kayit['Tarih']} - {kayit['Öğün']}: {kayit['Tarif']}")
+
+    # Harcanan hesaplama (Aktivite loglarından)
+    for g in son_7_gun:
+      if g in st.session_state.aktivite_loglari:
+        log = st.session_state.aktivite_loglari[g]
+        a_harcanan = log["adim"] * 0.04
+        # O güne ait video hesaplaması için basit met val 5.0 üzerinden tahmini yapıyoruz (veya profil üzerinden)
+        v_harcanan = round(((5.0 * 3.5 * p["mevcut_kilo"] / 200) * 20) * p.get("egzersiz_katsayisi", 1.0)) if log.get("video_tamamlandi") else 0
+        haftalik_harcanan += (bmr_kisi + a_harcanan + v_harcanan)
+      else:
+        # Eğer o gün girilmediyse bile bazal metabolizma harcanmıştır
+        haftalik_harcanan += bmr_kisi
+
+    haftalik_acik = haftalik_harcanan - haftalik_alinan
+    hedeflenen_haftalik_acik = ((p.get("verilmek_istenen_kilo", 3.0) * 7700) / p.get("hedef_gun", 45)) * 7
+
+    st.subheader("🗓️ Bu Hafta Yenilenler Geçmişi")
+    if haftalik_yenen_listesi:
+      for y in sorted(haftalik_yenen_listesi, reverse=True):
+        st.markdown(f"- {y}")
     else:
-      st.info("Kayıt bulunmuyor.")
+      st.info("Bu hafta için henüz öğün kaydınız bulunmuyor.")
+
+    st.divider()
+    st.subheader("📊 Haftalık Toplam Total Rapor")
+    
+    st.markdown(
+        f"""
+        <div class="recipe-card">
+            <div class="recipe-title">🔥 7 Günlük İcmal</div>
+            <div class="recipe-details" style="font-size: 16px;">
+                • <strong>Bu Hafta Total Alınan Kalori:</strong> {round(haftalik_alinan)} kcal<br>
+                • <strong>Bu Hafta Total Harcanan Kalori:</strong> {round(haftalik_harcanan)} kcal<br>
+                • <strong>Bu Hafta Total Oluşturulan Açık:</strong> <span style="font-weight:700; color:{t['accent']};">{round(haftalik_acik)} kcal</span><br>
+                • <strong>Haftalık Olması Gereken Hedef Açık:</strong> {round(hedeflenen_haftalik_acik)} kcal
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if haftalik_acik >= hedeflenen_haftalik_acik:
+      st.success("🎉 **Aferin!** İstediğin yolda devam ediyorsun. Bu haftaki kalori açığı hedefini başarıyla tutturdun!")
+    else:
+      st.warning("⚠️ **Maalesef** bu hafta hedeflenen kadar kalori açığı çıkartmadınız. Önümüzdeki hafta egzersizleri ve adımları artırmayı deneyin.")
+
 
   # ----------------------------------------------------
   # TARİF & MALZEME YÖNETİMİ
   # ----------------------------------------------------
   elif menu == "Tarif & Malzeme Yönetimi":
     st.header("Tarif ve Malzeme Yönetim Paneli")
-    tab_m, tab_t = st.tabs(
-        ["1. Yeni Malzeme Ekle", "2. Gramaj Esaslı Tarif Oluştur"]
-    )
+    tab_m, tab_t = st.tabs(["1. Yeni Malzeme Ekle", "2. Gramaj Esaslı Tarif Oluştur"])
     with tab_m:
       m_ad = st.text_input("Malzeme Adı")
       m_kal = st.number_input("100g Kalori", min_value=0.0, value=100.0)
@@ -1550,10 +929,7 @@ else:
       if st.button("Malzemeyi Kaydet"):
         if m_ad.strip():
           st.session_state.besin_veritabani[m_ad.strip().lower()] = {
-              "kalori": m_kal,
-              "protein": m_pro,
-              "karb": m_kar,
-              "yag": m_yag,
+              "kalori": m_kal, "protein": m_pro, "karb": m_kar, "yag": m_yag
           }
           verileri_kaydet(aktif_user)
           st.success("Malzeme eklendi!")
@@ -1565,12 +941,7 @@ else:
       )
       tarif_gramajlari = {}
       for m in secilen_malzemeler:
-        gr = st.number_input(
-            f"{m.title()} kaç gram/ml?",
-            min_value=1.0,
-            value=100.0,
-            key=f"g_{m}",
-        )
+        gr = st.number_input(f"{m.title()} kaç gram/ml?", min_value=1.0, value=100.0, key=f"g_{m}")
         tarif_gramajlari[m] = gr
       if st.button("Tarifi Kaydet"):
         if t_ad.strip() and tarif_gramajlari:
@@ -1579,124 +950,51 @@ else:
           st.success("Tarif kaydedildi!")
 
   # ----------------------------------------------------
-  # HESAP, TEMA SEÇİMİ, KALORİ AÇIĞI VEM EGZERSİZ KATSAYISI SİHİRBAZI
+  # HESAP, TEMA SEÇİMİ, KALORİ AÇIĞI SİHİRBAZI
   # ----------------------------------------------------
   elif menu == "Hesap ve Hedefler":
     st.header("👤 Hesap, Tema Tonları ve Kalori Açığı Sihirbazı")
 
-    p = st.session_state.profil
-
     mevcut_tema = p.get("tema", "Sonbahar Kremi")
     secilen_tema = st.selectbox(
         "Uygulama Tema Paleti Tonları",
-        [
-            "Sonbahar Kremi",
-            "Sıcak Kahve & Toprak",
-            "Gece / Kuğu Mavisi",
-            "Zeytin Yeşili & Doğa",
-            "Karamel Esintisi",
-        ],
-        index=[
-            "Sonbahar Kremi",
-            "Sıcak Kahve & Toprak",
-            "Gece / Kuğu Mavisi",
-            "Zeytin Yeşili & Doğa",
-            "Karamel Esintisi",
-        ].index(mevcut_tema)
-        if mevcut_tema
-        in [
-            "Sonbahar Kremi",
-            "Sıcak Kahve & Toprak",
-            "Gece / Kuğu Mavisi",
-            "Zeytin Yeşili & Doğa",
-            "Karamel Esintisi",
-        ]
-        else 0,
+        ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"],
+        index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"].index(mevcut_tema)
+        if mevcut_tema in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"] else 0,
     )
 
     st.divider()
 
     c1, c2, c3 = st.columns(3)
-    cinsiyet = c1.selectbox(
-        "Cinsiyet",
-        ["Kadın", "Erkek"],
-        index=0 if p["cinsiyet"] == "Kadın" else 1,
-    )
-    yas = c2.number_input(
-        "Yaş", min_value=15, max_value=80, value=int(p["yas"])
-    )
-    boy = c3.number_input(
-        "Boy (cm)", min_value=120, max_value=210, value=int(p["boy"])
-    )
+    cinsiyet = c1.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=0 if p["cinsiyet"] == "Kadın" else 1)
+    yas = c2.number_input("Yaş", min_value=15, max_value=80, value=int(p["yas"]))
+    boy = c3.number_input("Boy (cm)", min_value=120, max_value=210, value=int(p["boy"]))
 
     c4, c5 = st.columns(2)
-    mevcut_kilo = c4.number_input(
-        "Mevcut Kilon (kg)",
-        min_value=35.0,
-        max_value=160.0,
-        value=float(p["mevcut_kilo"]),
-        step=0.5,
-    )
-    hedef_kilo = c5.number_input(
-        "Hedeflenen Kilon (kg)",
-        min_value=30.0,
-        max_value=150.0,
-        value=float(p["hedef_kilo"]),
-        step=0.5,
-    )
+    mevcut_kilo = c4.number_input("Mevcut Kilon (kg)", min_value=35.0, max_value=160.0, value=float(p["mevcut_kilo"]), step=0.5)
+    hedef_kilo = c5.number_input("Hedeflenen Kilon (kg)", min_value=30.0, max_value=150.0, value=float(p["hedef_kilo"]), step=0.5)
 
     st.markdown("---")
     st.subheader("🎯 Kilo Verme / Alma Hedef Sihirbazı")
     c_h1, c_h2, c_h3 = st.columns(3)
     verilmek_istenen = c_h1.number_input(
-        "Hedef Kilo Değişimi (kg)",
-        min_value=0.5,
-        max_value=50.0,
-        value=float(p.get("verilmek_istenen_kilo", 3.0)),
-        step=0.5,
+        "Hedef Kilo Değişimi (kg)", min_value=0.5, max_value=50.0, value=float(p.get("verilmek_istenen_kilo", 3.0)), step=0.5
     )
     hedef_gun = c_h2.number_input(
-        "Hedeflenen Süre (Gün)",
-        min_value=10,
-        max_value=365,
-        value=int(p.get("hedef_gun", 45)),
-        step=5,
+        "Hedeflenen Süre (Gün)", min_value=10, max_value=365, value=int(p.get("hedef_gun", 45)), step=5
     )
     egzersiz_katsayi = c_h3.slider(
-        "Egzersiz Kalori Katsayısı",
-        min_value=0.8,
-        max_value=1.5,
-        value=float(p.get("egzersiz_katsayisi", 1.0)),
-        step=0.05,
-        help=(
-            "Antrenman temponuza göre harcanan egzersiz kalorisini artırıp"
-            " azaltır."
-        ),
+        "Egzersiz Kalori Katsayısı", min_value=0.8, max_value=1.5, value=float(p.get("egzersiz_katsayisi", 1.0)), step=0.05
     )
 
     aktivite_seviyesi = st.selectbox(
         "Aktivite Düzeyi",
-        [
-            "Hareketsiz / Masa Başı",
-            "Hafif Aktif (Haftada 1-3 gün)",
-            "Orta Aktif (Haftada 3-5 gün)",
-            "Çok Aktif",
-        ],
+        ["Hareketsiz / Masa Başı", "Hafif Aktif (Haftada 1-3 gün)", "Orta Aktif (Haftada 3-5 gün)", "Çok Aktif"]
     )
 
     if st.button("Bilgileri, Temayı ve Kalori Açığını Güncelle"):
-      if cinsiyet == "Kadın":
-        bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
-      else:
-        bmr = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) + 5
-
-      carpanlar = {
-          "Hareketsiz / Masa Başı": 1.2,
-          "Hafif Aktif (Haftada 1-3 gün)": 1.375,
-          "Orta Aktif (Haftada 3-5 gün)": 1.55,
-          "Çok Aktif": 1.725,
-      }
-      tdee = bmr * carpanlar[aktivite_seviyesi]
+      carpanlar = {"Hareketsiz / Masa Başı": 1.2, "Hafif Aktif (Haftada 1-3 gün)": 1.375, "Orta Aktif (Haftada 3-5 gün)": 1.55, "Çok Aktif": 1.725}
+      tdee = bmr_kisi * carpanlar[aktivite_seviyesi]
 
       toplam_verilecek_kcal = verilmek_istenen * 7700
       gunluk_acik = toplam_verilecek_kcal / hedef_gun
@@ -1717,30 +1015,3 @@ else:
       verileri_kaydet(aktif_user)
       st.success("✨ Tüm ayarlarınız kaydedildi! Yenileniyor...")
       st.rerun()
-
-    st.markdown("---")
-    st.subheader("📊 Kişiselleştirilmiş Kalori Açığı Raporu")
-    if cinsiyet == "Kadın":
-      bmr_k = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) - 161
-    else:
-      bmr_k = (10 * mevcut_kilo) + (6.25 * boy) - (5 * yas) + 5
-    tdee_k = bmr_k * 1.375
-    toplam_kcal_ornek = verilmek_istenen * 7700
-    gereken_acik = toplam_kcal_ornek / hedef_gun
-    sonuc_kalori = tdee_k - gereken_acik
-
-    st.markdown(
-        f"""
-        <div class="recipe-card">
-            <div class="recipe-title">💡 Nokta Atışı Kalori Planı</div>
-            <div class="recipe-details">
-                • <strong>Günlük Harcanan Enerji (TDEE):</strong> {round(tdee_k)} kcal<br>
-                • <strong>Hedeflenen Sürede Vermen Gereken Günlük Açık:</strong> {round(gereken_acik)} kcal / gün<br>
-                • <strong>Alman Gereken Günlük Kalori:</strong> <strong style="color: {t['accent']}; font-size:16px;">{round(sonuc_kalori)} kcal</strong><br>
-                • <strong>Egzersiz Kalori Katsayısı:</strong> {egzersiz_katsayi}x<br>
-                <em>{hedef_gun} günde {verilmek_istenen} kg vermek için bu kalori dengesini korumalısın!</em>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
