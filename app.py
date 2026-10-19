@@ -85,7 +85,7 @@ LOGO_SIDEBAR = f"""<div style="display: flex; flex-direction: column; align-item
 USERS_FILE = "kullanicilar.json"
 
 # ----------------------------------------------------
-# 3. KULLANICI YÖNETİMİ & DEVASA VERİTABANI
+# 3. KULLANICI YÖNETİMİ & VERİTABANI
 # ----------------------------------------------------
 def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
 
@@ -101,7 +101,6 @@ def kullanicilari_kaydet(users):
 
 def kullanici_veri_dosyasi(username): return f"veriler_{username.lower().strip()}.json"
 
-# Devasa Menü Veritabanı
 DEVASA_MENU = {
     "A. 🥐 Kahvaltılıklar ve Sabah Öğünü": {
         "Serpme Kahvaltı (Tek Kişilik)": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36},
@@ -345,7 +344,7 @@ if not st.session_state.giris_yapildi:
 
 else:
     # ----------------------------------------------------
-    # 5. ANA UYGULAMA PANELİ (Yapay Zeka ve Çöp Kutusu Geri Döndü!)
+    # 5. ANA UYGULAMA PANELİ
     # ----------------------------------------------------
     aktif_user = st.session_state.aktif_kullanici
     st.sidebar.markdown(LOGO_SIDEBAR, unsafe_allow_html=True)
@@ -373,7 +372,6 @@ else:
     if menu == "Günlük Takip & Ana Sayfa":
         st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
 
-        # TAKVİM GEÇMİŞİ HAFIZASI
         secilen_tarih = str(st.date_input("Kayıt Tarihi (Geçmişe Gidebilirsiniz)", datetime.date.today()))
         if secilen_tarih not in st.session_state.aktivite_loglari:
             st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0, "video_tamamlandi": False, "manuel_egzersiz_kcal": 0}
@@ -444,8 +442,8 @@ else:
 
         st.divider()
 
-        # YAPAY ZEKA GÖRSEL TARAMA (EKSİKSİZ GERİ GELDİ)
-        st.subheader("📸 Yapay Zeka ile Öğün Tarama (Gemini Vision)")
+        # YAPAY ZEKA GÖRSEL TARAMA (KAMERA KORUMALI & GEMINI 3.8 FLASH)
+        st.subheader("📸 Yapay Zeka ile Öğün Tarama (Gemini 3.8 Flash)")
         st.markdown("Yemeğinin fotoğrafını çek veya yükle, yapay zeka senin için kalori ve makrolarını bulup günlüğüne eklesin!")
         
         api_key_gemini = p.get("gemini_api_key", "")
@@ -460,8 +458,11 @@ else:
                     upl = st.file_uploader("Yemeğinin fotoğrafını seç", type=["jpg", "jpeg", "png"])
                     if upl: img_data = upl
                 with tab_kamera:
-                    cam = st.camera_input("Kameradan Çek")
-                    if cam: img_data = cam
+                    st.caption("🔒 **Gizlilik Koruması:** Kamera arka planda izinsiz ve sürekli çalışmaması için varsayılan olarak kapalıdır.")
+                    kamera_aktif = st.checkbox("📷 Kamerayı Aç / Fotoğraf Çek")
+                    if kamera_aktif:
+                        cam = st.camera_input("Fotoğrafınızı Çekin")
+                        if cam: img_data = cam
                     
                 if img_data:
                     image = Image.open(img_data)
@@ -469,8 +470,9 @@ else:
                     secilen_ogun_ai = st.selectbox("Hangi Öğün Olarak Eklensin?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
                     
                     if st.button("✨ Yapay Zeka ile Analiz Et ve Ekle", use_container_width=True):
-                        with st.spinner("Yapay zeka yemeğini inceliyor... Lütfen bekle..."):
-                            model = genai.GenerativeModel('gemini-2.0-flash')
+                        with st.spinner("Gemini yemeğini inceliyor... Lütfen bekle..."):
+                            # Güncel Gemini 3.8 Flash Modeli
+                            model = genai.GenerativeModel('gemini-3.8-flash')
                             prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama, ek yazı KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
                             try:
                                 response = model.generate_content([prompt, image])
