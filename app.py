@@ -443,7 +443,7 @@ else:
 
         st.divider()
 
-        # YAPAY ZEKA GÖRSEL TARAMA (OTOMATİK RETRY BEKLETME MEKANİZMALI)
+        # YAPAY ZEKA GÖRSEL TARAMA (15 SANİYE GÜNCELLENMİŞ RETRY MEKANİZMASI)
         st.subheader("📸 Yapay Zeka ile Öğün Tarama (Gemini 3.8 Flash)")
         st.markdown("Yemeğinin fotoğrafını çek veya yükle, yapay zeka senin için kalori ve makrolarını bulup günlüğüne eklesin!")
         
@@ -471,7 +471,7 @@ else:
                     secilen_ogun_ai = st.selectbox("Hangi Öğün Olarak Eklensin?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
                     
                     if st.button("✨ Yapay Zeka ile Analiz Et ve Ekle", use_container_width=True):
-                        # Otomatik Bekleme ve Yeniden Deneme Döngüsü (Retry Mechanism)
+                        # Otomatik Bekleme ve Yeniden Deneme (15 Saniye)
                         max_deneme = 2
                         basarili = False
                         ai_sonuc = None
@@ -488,8 +488,8 @@ else:
                                     break
                             except Exception as e:
                                 if "429" in str(e) and deneme < max_deneme - 1:
-                                    with st.spinner("⏳ Ücretsiz kota sınırına takıldı. Otomatik olarak 60 saniye bekleniyor..."):
-                                        time.sleep(60) # 1 dakika otomatik bekleme
+                                    with st.spinner("⏳ Ücretsiz kota sınırına takıldı. Otomatik olarak 15 saniye bekleniyor..."):
+                                        time.sleep(15) # Güncellenen 15 saniye bekleme
                                 else:
                                     if deneme == max_deneme - 1:
                                         st.error(f"Analiz sırasında bir hata oluştu: {e}")
