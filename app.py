@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import json
 import os
+import time
 import pandas as pd
 import streamlit as st
 import google.generativeai as genai
@@ -442,7 +443,7 @@ else:
 
         st.divider()
 
-        # YAPAY ZEKA GÖRSEL TARAMA (KAMERA KORUMALI & GEMINI 3.8 FLASH)
+        # YAPAY ZEKA GÖRSEL TARAMA (OTOMATİK RETRY BEKLETME MEKANİZMALI)
         st.subheader("📸 Yapay Zeka ile Öğün Tarama (Gemini 3.8 Flash)")
         st.markdown("Yemeğinin fotoğrafını çek veya yükle, yapay zeka senin için kalori ve makrolarını bulup günlüğüne eklesin!")
         
@@ -470,30 +471,43 @@ else:
                     secilen_ogun_ai = st.selectbox("Hangi Öğün Olarak Eklensin?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
                     
                     if st.button("✨ Yapay Zeka ile Analiz Et ve Ekle", use_container_width=True):
-                        with st.spinner("Gemini yemeğini inceliyor... Lütfen bekle..."):
-                            # Güncel Gemini 3.8 Flash Modeli
-                            model = genai.GenerativeModel('gemini-3.8-flash')
-                            prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama, ek yazı KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
+                        # Otomatik Bekleme ve Yeniden Deneme Döngüsü (Retry Mechanism)
+                        max_deneme = 2
+                        basarili = False
+                        ai_sonuc = None
+
+                        for deneme in range(max_deneme):
                             try:
-                                response = model.generate_content([prompt, image])
-                                res_text = response.text.strip().replace("```json", "").replace("```", "")
-                                ai_sonuc = json.loads(res_text)
-                                
-                                st.session_state.gunluk_kayitlar.append({
-                                    "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai,
-                                    "Tarif": ai_sonuc.get("Tarif", "Yemek") + " (AI)",
-                                    "Kalori": float(ai_sonuc.get("Kalori", 0)),
-                                    "Protein": float(ai_sonuc.get("Protein", 0)),
-                                    "Karbonhidrat": float(ai_sonuc.get("Karbonhidrat", 0)),
-                                    "Yağ": float(ai_sonuc.get("Yağ", 0))
-                                })
-                                verileri_kaydet(aktif_user)
-                                st.success(f"Yapay Zeka yemeği buldu: {ai_sonuc.get('Tarif')} ({ai_sonuc.get('Kalori')} kcal) ve başarıyla günlüğüne eklendi!")
-                                st.rerun()
+                                with st.spinner(f"Gemini yemeğini inceliyor... (Deneme {deneme+1})"):
+                                    model = genai.GenerativeModel('gemini-3.8-flash')
+                                    prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama, ek yazı KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
+                                    response = model.generate_content([prompt, image])
+                                    res_text = response.text.strip().replace("```json", "").replace("```", "")
+                                    ai_sonuc = json.loads(res_text)
+                                    basarili = True
+                                    break
                             except Exception as e:
-                                st.error(f"Analiz sırasında bir hata oluştu. API anahtarını veya kotanı kontrol et. Hata: {e}")
+                                if "429" in str(e) and deneme < max_deneme - 1:
+                                    with st.spinner("⏳ Ücretsiz kota sınırına takıldı. Otomatik olarak 60 saniye bekleniyor..."):
+                                        time.sleep(60) # 1 dakika otomatik bekleme
+                                else:
+                                    if deneme == max_deneme - 1:
+                                        st.error(f"Analiz sırasında bir hata oluştu: {e}")
+
+                        if basarili and ai_sonuc:
+                            st.session_state.gunluk_kayitlar.append({
+                                "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai,
+                                "Tarif": ai_sonuc.get("Tarif", "Yemek") + " (AI)",
+                                "Kalori": float(ai_sonuc.get("Kalori", 0)),
+                                "Protein": float(ai_sonuc.get("Protein", 0)),
+                                "Karbonhidrat": float(ai_sonuc.get("Karbonhidrat", 0)),
+                                "Yağ": float(ai_sonuc.get("Yağ", 0))
+                            })
+                            verileri_kaydet(aktif_user)
+                            st.success(f"Yapay Zeka yemeği buldu: {ai_sonuc.get('Tarif')} ({ai_sonuc.get('Kalori')} kcal) ve başarıyla günlüğüne eklendi!")
+                            st.rerun()
             except Exception as e:
-                st.error("Gerekli yapay zeka kütüphaneleri yüklenemedi. Terminalden çalıştırın: `pip install google-generativeai pillow`")
+                st.error(f"Gerekli yapay zeka kütüphaneleri yüklenemedi. Hata: {e}")
 
         st.divider()
 
