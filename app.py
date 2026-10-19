@@ -102,6 +102,7 @@ def kullanicilari_kaydet(users):
 
 def kullanici_veri_dosyasi(username): return f"veriler_{username.lower().strip()}.json"
 
+# 🎯 TÜM DEVASA MENÜ EKSİKSİZ OLARAK KORUNDU
 DEVASA_MENU = {
     "A. 🥐 Kahvaltılıklar ve Sabah Öğünü": {
         "Serpme Kahvaltı (Tek Kişilik)": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36},
@@ -286,10 +287,8 @@ def verileri_yukle(username):
             with open(user_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 profil = data.get("profil", {})
-                if "egzersiz_katsayisi" not in profil: profil["egzersiz_katsayisi"] = 1.0
-                if "gemini_api_key" not in profil: profil["gemini_api_key"] = ""
-                if "tema" not in profil: profil["tema"] = "Sonbahar Kremi"
-                if "setup_tamamlandi" not in profil: profil["setup_tamamlandi"] = True
+                for k, v in default_data["profil"].items():
+                    if k not in profil: profil[k] = v
                 data["profil"] = profil
                 return data
         except: return default_data
@@ -344,9 +343,6 @@ if not st.session_state.giris_yapildi:
                 st.success("Hesabınız başarıyla oluşturuldu! Giriş yapabilirsiniz.")
 
 else:
-    # ----------------------------------------------------
-    # 5. ANA UYGULAMA PANELİ
-    # ----------------------------------------------------
     aktif_user = st.session_state.aktif_kullanici
     st.sidebar.markdown(LOGO_SIDEBAR, unsafe_allow_html=True)
     st.sidebar.markdown(f"<div class='sidebar-user-card'><div class='sidebar-user-name'>{aktif_user.title()}</div></div>", unsafe_allow_html=True)
@@ -443,9 +439,9 @@ else:
 
         st.divider()
 
-        # YAPAY ZEKA GÖRSEL TARAMA (15 SANİYE GÜNCELLENMİŞ RETRY MEKANİZMASI)
-        st.subheader("📸 Yapay Zeka ile Öğün Tarama (Gemini 3.8 Flash)")
-        st.markdown("Yemeğinin fotoğrafını çek veya yükle, yapay zeka senin için kalori ve makrolarını bulup günlüğüne eklesin!")
+        # YAPAY ZEKA GÖRSEL TARAMA (ÖNİZLEME ONAYLI & 15 SANİYE RETRY KORUMALI)
+        st.subheader("📸 Yapay Zeka ile Öğün Tarama (Önizlemeli Onay Modülü)")
+        st.markdown("Yemeğini fotoğrafla, yapay zeka analiz etsin; değerleri onaylamadan veya düzenlemeden önce kontrol et!")
         
         api_key_gemini = p.get("gemini_api_key", "")
         if not api_key_gemini:
@@ -456,31 +452,30 @@ else:
                 tab_foto, tab_kamera = st.tabs(["🖼️ Galeriden Yükle", "📷 Kamera ile Çek"])
                 img_data = None
                 with tab_foto:
-                    upl = st.file_uploader("Yemeğinin fotoğrafını seç", type=["jpg", "jpeg", "png"])
+                    upl = st.file_uploader("Yemeğinin fotoğrafını seç", type=["jpg", "jpeg", "png"], key="upl_ai")
                     if upl: img_data = upl
                 with tab_kamera:
-                    st.caption("🔒 **Gizlilik Koruması:** Kamera arka planda izinsiz ve sürekli çalışmaması için varsayılan olarak kapalıdır.")
-                    kamera_aktif = st.checkbox("📷 Kamerayı Aç / Fotoğraf Çek")
+                    st.caption("🔒 **Gizlilik Koruması:** Kamera yalnızca sen açtığında aktifleşir.")
+                    kamera_aktif = st.checkbox("📷 Kamerayı Aç / Fotoğraf Çek", key="cam_chk")
                     if kamera_aktif:
-                        cam = st.camera_input("Fotoğrafınızı Çekin")
+                        cam = st.camera_input("Fotoğrafınızı Çekin", key="cam_input")
                         if cam: img_data = cam
                     
                 if img_data:
                     image = Image.open(img_data)
-                    st.image(image, caption="Analiz edilecek yemek görüntüsü", width=300)
-                    secilen_ogun_ai = st.selectbox("Hangi Öğün Olarak Eklensin?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
+                    st.image(image, caption="Analiz edilecek yemek görüntüsü", width=280)
+                    secilen_ogun_ai = st.selectbox("Hangi Öğün Olarak Eklensin?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="ogun_ai_sec")
                     
-                    if st.button("✨ Yapay Zeka ile Analiz Et ve Ekle", use_container_width=True):
-                        # Otomatik Bekleme ve Yeniden Deneme (15 Saniye)
+                    if st.button("✨ Yapay Zeka ile Analiz Et", use_container_width=True, key="btn_ai_analiz"):
                         max_deneme = 2
                         basarili = False
                         ai_sonuc = None
 
                         for deneme in range(max_deneme):
                             try:
-                                with st.spinner(f"Gemini yemeğini inceliyor... (Deneme {deneme+1})"):
+                                with st.spinner(f"Gemini yemeği inceliyor... (Deneme {deneme+1})"):
                                     model = genai.GenerativeModel('gemini-3.8-flash')
-                                    prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama, ek yazı KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
+                                    prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
                                     response = model.generate_content([prompt, image])
                                     res_text = response.text.strip().replace("```json", "").replace("```", "")
                                     ai_sonuc = json.loads(res_text)
@@ -488,31 +483,45 @@ else:
                                     break
                             except Exception as e:
                                 if "429" in str(e) and deneme < max_deneme - 1:
-                                    with st.spinner("⏳ Ücretsiz kota sınırına takıldı. Otomatik olarak 15 saniye bekleniyor..."):
-                                        time.sleep(15) # Güncellenen 15 saniye bekleme
+                                    with st.spinner("⏳ Kota sınırına takıldı. Otomatik olarak 15 saniye bekleniyor..."):
+                                        time.sleep(15)
                                 else:
                                     if deneme == max_deneme - 1:
-                                        st.error(f"Analiz sırasında bir hata oluştu: {e}")
+                                        st.error(f"Analiz sırasında hata oluştu: {e}")
 
                         if basarili and ai_sonuc:
+                            st.session_state["ai_onizleme_sonuc"] = ai_sonuc
+                            st.success("Yapay zeka analizi tamamlandı! Aşağıdaki önizleme alanından kontrol edip günlüğe ekleyebilirsin.")
+
+                    # DÜNYA STANDARDI: ÖNİZLEME VE DÜZENLEME FORMU
+                    if "ai_onizleme_sonuc" in st.session_state and st.session_state["ai_onizleme_sonuc"]:
+                        res = st.session_state["ai_onizleme_sonuc"]
+                        st.markdown("---")
+                        st.markdown("#### 📝 Yapay Zeka Analiz Önizlemesi & Düzenleme")
+                        
+                        ed_tarif = st.text_input("Yemek Adı", value=res.get("Tarif", "Yemek"))
+                        ed_kal = st.number_input("Kalori (kcal)", min_value=0.0, value=float(res.get("Kalori", 0)))
+                        ed_pro = st.number_input("Protein (g)", min_value=0.0, value=float(res.get("Protein", 0)))
+                        ed_karb = st.number_input("Karbonhidrat (g)", min_value=0.0, value=float(res.get("Karbonhidrat", 0)))
+                        ed_yag = st.number_input("Yağ (g)", min_value=0.0, value=float(res.get("Yağ", 0)))
+
+                        if st.button("✅ Onayla ve Günlüğe Ekle", use_container_width=True, key="btn_onay_ekle"):
                             st.session_state.gunluk_kayitlar.append({
                                 "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai,
-                                "Tarif": ai_sonuc.get("Tarif", "Yemek") + " (AI)",
-                                "Kalori": float(ai_sonuc.get("Kalori", 0)),
-                                "Protein": float(ai_sonuc.get("Protein", 0)),
-                                "Karbonhidrat": float(ai_sonuc.get("Karbonhidrat", 0)),
-                                "Yağ": float(ai_sonuc.get("Yağ", 0))
+                                "Tarif": ed_tarif + " (AI)",
+                                "Kalori": ed_kal, "Protein": ed_pro, "Karbonhidrat": ed_karb, "Yağ": ed_yag
                             })
                             verileri_kaydet(aktif_user)
-                            st.success(f"Yapay Zeka yemeği buldu: {ai_sonuc.get('Tarif')} ({ai_sonuc.get('Kalori')} kcal) ve başarıyla günlüğüne eklendi!")
+                            del st.session_state["ai_onizleme_sonuc"]
+                            st.success("Öğün başarıyla günlüğüne eklendi!")
                             st.rerun()
             except Exception as e:
-                st.error(f"Gerekli yapay zeka kütüphaneleri yüklenemedi. Hata: {e}")
+                st.error(f"AI modülü yüklenirken hata: {e}")
 
         st.divider()
 
-        # MANUEL ÖĞÜN EKLEME (Kutucuklu ve Sadece İsimli)
-        st.subheader("🍽️ Öğün Ekle")
+        # DEVASA MENÜ İLE MANUEL ÖĞÜN EKLEME (Eksiksiz)
+        st.subheader("🍽️ Öğün Ekle (Devasa Menü)")
         cc1, cc2 = st.columns(2)
         sec_kat = cc1.selectbox("Kategori", list(DEVASA_MENU.keys()))
         sec_ogun = cc2.selectbox("Öğün Zamanı (Manuel)", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
@@ -584,7 +593,6 @@ else:
     # =====================================================================
     elif menu == "Haftalık Program & Değerlendirme":
         st.header("Haftalık Geçmiş ve Grafikler")
-        
         bugun_tarihi = datetime.date.today()
         son_7_gun = [(bugun_tarihi - datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
 
@@ -664,7 +672,6 @@ else:
     # =====================================================================
     elif menu == "Hesap ve Hedefler":
         st.header("👤 Hesap, Kilo Verme Hedefi ve Tema Seçim Sihirbazı")
-
         secilen_tema = st.selectbox("Uygulama Tema Paleti (5 Seçenek)", ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"], index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"].index(p.get("tema", "Sonbahar Kremi")) if p.get("tema", "Sonbahar Kremi") in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"] else 0)
 
         st.divider()
