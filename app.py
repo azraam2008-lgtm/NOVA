@@ -470,7 +470,7 @@ else:
                     
                     if st.button("✨ Yapay Zeka ile Analiz Et ve Ekle", use_container_width=True):
                         with st.spinner("Yapay zeka yemeğini inceliyor... Lütfen bekle..."):
-                            model = genai.GenerativeModel('gemini-1.5-flash')
+                            model = genai.GenerativeModel('gemini-2.0-flash')
                             prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama, ek yazı KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
                             try:
                                 response = model.generate_content([prompt, image])
