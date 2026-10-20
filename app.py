@@ -306,7 +306,7 @@ else:
                 st.rerun()
         st.divider()
 
-        # ARKA PLANA GÖMÜLÜ YAPAY ZEKA TARAMASI
+        # ARKA PLANA GÖMÜLÜ YAPAY ZEKA TARAMASI (SADELEŞTİRİLDİ, UYARI YOK)
         st.subheader("📸 Yapay Zeka ile Öğün Tarama")
         st.markdown("Yemeğini fotoğrafla, onaylamadan önce değerleri önizle.")
         
@@ -538,6 +538,7 @@ else:
     elif menu == "Hesap ve Hedefler":
         st.header("👤 Hesap, Kilo Verme Hedefi ve Tema Seçim Sihirbazı")
         
+        # API UYARISI BURADAN DA TAMAMEN SİLİNDİ, SADECE TEMA KALDI
         secilen_tema = st.selectbox("Uygulama Tema Paleti (5 Seçenek)", ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"], index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"].index(p.get("tema", "Sonbahar Kremi")) if p.get("tema", "Sonbahar Kremi") in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"] else 0)
 
         st.divider()
