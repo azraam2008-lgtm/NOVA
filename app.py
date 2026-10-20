@@ -9,19 +9,20 @@ import google.generativeai as genai
 from PIL import Image
 
 # ----------------------------------------------------
-# 1. YAPAY ZEKA MOTORU (KODUN DERİNLERİNE GÖMÜLDÜ)
+# 1. YAPAY ZEKA MOTORU (GÜVENLİ SECRETS ENTEGRASYONU)
 # ----------------------------------------------------
 def yapay_zeka_ile_fotograf_analizi(image_data):
     """
-    Kullanıcıdan gizlenen, arka planda çalışan ana yapay zeka motoru.
-    GIZLI_API_KEY içerisine Google AI Studio'dan aldığınız key'i yapıştırın.
+    Kullanıcıdan tamamen gizlenen, arka planda çalışan yapay zeka motoru.
+    API Anahtarını Streamlit'in güvenli kasasından (st.secrets) çeker.
     """
-    GIZLI_API_KEY = ""  # AIzaSy... ile başlayan anahtarını SADECE BURAYA yapıştır.
-    
-    if not GIZLI_API_KEY:
-        return False, "Sistem yöneticisi henüz API anahtarını koda eklemedi."
+    try:
+        # Şifre doğrudan koda yazılmaz, Streamlit sunucusundan güvenli bir şekilde alınır
+        guvenli_api_key = st.secrets["GEMINI_API_KEY"]
+    except KeyError:
+        return False, "Sistem hatası: API anahtarı Streamlit Secrets içinde bulunamadı."
         
-    genai.configure(api_key=GIZLI_API_KEY)
+    genai.configure(api_key=guvenli_api_key)
     model = genai.GenerativeModel('gemini-3.8-flash')
     prompt = "Bu fotoğraftaki yemeğin ne olduğunu ve standart bir porsiyonunun tahmini besin değerlerini analiz et. LÜTFEN SADECE GEÇERLİ BİR JSON FORMATINDA YANIT VER. Markdown, açıklama KULLANMA. Format: {\"Tarif\": \"Yemek Adı\", \"Kalori\": 300, \"Protein\": 15, \"Karbonhidrat\": 30, \"Yağ\": 10}"
     
@@ -33,7 +34,7 @@ def yapay_zeka_ile_fotograf_analizi(image_data):
             return True, json.loads(res_text)
         except Exception as e:
             if "429" in str(e) and deneme < max_deneme - 1:
-                time.sleep(15) # Kota aşımında gizlice 15 saniye bekleyip tekrar dener
+                time.sleep(15) # Kota aşımında arka planda gizlice 15 saniye bekleyip tekrar dener
             else:
                 return False, str(e)
     return False, "Bilinmeyen bir hata oluştu."
@@ -256,7 +257,7 @@ else:
     bmr_kisi = hesapla_bmr(p)
 
     # =====================================================================
-    # 6.1 GÜNLÜK TAKİP & ANA SAYFA (SADELEŞMİŞ AI ARAYÜZÜ İLE)
+    # 6.1 GÜNLÜK TAKİP & ANA SAYFA
     # =====================================================================
     if menu == "Günlük Takip & Ana Sayfa":
         st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
@@ -329,14 +330,14 @@ else:
             
             if st.button("✨ Analiz Et (Motoru Çalıştır)", use_container_width=True, key="btn_ai_analiz"):
                 with st.spinner("Motor arka planda çalışıyor, yemek inceleniyor..."):
-                    # GİZLİ FONKSİYONU ÇAĞIRIR
+                    # GİZLİ VE GÜVENLİ FONKSİYONU ÇAĞIRIR
                     basarili, sonuc = yapay_zeka_ile_fotograf_analizi(image)
                     
                     if basarili:
                         st.session_state["ai_onizleme_sonuc"] = sonuc
                         st.success("Analiz tamamlandı! Aşağıdan onaylayabilirsiniz.")
                     else:
-                        st.error(f"Sistemsel bir hata veya kota sorunu oluştu: {sonuc}")
+                        st.error(f"Sistemsel bir hata oluştu: {sonuc}")
 
             if "ai_onizleme_sonuc" in st.session_state and st.session_state["ai_onizleme_sonuc"]:
                 res = st.session_state["ai_onizleme_sonuc"]
@@ -362,17 +363,58 @@ else:
 
         st.divider()
 
-        # DETAYLI MAKRO ÇUBUKLARI
-        st.subheader("📊 Günlük Makro Besin Dağılımı")
+        # DEVASA MENÜ İLE MANUEL ÖĞÜN EKLEME
+        st.subheader("🍽️ Öğün Ekle (Devasa Menü)")
+        cc1, cc2 = st.columns(2)
+        sec_kat = cc1.selectbox("Kategori", list(DEVASA_MENU.keys()))
+        sec_ogun = cc2.selectbox("Öğün Zamanı (Manuel)", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
+        urunler = DEVASA_MENU[sec_kat]
+        secili_liste = []
+        
+        cu1, cu2 = st.columns(2)
+        for idx, (u_name, u_data) in enumerate(urunler.items()):
+            target_col = cu1 if idx % 2 == 0 else cu2
+            if target_col.checkbox(u_name, key=f"chk_{secilen_tarih}_{u_name}"):
+                secili_liste.append((u_name, u_data))
+
+        if st.button("Seçili Lezzetleri Günlüğe Ekle", use_container_width=True):
+            if secili_liste:
+                for ad, data in secili_liste:
+                    st.session_state.gunluk_kayitlar.append({
+                        "Tarih": secilen_tarih, "Öğün": sec_ogun, "Tarif": ad,
+                        "Kalori": data["kalori"], "Protein": data["protein"], "Karbonhidrat": data["karb"], "Yağ": data["yag"]
+                    })
+                verileri_kaydet(aktif_user)
+                st.success("Seçilen ürünler listeye eklendi!")
+                st.rerun()
+            else: st.warning("Lütfen eklemek istediğiniz ürünleri işaretleyin.")
+
+        st.divider()
+
+        # ÖĞÜN GEÇMİŞİ VE ÇÖP KUTUSU
+        st.subheader(f"📋 {secilen_tarih} Tarihinde Yenilenler")
         bugun_og = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k["Tarih"] == secilen_tarih]
         toplam_alinan, bugun_protein, bugun_karb, bugun_yag = 0, 0, 0, 0
+        
         if bugun_og:
             for i, kayit in bugun_og:
                 toplam_alinan += kayit["Kalori"]
                 bugun_protein += kayit.get("Protein", 0)
                 bugun_karb += kayit.get("Karbonhidrat", 0)
                 bugun_yag += kayit.get("Yağ", 0)
+                
+                cr1, cr2 = st.columns([10, 1])
+                cr1.markdown(f"**{kayit['Öğün']}**: {kayit['Tarif']} <span style='color:{t['accent']};'>({kayit['Kalori']} kcal | P: {kayit.get('Protein',0)}g, K: {kayit.get('Karbonhidrat',0)}g, Y: {kayit.get('Yağ',0)}g)</span>", unsafe_allow_html=True)
+                if cr2.button("🗑️", key=f"sil_{i}"):
+                    st.session_state.gunluk_kayitlar.pop(i)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
+        else: st.info("Bu tarihte henüz yediğiniz bir şey kaydedilmedi.")
 
+        st.divider()
+
+        # DETAYLI MAKRO ÇUBUKLARI
+        st.subheader("📊 Günlük Makro Besin Dağılımı")
         hedef_protein_g = round(p.get("mevcut_kilo", 58.0) * 1.6)
         hedef_karb_g = 150
         hedef_yag_g = 55
@@ -406,4 +448,139 @@ else:
         sum2.markdown(f"**🍽️ Alınan Kalori**<br><h3>{round(toplam_alinan)} kcal</h3>", unsafe_allow_html=True)
         sum3.markdown(f"**📉 Net Kalori Açığı**<br><h3>{round(olusturulan_acik)} kcal</h3>", unsafe_allow_html=True)
 
-    # (Diğer sekmelerdeki kodlar aynı şekildedir)
+    # =====================================================================
+    # 6.2 HAFTALIK PROGRAM & AKILLI KOÇLUK DEĞERLENDİRMESİ
+    # =====================================================================
+    elif menu == "Haftalık Program & Değerlendirme":
+        st.header("Haftalık Geçmiş ve Akıllı Koçluk Paneli")
+        bugun_tarihi = datetime.date.today()
+        son_7_gun = [(bugun_tarihi - datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+
+        if st.session_state.gunluk_kayitlar:
+            df_tum = pd.DataFrame(st.session_state.gunluk_kayitlar)
+            haftalik_ozet = df_tum.groupby("Tarih")[["Kalori", "Protein", "Karbonhidrat", "Yağ"]].sum().reset_index()
+            st.subheader("📈 Günlük Kalori Alımı Grafiği")
+            st.line_chart(haftalik_ozet.set_index("Tarih")[["Kalori"]], color=t["accent"])
+            st.subheader("📊 Besin Değerleri Toplam Tablosu")
+            st.dataframe(haftalik_ozet, use_container_width=True)
+        st.divider()
+
+        haftalik_alinan, haftalik_harcanan, haftalik_yenenler = 0, 0, []
+        for k in st.session_state.gunluk_kayitlar:
+            if k["Tarih"] in son_7_gun:
+                haftalik_alinan += k["Kalori"]
+                haftalik_yenenler.append(f"{k['Tarih']} | {k['Öğün']}: {k['Tarif']} ({k['Kalori']} kcal)")
+
+        for g in son_7_gun:
+            if g in st.session_state.aktivite_loglari:
+                log = st.session_state.aktivite_loglari[g]
+                v_kal = round(((5.5 * 3.5 * p["mevcut_kilo"] / 200) * 20) * p.get("egzersiz_katsayisi", 1.0)) if log.get("video_tamamlandi") else 0
+                m_kal = log.get("manuel_egzersiz_kcal", 0)
+                haftalik_harcanan += (bmr_kisi + (log["adim"] * 0.04) + v_kal + m_kal)
+            else: haftalik_harcanan += bmr_kisi
+
+        haftalik_acik = haftalik_harcanan - haftalik_alinan
+        hedef_haftalik_acik = ((p.get("verilmek_istenen_kilo", 3.0) * 7700) / p.get("hedef_gun", 45)) * 7
+
+        st.subheader("📋 Bu Hafta Neler Yedik? (7 Günlük Geçmiş)")
+        if haftalik_yenenler:
+            for y in sorted(haftalik_yenenler, reverse=True): st.markdown(f"- {y}")
+        else: st.info("Bu hafta hiç öğün kaydı girilmedi.")
+
+        st.divider()
+        st.markdown(f"""
+            <div class="recipe-card">
+                <div class="recipe-title">🔥 7 Günlük Total Değerlendirme</div>
+                • <strong>Total Alınan Kalori:</strong> {round(haftalik_alinan)} kcal<br>
+                • <strong>Total Harcanan Kalori:</strong> {round(haftalik_harcanan)} kcal<br>
+                • <strong>Total Oluşturulan Açık:</strong> <span style="font-weight:700; color:{t['accent']};">{round(haftalik_acik)} kcal</span><br>
+                • <strong>Haftalık Olması Gereken Açık:</strong> {round(hedef_haftalik_acik)} kcal
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.subheader("🧠 Nova Akıllı Haftalık Koçluk Tavsiyesi")
+        if haftalik_acik >= hedef_haftalik_acik:
+            st.success("✨ **Koçluk Analizi:** Harika bir hafta geçirdin! Hedeflenen kalori açığını başarıyla tutturdun. Bedenin yağ yakım sürecinde mükemmel bir adaptasyon gösteriyor.")
+        elif haftalik_acik > 0:
+            st.warning("💡 **Koçluk Analizi:** Bu hafta kalori açığı oluşturdun ancak hedefinizin biraz gerisindesiniz. Önümüzdeki hafta yürüyüş adımlarını artırarak hedefi tam 12'den vurabilirsin!")
+        else:
+            st.error("⚠️ **Koçluk Analizi:** Bu hafta alınan kalori harcananı geçmiş durumda. Hiç sorun değil! Yeni haftaya sıfırdan başlayarak su tüketimini artırmak dengeni geri getirecektir.")
+
+    # =====================================================================
+    # 6.3 TARİF & MALZEME YÖNETİMİ
+    # =====================================================================
+    elif menu == "Tarif & Malzeme Yönetimi":
+        st.header("Tarif ve Malzeme Yönetim Paneli")
+        tab_m, tab_t = st.tabs(["1. Yeni Malzeme Ekle", "2. Gramaj Esaslı Tarif Oluştur"])
+        with tab_m:
+            m_ad = st.text_input("Malzeme Adı")
+            m_kal = st.number_input("100g Kalori", min_value=0.0, value=100.0)
+            m_pro = st.number_input("100g Protein", min_value=0.0, value=10.0)
+            if st.button("Malzemeyi Kaydet"):
+                if m_ad.strip():
+                    st.session_state.besin_veritabani[m_ad.strip().lower()] = {"kalori": m_kal, "protein": m_pro, "karb": 0, "yag": 0}
+                    verileri_kaydet(aktif_user)
+                    st.success("Malzeme eklendi!")
+
+        with tab_t:
+            t_ad = st.text_input("Tarif Adı")
+            secilen_malzemeler = st.multiselect("Malzemeleri Seç", list(st.session_state.besin_veritabani.keys()))
+            tarif_gramajlari = {}
+            for m in secilen_malzemeler: tarif_gramajlari[m] = st.number_input(f"{m.title()} kaç gram/ml?", value=100.0, key=f"g_{m}")
+            if st.button("Tarifi Kaydet") and t_ad.strip() and tarif_gramajlari:
+                st.session_state.hazir_tarifler[t_ad.strip()] = tarif_gramajlari
+                verileri_kaydet(aktif_user)
+                st.success("Tarif kaydedildi!")
+
+    # =====================================================================
+    # 6.4 HESAP, TEMA SEÇİMİ VE KALORİ AÇIĞI SİHİRBAZI
+    # =====================================================================
+    elif menu == "Hesap ve Hedefler":
+        st.header("👤 Hesap, Kilo Verme Hedefi ve Tema Seçim Sihirbazı")
+        
+        secilen_tema = st.selectbox("Uygulama Tema Paleti (5 Seçenek)", ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"], index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"].index(p.get("tema", "Sonbahar Kremi")) if p.get("tema", "Sonbahar Kremi") in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"] else 0)
+
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        cinsiyet = c1.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=0 if p["cinsiyet"] == "Kadın" else 1)
+        yas = c2.number_input("Yaş", min_value=15, max_value=80, value=int(p["yas"]))
+        boy = c3.number_input("Boy (cm)", min_value=120, max_value=210, value=int(p["boy"]))
+
+        c4, c5 = st.columns(2)
+        mevcut_kilo = c4.number_input("Mevcut Kilon (kg)", min_value=35.0, value=float(p["mevcut_kilo"]), step=0.5)
+        hedef_kilo = c5.number_input("Hedeflenen Kilon (kg)", min_value=30.0, value=float(p["hedef_kilo"]), step=0.5)
+
+        st.markdown("---")
+        ch1, ch2, ch3 = st.columns(3)
+        verilmek_istenen = ch1.number_input("Kaç kilo vermek istiyorsun?", min_value=0.5, value=float(p.get("verilmek_istenen_kilo", 3.0)), step=0.5)
+        hedef_gun = ch2.number_input("Bu hedefe kaç günde ulaşmak istiyorsun?", min_value=10, value=int(p.get("hedef_gun", 45)), step=5)
+        egz_kat = ch3.slider("Egzersiz Çarpan Katsayısı", 0.8, 1.5, value=float(p.get("egzersiz_katsayisi", 1.0)), step=0.05)
+
+        akt_sev = st.selectbox("Aktivite Düzeyi", ["Hareketsiz / Masa Başı", "Hafif Aktif (Haftada 1-3 gün)", "Orta Aktif (Haftada 3-5 gün)", "Çok Aktif"])
+
+        if st.button("Tüm Bilgileri ve Temayı Kaydet", use_container_width=True):
+            st.session_state.profil.update({
+                "cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo,
+                "verilmek_istenen_kilo": verilmek_istenen, "hedef_gun": hedef_gun, "egzersiz_katsayisi": egz_kat, 
+                "tema": secilen_tema, "setup_tamamlandi": True
+            })
+            verileri_kaydet(aktif_user)
+            st.success("✨ Tüm profilin, teman ve ayarların başarıyla kaydedildi! Sayfa yenileniyor...")
+            st.rerun()
+
+        st.divider()
+        carpanlar = {"Hareketsiz / Masa Başı": 1.2, "Hafif Aktif (Haftada 1-3 gün)": 1.375, "Orta Aktif (Haftada 3-5 gün)": 1.55, "Çok Aktif": 1.725}
+        tdee_g = bmr_kisi * carpanlar[akt_sev]
+        gunluk_acik_g = (verilmek_istenen * 7700) / hedef_gun
+
+        st.markdown(f"""
+            <div class="recipe-card">
+                <div class="recipe-title">💡 Nokta Atışı Kalori Planı</div>
+                <div class="recipe-details">
+                    • <strong>Günlük Harcanan Enerji (TDEE):</strong> {round(tdee_g)} kcal<br>
+                    • <strong>Hedeflenen Sürede Vermen Gereken Günlük Açık:</strong> {round(gunluk_acik_g)} kcal / gün<br>
+                    • <strong>Alman Gereken Günlük Kalori:</strong> <strong style="color: {t['accent']}; font-size:16px;">{round(tdee_g - gunluk_acik_g)} kcal</strong><br>
+                    <em>{hedef_gun} günde {verilmek_istenen} kg vermek için bu kalori dengesini korumalısın!</em>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
