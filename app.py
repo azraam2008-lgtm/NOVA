@@ -8,6 +8,12 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
+# ====================================================
+# BURAYA GOOGLE AI STUDIO API ANAHTARINIZI YAPIŞTIRIN
+# Örnek: SABIT_API_KEY = "AIzaSyB-1234567890abcdef"
+# ====================================================
+SABIT_API_KEY = ""
+
 # ----------------------------------------------------
 # 1. SAYFA KONFİGÜRASYONU & AMBLEM BAĞLANTISI
 # ----------------------------------------------------
@@ -183,7 +189,7 @@ def verileri_yukle(username):
     user_file = kullanici_veri_dosyasi(username)
     default_data = {
         "besin_veritabani": {}, "hazir_tarifler": {}, "gunluk_kayitlar": [], "aktivite_loglari": {},
-        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 58.0, "hedef_kilo": 55.0, "verilmek_istenen_kilo": 3.0, "hedef_gun": 45, "egzersiz_katsayisi": 1.0, "tema": "Sonbahar Kremi", "gemini_api_key": "", "setup_tamamlandi": False}
+        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 58.0, "hedef_kilo": 55.0, "verilmek_istenen_kilo": 3.0, "hedef_gun": 45, "egzersiz_katsayisi": 1.0, "tema": "Sonbahar Kremi", "setup_tamamlandi": False}
     }
     if os.path.exists(user_file):
         try:
@@ -261,13 +267,13 @@ else:
         "Günlük Takip & Ana Sayfa", "Haftalık Program & Değerlendirme", "Tarif & Malzeme Yönetimi", "Hesap ve Hedefler",
     ], index=3 if is_first_login else 0)
 
-    if is_first_login: st.info("✨ **Nova'ya Hoş Geldin!** Yolculuğuna kusursuz başlayabilmek için lütfen **Hesap ve Hedefler** sekmesinden API anahtarını, tema rengini ve hedeflerini tamamla.")
+    if is_first_login: st.info("✨ **Nova'ya Hoş Geldin!** Yolculuğuna kusursuz başlayabilmek için lütfen **Hesap ve Hedefler** sekmesinden hedeflerini tamamla.")
 
     p = st.session_state.profil
     bmr_kisi = hesapla_bmr(p)
 
     # =====================================================================
-    # 5.1 GÜNLÜK TAKİP & ANA SAYFA (YENİLENEN MAKRO ÇUBUKLARI İLE)
+    # 5.1 GÜNLÜK TAKİP & ANA SAYFA
     # =====================================================================
     if menu == "Günlük Takip & Ana Sayfa":
         st.header(f"Günlük Yaşam Paneli — {aktif_user.title()}")
@@ -342,13 +348,19 @@ else:
 
         st.divider()
 
-        # YAPAY ZEKA GÖRSEL TARAMA (ÖNİZLEME ONAYLI & 15 SANİYE RETRY KORUMALI)
+        # DOĞRUDAN ANA SAYFAYA GÖMÜLÜ YAPAY ZEKA TARAMASI
         st.subheader("📸 Yapay Zeka ile Öğün Tarama (Önizlemeli Onay Modülü)")
         st.markdown("Yemeğini fotoğrafla, yapay zeka analiz etsin; değerleri onaylamadan veya düzenlemeden önce kontrol et!")
         
-        api_key_gemini = p.get("gemini_api_key", "")
+        api_key_gemini = SABIT_API_KEY
         if not api_key_gemini:
-            st.warning("Bu özelliği kullanabilmek için 'Hesap ve Hedefler' sekmesinden Gemini API anahtarınızı (API Key) girmelisiniz.")
+            try:
+                api_key_gemini = st.secrets.get("GEMINI_API_KEY", "")
+            except:
+                pass
+
+        if not api_key_gemini:
+            st.warning("⚠️ Yapay zeka tarama özelliğini kullanabilmek için kodun en üstünde yer alan SABIT_API_KEY değişkeninin içerisine API anahtarınızı yapıştırmalısınız.")
         else:
             try:
                 genai.configure(api_key=api_key_gemini)
@@ -472,7 +484,7 @@ else:
 
         st.divider()
 
-        # 🎯 YENİLİK 1: DETAYLI MAKRO (PROTEİN/KARB/YAĞ) İLERLEME ÇUBUKLARI (SnapCalorie Tarzı)
+        # DETAYLI MAKRO (PROTEİN/KARB/YAĞ) İLERLEME ÇUBUKLARI
         st.subheader("📊 Günlük Makro Besin Dağılımı ve Hedefler")
         hedef_protein_g = round(p.get("mevcut_kilo", 58.0) * 1.6) # Kilo başına 1.6g protein hedefi
         hedef_karb_g = 150
@@ -563,7 +575,7 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # 🎯 YENİLİK 2: DİNAMİK HAFTALIK KOÇLUK GERİ BİLDİRİMİ (MacroFactor & PlateLens Tarzı)
+        # DİNAMİK HAFTALIK KOÇLUK GERİ BİLDİRİMİ
         st.subheader("🧠 Nova Akıllı Haftalık Koçluk Tavsiyesi")
         if haftalik_acik >= hedef_haftalik_acik:
             st.success("✨ **Koçluk Analizi:** Harika bir hafta geçirdin! Hedeflenen kalori açığını başarıyla tutturdun. Bedenin yağ yakım sürecinde mükemmel bir adaptasyon gösteriyor. Önümüzdeki hafta bu rutini aynen koruyabilirsin.")
@@ -606,11 +618,6 @@ else:
         secilen_tema = st.selectbox("Uygulama Tema Paleti (5 Seçenek)", ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"], index=["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"].index(p.get("tema", "Sonbahar Kremi")) if p.get("tema", "Sonbahar Kremi") in ["Sonbahar Kremi", "Sıcak Kahve & Toprak", "Gece / Kuğu Mavisi", "Zeytin Yeşili & Doğa", "Karamel Esintisi"] else 0)
 
         st.divider()
-        st.subheader("🤖 Yapay Zeka Entegrasyonu")
-        gemini_key = st.text_input("Gemini API Key (Fotoğraflı Öğün Tarama İçin)", value=p.get("gemini_api_key", ""), type="password")
-        st.caption("Eğer API key'iniz yoksa [Google AI Studio](https://aistudio.google.com/app/apikey) adresinden ücretsiz olarak alabilirsiniz.")
-
-        st.divider()
         c1, c2, c3 = st.columns(3)
         cinsiyet = c1.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=0 if p["cinsiyet"] == "Kadın" else 1)
         yas = c2.number_input("Yaş", min_value=15, max_value=80, value=int(p["yas"]))
@@ -628,14 +635,14 @@ else:
 
         akt_sev = st.selectbox("Aktivite Düzeyi", ["Hareketsiz / Masa Başı", "Hafif Aktif (Haftada 1-3 gün)", "Orta Aktif (Haftada 3-5 gün)", "Çok Aktif"])
 
-        if st.button("Tüm Bilgileri, Temayı ve API'yi Kaydet", use_container_width=True):
+        if st.button("Tüm Bilgileri ve Temayı Kaydet", use_container_width=True):
             st.session_state.profil.update({
                 "cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo,
                 "verilmek_istenen_kilo": verilmek_istenen, "hedef_gun": hedef_gun, "egzersiz_katsayisi": egz_kat, 
-                "tema": secilen_tema, "gemini_api_key": gemini_key, "setup_tamamlandi": True
+                "tema": secilen_tema, "setup_tamamlandi": True
             })
             verileri_kaydet(aktif_user)
-            st.success("✨ Tüm profilin, teman, API ayarların başarıyla kaydedildi! Sayfa yenileniyor...")
+            st.success("✨ Tüm profilin, teman ve ayarların başarıyla kaydedildi! Sayfa yenileniyor...")
             st.rerun()
 
         st.divider()
