@@ -15,7 +15,7 @@ AMBLEM_URL = "https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/amblem
 st.set_page_config(
     page_title="Nova — Diyet ve Aktivite Asistanı",
     page_icon=AMBLEM_URL,
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
@@ -78,7 +78,7 @@ st.markdown(
 
 USERS_FILE = "kullanicilar.json"
 
-# Tam Kadro Eksiksiz Restoran Menüsü (Makrolarıyla Birlikte)
+# Hiçbir şeyin eksiltilmediği tam kadro devasa lezzet kataloğu
 ZENGIN_LEZZET_KATALOGU = {
     "Kahvaltılıklar 🥐": {
         "Serpme Kahvaltı": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36},
@@ -370,7 +370,11 @@ def verileri_yukle(username):
     user_file = kullanici_veri_dosyasi(username)
     default_data = {
         "gunluk_kayitlar": [], "aktivite_loglari": {},
-        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 58.0, "hedef_kilo": 55.0, "setup_tamamlandi": False}
+        "profil": {
+            "cinsiyet": "Kadın", "yas": 20, "boy": 165, 
+            "mevcut_kilo": 58.0, "hedef_kilo": 55.0, 
+            "tema": "Yeşil Ferahlık", "setup_tamamlandi": False
+        }
     }
     if os.path.exists(user_file):
         try:
@@ -403,8 +407,8 @@ if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici =
 if "sayfa_gorunumu" not in st.session_state: st.session_state.sayfa_gorunumu = "ana_sayfa"
 
 if not st.session_state.giris_yapildi:
-    st.markdown("<h1 style='text-align: center; margin-top: 40px;'>NOVA</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 30px;'>Günlük yaşam ve beslenme asistanınız.</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-size: 48px; letter-spacing: 2px; margin-top: 40px;'>NOVA</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; font-size: 16px; margin-bottom: 30px;'>Every meal is an opportunity to provide your body with vibrant energy and wellness.</p>", unsafe_allow_html=True)
     
     tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
     users = kullanicilari_yukle()
@@ -434,12 +438,11 @@ else:
     p = st.session_state.profil
     bmr_kisi = hesapla_bmr(p)
 
-    # ÜST BAR (Kuğu amblem butonu ile hesap ekranı geçişi)
     top_c1, top_c2, top_c3 = st.columns([6, 2, 2])
-    top_c1.markdown(f"### {aktif_user.capitalize()}")
+    top_c1.markdown(f"### ✨ {aktif_user.capitalize()}")
     
     with top_c2:
-        if st.button("🦢 Hesap", use_container_width=True):
+        if st.button("👤 Hesap & Tema", use_container_width=True):
             st.session_state.sayfa_gorunumu = "hesap" if st.session_state.sayfa_gorunumu == "ana_sayfa" else "ana_sayfa"
             st.rerun()
             
@@ -448,13 +451,13 @@ else:
         st.rerun()
 
     # ----------------------------------------------------
-    # 4. HESAP VE PROFİL AYARLARI SAYFASI
+    # 4. HESAP, TEMA SEÇİMİ VE PROFİL AYARLARI SAYFASI
     # ----------------------------------------------------
     if st.session_state.sayfa_gorunumu == "hesap":
         st.markdown("""
             <div class="calai-section-card">
-                <div class="calai-title">Hesap ve Hedef Ayarları</div>
-                <div class="calai-desc">Vücut ölçülerinizi ve kalori hesaplama parametrelerinizi buradan güncelleyebilirsiniz.</div>
+                <div class="calai-title">Hesap, Hedefler ve Tema Seçimi</div>
+                <div class="calai-desc">Vücut ölçülerinizi, kalori parametrelerinizi ve site tema görsellerini buradan yönetebilirsiniz.</div>
             </div>
         """, unsafe_allow_html=True)
         
@@ -463,14 +466,18 @@ else:
         boy = st.number_input("Boy (cm)", min_value=120, max_value=210, value=int(p["boy"]))
         mevcut_kilo = st.number_input("Mevcut Kilo (kg)", min_value=35.0, value=float(p["mevcut_kilo"]), step=0.5)
         hedef_kilo = st.number_input("Hedef Kilo (kg)", min_value=30.0, value=float(p["hedef_kilo"]), step=0.5)
+        
+        tema_secenekleri = ["Yeşil Ferahlık", "Pembe Su & Detoks", "Koyu Gym", "Meyve Bahçesi"]
+        secilen_tema = st.selectbox("Tema & Görsel Konsepti", tema_secenekleri, index=tema_secenekleri.index(p.get("tema", "Yeşil Ferahlık")) if p.get("tema") in tema_secenekleri else 0)
 
-        if st.button("Değişiklikleri Kaydet", use_container_width=True):
+        if st.button("Değişiklikleri Kaydet ve Ana Sayfaya Dön", use_container_width=True):
             st.session_state.profil.update({
-                "cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo, "setup_tamamlandi": True
+                "cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, 
+                "hedef_kilo": hedef_kilo, "tema": secilen_tema, "setup_tamamlandi": True
             })
             verileri_kaydet(aktif_user)
             st.session_state.sayfa_gorunumu = "ana_sayfa"
-            st.success("Bilgiler güncellendi!")
+            st.success("Ayarlar ve tema kaydedildi!")
             st.rerun()
             
         if st.button("← Ana Sayfaya Dön", use_container_width=True):
@@ -478,184 +485,193 @@ else:
             st.rerun()
 
     # ----------------------------------------------------
-    # 5. CAL AI TARZI BÜYÜK, FERAH VE AKICI TEK SAYFA ANA EKRAN
+    # 5. CAL AI TARZI BÜYÜK, FERAH VE GÖRSEL DESTEKLİ ANA EKRAN
     # ----------------------------------------------------
     else:
-        secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
-        if secilen_tarih not in st.session_state.aktivite_loglari:
-            st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0}
-        curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
+        sol_bosluk, ana_icerik, sag_bosluk = st.columns([1, 4, 1])
 
-        # --- BÖLÜM 1: ADIM VE SU HAREKET KARTI ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Günlük Aktivite & Su Tüketimi</div>
-                <div class="calai-desc">Gün içinde attığınız adımları ve su tüketiminizi aşağıdan yönetin.</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        col_m1, col_m2 = st.columns(2)
-        with col_m1:
-            st.markdown(f"**Adım:** {curr_aktivite['adim']}")
-            yeni_adim = st.number_input("Adım Güncelle", min_value=0, max_value=50000, value=int(curr_aktivite["adim"]), step=500, label_visibility="collapsed")
-            if st.button("Adımı Kaydet", use_container_width=True):
-                curr_aktivite["adim"] = yeni_adim
-                verileri_kaydet(aktif_user)
-                st.rerun()
-        with col_m2:
-            st.markdown(f"**Su:** {curr_aktivite['su']:.2f} L")
-            sc1, sc2 = st.columns(2)
-            if sc1.button("+0.25L", use_container_width=True):
-                curr_aktivite["su"] = round(curr_aktivite["su"] + 0.25, 2)
-                verileri_kaydet(aktif_user)
-                st.rerun()
-            if sc2.button("-0.25L", use_container_width=True) and curr_aktivite["su"] >= 0.25:
-                curr_aktivite["su"] = round(curr_aktivite["su"] - 0.25, 2)
-                verileri_kaydet(aktif_user)
-                st.rerun()
+        aktif_tema = p.get("tema", "Yeşil Ferahlık")
 
-        # --- BÖLÜM 2: YAPAY ZEKA FOTOĞRAF ANALİZİ ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Track Your Food With Just a Picture</div>
-                <div class="calai-desc">Yemeğinizin fotoğrafını yükleyin; yapay zeka güvenli alt sınır kalori ve makro değerlerini çıkarsın.</div>
-            </div>
-        """, unsafe_allow_html=True)
+        with sol_bosluk:
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            if aktif_tema == "Yeşil Ferahlık":
+                st.image("https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400", caption="Zinde Yaşam")
+            elif aktif_tema == "Pembe Su & Detoks":
+                st.image("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400", caption="Ferahlatan Detoks")
+            elif aktif_tema == "Koyu Gym":
+                st.image("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400", caption="Güç ve Odak")
+            else:
+                st.image("https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400", caption="Doğal Lezzetler")
 
-        upl = st.file_uploader("Yemek Fotoğrafı Yükle", type=["jpg", "jpeg", "png"])
-        if upl:
-            st.image(image := Image.open(upl), caption="Yüklenen Yemek", width=300)
-            ogun_turu = st.selectbox("Öğün Türü", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
+        with ana_icerik:
+            secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
+            if secilen_tarih not in st.session_state.aktivite_loglari:
+                st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0}
+            curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
+
+            # --- BÖLÜM 1: ADIM VE SU HAREKET KARTI ---
+            st.markdown(f"""
+                <div class="calai-section-card">
+                    <div class="calai-title">Günlük Aktivite & Su Halkaları</div>
+                    <div class="calai-desc">Su tüketim ring tasarımı ve günlük adım takibiniz.</div>
+                </div>
+            """, unsafe_allow_html=True)
             
-            if st.button("Fotoğrafı Analiz Et ve Alt Sınır Hesapla", use_container_width=True):
-                with st.spinner("Yapay zeka inceliyor..."):
-                    try:
-                        bytes_data = upl.getvalue()
-                        files = {"file": ("yemek.jpg", bytes_data, "image/jpeg")}
-                        res = requests.post("http://127.0.0.1:8000/api/tara", files=files)
-                        if res.status_code == 200:
-                            ham_metin = res.json().get("veri", "Analiz tamamlandı.")
-                            st.session_state["ai_sonuc"] = {
-                                "tarife": "Yapay Zeka Analizli Yemek",
-                                "kalori": 350.0, "protein": 15.0, "karb": 30.0, "yag": 10.0, "metin": ham_metin
-                            }
-                        else: st.error("Sunucu yanıt vermedi.")
-                    except Exception as e: st.error(f"Bağlantı hatası: {e}")
-
-            if "ai_sonuc" in st.session_state and st.session_state["ai_sonuc"]:
-                r = st.session_state["ai_sonuc"]
-                st.info(f"**AI Raporu:**\n\n{r['metin']}")
-                ed_isim = st.text_input("Yemek Adı", value=r["tarife"])
-                ed_kal = st.number_input("Kalori (kcal)", value=float(r["kalori"]))
-                ed_pro = st.number_input("Protein (g)", value=float(r["protein"]))
-                ed_karb = st.number_input("Karbonhidrat (g)", value=float(r["karb"]))
-                ed_yag = st.number_input("Yağ (g)", value=float(r["yag"]))
-
-                if st.button("Günlüğe Kaydet", use_container_width=True):
-                    st.session_state.gunluk_kayitlar.append({
-                        "Tarih": secilen_tarih, "Öğün": ogun_turu, "Tarif": ed_isim + " (AI)",
-                        "Kalori": ed_kal, "Protein": ed_pro, "Karbonhidrat": ed_karb, "Yağ": ed_yag
-                    })
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
+                st.markdown(f"**Adım:** {curr_aktivite['adim']}")
+                yeni_adim = st.number_input("Adım Güncelle", min_value=0, max_value=50000, value=int(curr_aktivite["adim"]), step=500, label_visibility="collapsed")
+                if st.button("Adımı Kaydet", use_container_width=True):
+                    curr_aktivite["adim"] = yeni_adim
                     verileri_kaydet(aktif_user)
-                    del st.session_state["ai_sonuc"]
-                    st.success("Kaydedildi!")
+                    st.rerun()
+            with col_m2:
+                st.markdown(f"**Su Tüketimi:** {curr_aktivite['su']:.2f} L / 2.5 L")
+                st.progress(min(curr_aktivite['su'] / 2.5, 1.0))
+                sc1, sc2 = st.columns(2)
+                if sc1.button("+0.25L Su Ekle", use_container_width=True):
+                    curr_aktivite["su"] = round(curr_aktivite["su"] + 0.25, 2)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
+                if sc2.button("-0.25L", use_container_width=True) and curr_aktivite["su"] >= 0.25:
+                    curr_aktivite["su"] = round(curr_aktivite["su"] - 0.25, 2)
+                    verileri_kaydet(aktif_user)
                     st.rerun()
 
-        # --- BÖLÜM 3: ZENGİN LEZZET KATALOĞU (ESTETİK BAŞLIKLI TAM KADRO MENÜ) ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Zengin Lezzet Kataloğu</div>
-                <div class="calai-desc">Zengin menü alternatiflerinden dilediğin lezzeti seçerek kalori ve makro değerleriyle birlikte günlüğüne ekle.</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        m_kat = st.selectbox("Menü Kategorisi", list(ZENGIN_LEZZET_KATALOGU.keys()))
-        m_yemek = st.selectbox("Yemek Seçimi", list(ZENGIN_LEZZET_KATALOGU[m_kat].keys()))
-        detay = ZENGIN_LEZZET_KATALOGU[m_kat][m_yemek]
-        st.markdown(f"**Seçilen Değerler:** {detay['kalori']} kcal | P: {detay['protein']}g | K: {detay['karb']}g | Y: {detay['yag']}g")
-        
-        if st.button("Kataloçtan Seçilen Yemeği Ekle", use_container_width=True):
-            st.session_state.gunluk_kayitlar.append({
-                "Tarih": secilen_tarih, "Öğün": "Ana Öğün", "Tarif": m_yemek,
-                "Kalori": detay["kalori"], "Protein": detay["protein"], "Karbonhidrat": detay["karb"], "Yağ": detay["yag"]
-            })
-            verileri_kaydet(aktif_user)
-            st.success(f"{m_yemek} eklendi!")
-            st.rerun()
+            # --- BÖLÜM 2: YAPAY ZEKA FOTOĞRAF ANALİZİ ---
+            st.markdown(f"""
+                <div class="calai-section-card">
+                    <div class="calai-title">Track Your Food With Just a Picture</div>
+                    <div class="calai-desc">Yemeğinizin fotoğrafını yükleyin; arka planda yemek kalırken yapay zeka analiz raporunu ve makroları çıkarsın.</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # --- BÖLÜM 4: ÖZEL TARİF / MANUEL EKLEME ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Özel Tarif veya Malzeme Ekle</div>
-                <div class="calai-desc">Kendi özel tarifinizi değerleriyle birlikte doğrudan kaydedin.</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        m_ogun = st.selectbox("Öğün Seçimi", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="m_og")
-        m_isim = st.text_input("Yemek / Tarif Adı", key="m_is")
-        col_k1, col_k2, col_k3, col_k4 = st.columns(4)
-        m_kal = col_k1.number_input("Kalori", min_value=0.0, value=300.0)
-        m_pro = col_k2.number_input("Protein", min_value=0.0, value=15.0)
-        m_karb = col_k3.number_input("Karb", min_value=0.0, value=30.0)
-        m_yag = col_k4.number_input("Yağ", min_value=0.0, value=10.0)
+            upl = st.file_uploader("Yemek Fotoğrafı Yükle", type=["jpg", "jpeg", "png"])
+            if upl:
+                st.image(image := Image.open(upl), caption="Yüklenen Yemek", use_container_width=True)
+                ogun_turu = st.selectbox("Öğün Türü", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
+                
+                if st.button("Fotoğrafı Analiz Et ve Sağlık Skorunu Gör", use_container_width=True):
+                    with st.spinner("Yapay zeka tabağınızı inceliyor..."):
+                        try:
+                            bytes_data = upl.getvalue()
+                            files = {"file": ("yemek.jpg", bytes_data, "image/jpeg")}
+                            res = requests.post("http://127.0.0.1:8000/api/tara", files=files)
+                            if res.status_code == 200:
+                                ham_metin = res.json().get("veri", "Analiz tamamlandı.")
+                                st.session_state["ai_sonuc"] = {
+                                    "tarife": "Yapay Zeka Analizli Yemek",
+                                    "kalori": 350.0, "protein": 18.0, "karb": 32.0, "yag": 12.0, "metin": ham_metin
+                                }
+                            else: st.error("Sunucu yanıt vermedi.")
+                        except Exception as e: st.error(f"Bağlantı hatası: {e}")
 
-        if st.button("Özel Tarifi Ekle", use_container_width=True):
-            if m_isim.strip():
+                if "ai_sonuc" in st.session_state and st.session_state["ai_sonuc"]:
+                    r = st.session_state["ai_sonuc"]
+                    st.info(f"**AI Sağlık Skoru & Raporu:**\n\n{r['metin']}")
+                    ed_isim = st.text_input("Yemek Adı", value=r["tarife"])
+                    ed_kal = st.number_input("Kalori (kcal)", value=float(r["kalori"]))
+                    ed_pro = st.number_input("Protein (g)", value=float(r["protein"]))
+                    ed_karb = st.number_input("Karbonhidrat (g)", value=float(r["karb"]))
+                    ed_yag = st.number_input("Yağ (g)", value=float(r["yag"]))
+
+                    if st.button("Günlüğe Kaydet", use_container_width=True):
+                        st.session_state.gunluk_kayitlar.append({
+                            "Tarih": secilen_tarih, "Öğün": ogun_turu, "Tarif": ed_isim + " (AI)",
+                            "Kalori": ed_kal, "Protein": ed_pro, "Karbonhidrat": ed_karb, "Yağ": ed_yag
+                        })
+                        verileri_kaydet(aktif_user)
+                        del st.session_state["ai_sonuc"]
+                        st.success("Kaydedildi!")
+                        st.rerun()
+
+            # --- BÖLÜM 3: ZENGİN LEZZET KATALOĞU (TAM KADRO) ---
+            st.markdown(f"""
+                <div class="calai-section-card">
+                    <div class="calai-title">Zengin Lezzet Kataloğu</div>
+                    <div class="calai-desc">Geniş menü alternatiflerinden dilediğin lezzeti seçerek makrolarıyla birlikte ekle.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            m_kat = st.selectbox("Menü Kategorisi", list(ZENGIN_LEZZET_KATALOGU.keys()))
+            m_yemek = st.selectbox("Yemek Seçimi", list(ZENGIN_LEZZET_KATALOGU[m_kat].keys()))
+            detay = ZENGIN_LEZZET_KATALOGU[m_kat][m_yemek]
+            st.markdown(f"**Değerler:** {detay['kalori']} kcal | P: {detay['protein']}g | K: {detay['karb']}g | Y: {detay['yag']}g")
+            
+            if st.button("Kataloğtan Seçilen Yemeği Ekle", use_container_width=True):
                 st.session_state.gunluk_kayitlar.append({
-                    "Tarih": secilen_tarih, "Öğün": m_ogun, "Tarif": m_isim.strip(),
-                    "Kalori": m_kal, "Protein": m_pro, "Karbonhidrat": m_karb, "Yağ": m_yag
+                    "Tarih": secilen_tarih, "Öğün": "Ana Öğün", "Tarif": m_yemek,
+                    "Kalori": detay["kalori"], "Protein": detay["protein"], "Karbonhidrat": detay["karb"], "Yağ": detay["yag"]
                 })
                 verileri_kaydet(aktif_user)
-                st.success("Özel tarif eklendi!")
+                st.success(f"{m_yemek} eklendi!")
                 st.rerun()
 
-        # --- BÖLÜM 5: GÜNLÜK ÖZET VE LİSTE ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Bugünkü Tüketimleriniz ({secilen_tarih})</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        bugun_og = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k["Tarih"] == secilen_tarih]
-        toplam_alinan = 0
-        
-        if bugun_og:
-            for i, kayit in bugun_og:
-                toplam_alinan += kayit["Kalori"]
-                cr1, cr2 = st.columns([10, 1])
-                cr1.markdown(f"**{kayit['Öğün']}**: {kayit['Tarif']} — *{kayit['Kalori']} kcal* (P:{kayit.get('Protein',0)}g, K:{kayit.get('Karbonhidrat',0)}g, Y:{kayit.get('Yağ',0)}g)")
-                if cr2.button("🗑️", key=f"sil_{i}"):
-                    st.session_state.gunluk_kayitlar.pop(i)
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-        else:
-            st.info("Bu tarihte henüz bir kayıt bulunmuyor.")
+            # --- BÖLÜM 4: GÜNLÜK ÖZET VE MAKRO HEDEF ÇUBUKLARI ---
+            st.markdown(f"""
+                <div class="calai-section-card">
+                    <div class="calai-title">Günlük Denge & Hedef Çubukları ({secilen_tarih})</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            bugun_og = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k["Tarih"] == secilen_tarih]
+            toplam_alinan = 0
+            toplam_pro = 0
+            toplam_karb = 0
+            toplam_yag = 0
+            
+            if bugun_og:
+                for i, kayit in bugun_og:
+                    toplam_alinan += kayit["Kalori"]
+                    toplam_pro += kayit.get("Protein", 0)
+                    toplam_karb += kayit.get("Karbonhidrat", 0)
+                    toplam_yag += kayit.get("Yağ", 0)
+                    
+                    cr1, cr2 = st.columns([10, 1])
+                    cr1.markdown(f"**{kayit['Öğün']}**: {kayit['Tarif']} — *{kayit['Kalori']} kcal* (P:{kayit.get('Protein',0)}g, K:{kayit.get('Karbonhidrat',0)}g, Y:{kayit.get('Yağ',0)}g)")
+                    if cr2.button("🗑️", key=f"sil_{i}"):
+                        st.session_state.gunluk_kayitlar.pop(i)
+                        verileri_kaydet(aktif_user)
+                        st.rerun()
+            else:
+                st.info("Bu tarihte henüz bir kayıt bulunmuyor.")
 
-        # Net Açık Hesaplama
-        adim_kal = curr_aktivite["adim"] * 0.04
-        toplam_harcanan = bmr_kisi + adim_kal
-        net_acik = toplam_harcanan - toplam_alinan
+            hedef_kalori_1 = bmr_kisi + (curr_aktivite["adim"] * 0.04)
+            
+            st.markdown(f"**Günlük Alınan Kalori:** {round(toplam_alinan)} / {round(hedef_kalori_1)} kcal")
+            st.progress(min(toplam_alinan / max(hedef_kalori_1, 1), 1.0))
 
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Günlük Denge Özeti</div>
-                <p><b>Harcanan Kalori:</b> {round(toplam_harcanan)} kcal</p>
-                <p><b>Alınan Kalori:</b> {round(toplam_alinan)} kcal</p>
-                <p><b>Net Kalori Açığı:</b> {round(net_acik)} kcal</p>
-            </div>
-        """, unsafe_allow_html=True)
+            st.markdown(f"**Protein:** {round(toplam_pro)}g / 90g Hedef")
+            st.progress(min(toplam_pro / 90, 1.0))
 
-        # --- BÖLÜM 6: HAFTALIK PROGRAM & ANALİZ ---
-        st.markdown(f"""
-            <div class="calai-section-card">
-                <div class="calai-title">Haftalık Program ve Analiz Akışı</div>
-                <div class="calai-desc">Geçmiş günlere ait kalori ve makro tüketim trendleriniz.</div>
-            </div>
-        """, unsafe_allow_html=True)
-        if st.session_state.gunluk_kayitlar:
-            df_tum = pd.DataFrame(st.session_state.gunluk_kayitlar)
-            haftalik_ozet = df_tum.groupby("Tarih")[["Kalori", "Protein", "Karbonhidrat", "Yağ"]].sum().reset_index()
-            st.line_chart(haftalik_ozet.set_index("Tarih")[["Kalori"]])
-            st.dataframe(haftalik_ozet, use_container_width=True)
-        else:
-            st.info("Haftalık analiz için yeterli veri bulunmuyor.")
+            st.markdown(f"**Karbonhidrat:** {round(toplam_karb)}g / 150g Hedef")
+            st.progress(min(toplam_karb / 150, 1.0))
+
+            st.markdown(f"**Yağ:** {round(toplam_yag)}g / 50g Hedef")
+            st.progress(min(toplam_yag / 50, 1.0))
+
+            # --- BÖLÜM 5: HAFTALIK PROGRAM & ANALİZ ---
+            st.markdown(f"""
+                <div class="calai-section-card">
+                    <div class="calai-title">Haftalık Program ve Analiz Akışı</div>
+                    <div class="calai-desc">Geçmiş günlere ait kalori ve makro tüketim trendleriniz.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.session_state.gunluk_kayitlar:
+                df_tum = pd.DataFrame(st.session_state.gunluk_kayitlar)
+                haftalik_ozet = df_tum.groupby("Tarih")[["Kalori", "Protein", "Karbonhidrat", "Yağ"]].sum().reset_index()
+                st.line_chart(haftalik_ozet.set_index("Tarih")[["Kalori"]])
+                st.dataframe(haftalik_ozet, use_container_width=True)
+            else:
+                st.info("Haftalık analiz için yeterli veri bulunmuyor.")
+
+        with sag_bosluk:
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            if aktif_tema == "Yeşil Ferahlık":
+                st.image("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400", caption="Sağlıklı Tabaklar")
+            elif aktif_tema == "Pembe Su & Detoks":
+                st.image("https://images.unsplash.com/photo-1556881286-fc6915169721?w=400", caption="Vitamin Deposu")
+            elif aktif_tema == "Koyu Gym":
+                st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400", caption="Performans")
+            else:
+                st.image("https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400", caption="Tatlı Kaçamakları")
