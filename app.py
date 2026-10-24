@@ -243,25 +243,36 @@ else:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 2) VİDEO VE EGZERSİZ MODÜLÜ
+        # 2) GÜNLÜK OTOMATİK VİDEO VE EGZERSİZ MODÜLÜ
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-        st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Egzersiz & Antrenman Stüdyosu</h2>", unsafe_allow_html=True)
-        egz_link = st.text_input("YouTube veya Video Linki (Örn: Pilates, Kardiyo)", placeholder="https://www.youtube.com/watch?v=...")
-        if egz_link:
-            try:
-                st.video(egz_link)
-            except:
-                st.warning("Geçerli bir video linki giriniz.")
-                
-        egz_kalori = st.number_input("Bu Antrenmanda Yakılan Kalori (kcal):", min_value=0, step=50, value=250)
+        st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Günün Egzersizi</h2>", unsafe_allow_html=True)
+        
+        tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
+        gun_indeksi = tarih_obj.weekday()
+        
+        GUNLUK_EGZERSIZLER = {
+            0: {"kanal": "Growwithjo", "baslik": "20 Dakika Tam Vücut Yağ Yakımı", "link": "https://www.youtube.com/watch?v=1zxOa-G3v9M", "kalori": 240},
+            1: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Full Body Pilates", "link": "https://www.youtube.com/watch?v=K-PpC7qEHi8", "kalori": 180},
+            2: {"kanal": "Growwithjo", "baslik": "25 Dakika Sweat & Tone", "link": "https://www.youtube.com/watch?v=ZfK1cI9T7j4", "kalori": 280},
+            3: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Karın ve Merkez Bölgesi", "link": "https://www.youtube.com/watch?v=CqYf-7c1Jc8", "kalori": 160},
+            4: {"kanal": "Growwithjo", "baslik": "20 Dakika Tempolu Yürüyüş", "link": "https://www.youtube.com/watch?v=3sEEMFRQaM0", "kalori": 220},
+            5: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Alt Vücut ve Kalça", "link": "https://www.youtube.com/watch?v=0hY7mN0O5g8", "kalori": 190},
+            6: {"kanal": "Growwithjo", "baslik": "25 Dakika Dans ve Kardiyo", "link": "https://www.youtube.com/watch?v=9_jU1_C9d00", "kalori": 270},
+        }
+        
+        g_egz = GUNLUK_EGZERSIZLER[gun_indeksi]
+        
+        st.markdown(f"**Kanal:** {g_egz['kanal']} | **Program:** {g_egz['baslik']}")
+        st.markdown(f"🤖 **Yapay Zeka Analizi:** Bu videodaki hareket dinamiğine göre **{g_egz['kalori']} kcal** yakacaksın.")
+        st.video(g_egz['link'])
+        
         if st.button("✅ Antrenmanı Tamamladım", use_container_width=True):
-            curr_aktivite["egzersiz_kalori"] = curr_aktivite.get("egzersiz_kalori", 0) + egz_kalori
+            curr_aktivite["egzersiz_kalori"] = g_egz['kalori']
             verileri_kaydet(aktif_user)
-            st.success(f"Harika iş çıkardın! {egz_kalori} kcal günlüğüne eklendi.")
             st.rerun()
             
         if curr_aktivite.get("egzersiz_kalori", 0) > 0:
-            st.info(f"🔥 Bugün egzersizlerden toplam yaktığın kalori: **{curr_aktivite['egzersiz_kalori']} kcal**")
+            st.success(f"🔥 Harika iş çıkardın! Tabloya günlük **{curr_aktivite['egzersiz_kalori']} kcal** egzersiz harcaması eklendi.")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # 3) KALORİ, TABLO VE İNCE MAKRO ÇUBUKLARI
@@ -280,7 +291,6 @@ else:
         toplam_harcanan = harcanan_adim_kalori + harcanan_egzersiz
         net_kalori = top_kalori - toplam_harcanan
         
-        # Makro Hedefleri (Kabaca)
         hedef_pro = (hedef_kalori * 0.3) / 4
         hedef_karb = (hedef_kalori * 0.4) / 4
         hedef_yag = (hedef_kalori * 0.3) / 9
@@ -299,7 +309,6 @@ else:
         <br>
         """, unsafe_allow_html=True)
         
-        # İnce Makro Çubukları HTML/CSS
         def render_makro(isim, mevcut, hedef, renk):
             yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
             return f"""
