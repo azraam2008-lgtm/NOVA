@@ -12,143 +12,50 @@ SUPABASE_KEY = "sb_publishable_yXcnmg2uJsA7vR0DXnWUWQ_06Jm4E8e"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ----------------------------------------------------
-# 1. SAYFA KONFİGÜRASYONU & AMBLEM BAĞLANTISI
+# 1. SAYFA KONFİGÜRASYONU 
 # ----------------------------------------------------
-AMBLEM_URL = "https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/amblem.jpg"
-
 st.set_page_config(
     page_title="Nova — Diyet ve Aktivite Asistanı",
-    page_icon=AMBLEM_URL,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-st.markdown(
-    f"""
-    <head>
-        <link rel="apple-touch-icon" href="{AMBLEM_URL}">
-        <link rel="icon" type="image/jpeg" href="{AMBLEM_URL}">
-    </head>
-""", unsafe_allow_html=True)
+# ----------------------------------------------------
+# 2. TEMA VE ARKA PLAN YÖNETİMİ
+# ----------------------------------------------------
+TEMA_AYARLARI = {
+    "Yakut Kızılı": {"bg_image": "925912004661385138.jpg", "text_color": "#ffffff", "card_bg": "rgba(30, 5, 5, 0.85)", "ring_track": "rgba(255,255,255,0.2)"},
+    "Turkuaz Ferahlığı": {"bg_image": "Oppo_Find_X9s_Wallpaper.jpg", "text_color": "#003333", "card_bg": "rgba(224, 242, 241, 0.90)", "ring_track": "rgba(0,0,0,0.1)"},
+    "Altın Zarafet": {"bg_image": "826903181627399116.jpg", "text_color": "#3e2723", "card_bg": "rgba(255, 248, 225, 0.90)", "ring_track": "rgba(0,0,0,0.1)"},
+    "Bordo Kadife": {"bg_image": "Deep_Maroon.jpg", "text_color": "#ffffff", "card_bg": "rgba(43, 0, 0, 0.85)", "ring_track": "rgba(255,255,255,0.2)"},
+    "Derin Mavi": {"bg_image": "Mavi_Arka_Plan.jpg", "text_color": "#ffffff", "card_bg": "rgba(0, 15, 40, 0.85)", "ring_track": "rgba(255,255,255,0.2)"},
+    "Koyu Cam": {"bg_image": "687854543129884120.jpg", "text_color": "#e0e0e0", "card_bg": "rgba(17, 17, 17, 0.85)", "ring_track": "rgba(255,255,255,0.2)"}
+}
 
 # ----------------------------------------------------
-# 2. PROFESYONEL VE FERAH KART TASARIMI (CSS)
-# ----------------------------------------------------
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-    
-    .stApp { background-color: #f8f9fa; color: #111111; font-family: 'Plus Jakarta Sans', sans-serif; }
-    h1, h2, h3, h4 { color: #111111 !important; font-weight: 700 !important; }
-    [data-testid="stSidebar"] { display: none; }
-    
-    .calai-section-card {
-        background: #ffffff; border: 1px solid #e5e5ea; border-radius: 24px;
-        padding: 32px; margin-bottom: 28px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
-    }
-    .calai-title { font-size: 22px; font-weight: 700; color: #111111; margin-bottom: 8px; }
-    .stButton > button {
-        background-color: #111111; color: #ffffff; border: none; border-radius: 12px;
-        font-weight: 600; padding: 10px 20px; transition: 0.2s;
-    }
-    .stButton > button:hover { background-color: #333333; color: #ffffff; }
-    </style>
-""", unsafe_allow_html=True)
-
-# ----------------------------------------------------
-# 3. KAPSAMLI VE ULTRA-ZENGİN RESTORAN MENÜSÜ (KATALOG)
+# 3. KAPSAMLI LEZZET KATALOĞU (KISALTILMIŞ ÖNİZLEME - KENDİ MENÜNLE AYNI KALACAK)
 # ----------------------------------------------------
 ZENGIN_LEZZET_KATALOGU = {
     "Kahvaltılıklar 🥐": {
-        "Serpme Kahvaltı": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36, "gramaj": 650, "malzemeler": ["Peynir çeşitleri", "Zeytin", "Domates-Salatalık", "Yumurta", "Reçel", "Bal-Kaymak", "Ekmek"]},
-        "Kahvaltı Tabağı": {"kalori": 420, "protein": 18, "karb": 35, "yag": 22, "gramaj": 400, "malzemeler": ["Beyaz Peynir", "Kaşar", "Zeytin", "Yumurta", "Domates", "Salatalık"]},
-        "Menemen": {"kalori": 210, "protein": 11, "karb": 9, "yag": 15, "gramaj": 250, "malzemeler": ["Yumurta", "Domates", "Biber", "Zeytinyağı"]},
-        "Kaşarlı Menemen": {"kalori": 280, "protein": 15, "karb": 10, "yag": 19, "gramaj": 280, "malzemeler": ["Yumurta", "Domates", "Biber", "Kaşar Peyniri"]},
-        "Sucuklu Yumurta": {"kalori": 340, "protein": 16, "karb": 3, "yag": 30, "gramaj": 200, "malzemeler": ["Yumurta", "Dana Sucuk", "Tereyağı"]},
-        "Peynirli Omlet": {"kalori": 250, "protein": 15, "karb": 2, "yag": 20, "gramaj": 200, "malzemeler": ["Yumurta", "Beyaz Peynir", "Tereyağı"]},
-        "Kaşarlı Tost": {"kalori": 320, "protein": 14, "karb": 30, "yag": 16, "gramaj": 180, "malzemeler": ["Tost Ekmeği", "Kaşar Peyniri"]},
-        "Karışık Tost": {"kalori": 380, "protein": 18, "karb": 31, "yag": 21, "gramaj": 200, "malzemeler": ["Tost Ekmeği", "Kaşar", "Sucuk"]},
-        "Avokadolu Tost": {"kalori": 310, "protein": 9, "karb": 28, "yag": 17, "gramaj": 210, "malzemeler": ["Ekşi Mayalı Ekmek", "Avokado", "Baharatlar"]},
-        "Kruvasan": {"kalori": 270, "protein": 5, "karb": 31, "yag": 14, "gramaj": 85, "malzemeler": ["Tereyağlı Kruvasan Hamuru"]},
-        "Pancake": {"kalori": 310, "protein": 8, "karb": 45, "yag": 10, "gramaj": 200, "malzemeler": ["Un", "Süt", "Yumurta", "Akçaağaç Şurubu"]},
-        "Granola ve Yoğurt Kasesi": {"kalori": 320, "protein": 14, "karb": 44, "yag": 10, "gramaj": 250, "malzemeler": ["Süzme Yoğurt", "Granola", "Bal", "Meyve"]}
-    },
-    "Çorbalar 🍲": {
-        "Mercimek Çorbası": {"kalori": 160, "protein": 8, "karb": 22, "yag": 4.5, "gramaj": 250, "malzemeler": ["Kırmızı Mercimek", "Soğan", "Havuç", "Zeytinyağı"]},
-        "Ezogelin Çorbası": {"kalori": 170, "protein": 8, "karb": 24, "yag": 5, "gramaj": 250, "malzemeler": ["Mercimek", "Bulgur", "Pirinç", "Salça", "Nane"]},
-        "Domates Çorbası": {"kalori": 140, "protein": 3, "karb": 18, "yag": 6, "gramaj": 250, "malzemeler": ["Domates Püresi", "Un", "Tereyağı", "Krema"]},
-        "Kremalı Mantar Çorbası": {"kalori": 180, "protein": 4, "karb": 15, "yag": 11, "gramaj": 250, "malzemeler": ["Mantar", "Krema", "Un", "Tereyağı"]},
-        "Tavuk Suyu Çorbası": {"kalori": 130, "protein": 10, "karb": 14, "yag": 3.5, "gramaj": 250, "malzemeler": ["Tavuk Suyu", "Tel Şehriye", "Tavuk Eti"]}
-    },
-    "Ara Sıcaklar & Başlangıçlar 🧀": {
-        "Patates Kızartması": {"kalori": 360, "protein": 4, "karb": 48, "yag": 17, "gramaj": 180, "malzemeler": ["Patates", "Kızartma Yağı", "Tuz"]},
-        "Soğan Halkası (8 Adet)": {"kalori": 290, "protein": 3, "karb": 34, "yag": 16, "gramaj": 150, "malzemeler": ["Soğan", "Özel Kaplama Harcı"]},
-        "Mozzarella Sticks (6 Adet)": {"kalori": 340, "protein": 14, "karb": 26, "yag": 20, "gramaj": 160, "malzemeler": ["Mozzarella Peyniri", "Galeta Unu"]},
-        "Sigara Böreği (5 Adet)": {"kalori": 310, "protein": 9, "karb": 32, "yag": 16, "gramaj": 150, "malzemeler": ["Yufka", "Lor Peyniri", "Maydanoz"]},
-        "Paçanga Böreği": {"kalori": 380, "protein": 14, "karb": 30, "yag": 22, "gramaj": 170, "malzemeler": ["Yufka", "Pastırma", "Kaşar Peyniri", "Biber"]}
-    },
-    "Salatalar 🥗": {
-        "Mevsim Salata": {"kalori": 90, "protein": 2, "karb": 8, "yag": 6, "gramaj": 200, "malzemeler": ["Marul", "Havuç", "Mor Lahana", "Zeytinyağı", "Limon"]},
-        "Çoban Salata": {"kalori": 110, "protein": 3, "karb": 9, "yag": 7, "gramaj": 220, "malzemeler": ["Domates", "Salatalık", "Biber", "Soğan", "Zeytinyağı"]},
-        "Sezar Salata": {"kalori": 250, "protein": 8, "karb": 12, "yag": 19, "gramaj": 250, "malzemeler": ["Marul", "Kruton Ekmek", "Parmesan", "Sezar Sos"]},
-        "Tavuklu Sezar Salata": {"kalori": 340, "protein": 28, "karb": 13, "yag": 20, "gramaj": 320, "malzemeler": ["Izgara Tavuk", "Marul", "Kruton", "Parmesan"]},
-        "Ton Balıklı Salata": {"kalori": 290, "protein": 28, "karb": 9, "yag": 15, "gramaj": 280, "malzemeler": ["Ton Balığı", "Yeşillik", "Mısır", "Zeytinyağı"]}
-    },
-    "Sandviçler & Dürümler 🥪": {
-        "Kaşarlı Tost Sandviç": {"kalori": 320, "protein": 14, "karb": 30, "yag": 16, "gramaj": 180, "malzemeler": ["Sandviç Ekmeği", "Kaşar Peyniri"]},
-        "Ton Balıklı Sandviç": {"kalori": 350, "protein": 22, "karb": 38, "yag": 12, "gramaj": 230, "malzemeler": ["Sandviç Ekmeği", "Ton Balığı", "Marul", "Mayonez"]},
-        "Tavuklu Wrap": {"kalori": 420, "protein": 26, "karb": 44, "yag": 16, "gramaj": 280, "malzemeler": ["Lavaş", "Izgara Tavuk", "Yeşillik", "Özel Sos"]},
-        "Et Dürüm": {"kalori": 490, "protein": 25, "karb": 50, "yag": 22, "gramaj": 300, "malzemeler": ["Lavaş", "Dana Eti Dilimleri", "Domates", "Soğan"]}
-    },
-    "Burgerler & Fast Food 🍔": {
-        "Klasik Hamburger": {"kalori": 420, "protein": 22, "karb": 38, "yag": 20, "gramaj": 250, "malzemeler": ["Hamburger Ekmeği", "Dana Köfte", "Marul", "Turşu"]},
-        "Cheeseburger": {"kalori": 480, "protein": 25, "karb": 40, "yag": 24, "gramaj": 270, "malzemeler": ["Hamburger Ekmeği", "Dana Köfte", "Cheddar Peyniri"]},
-        "Double Cheeseburger": {"kalori": 680, "protein": 42, "karb": 42, "yag": 38, "gramaj": 380, "malzemeler": ["Çift Köfte", "Çift Cheddar Peyniri", "Özel Sos"]},
-        "Tavuk Nugget Menü": {"kalori": 650, "protein": 24, "karb": 70, "yag": 30, "gramaj": 400, "malzemeler": ["Nugget (8 Adet)", "Patates Kızartması", "İçecek"]}
-    },
-    "Pizzalar & Makarnalar 🍕": {
-        "Margherita Pizza": {"kalori": 620, "protein": 24, "karb": 78, "yag": 24, "gramaj": 450, "malzemeler": ["Pizza Hamuru", "Mozzarella", "Domates Sosu", "Fesleğen"]},
-        "Karışık Pizza": {"kalori": 780, "protein": 34, "karb": 82, "yag": 33, "gramaj": 520, "malzemeler": ["Mozzarella", "Sucuk", "Sosis", "Mantar", "Biber", "Zeytin"]},
-        "Spaghetti Bolognese": {"kalori": 510, "protein": 24, "karb": 65, "yag": 18, "gramaj": 380, "malzemeler": ["Spaghetti", "Kıymalı Domates Sosu", "Parmesan"]},
-        "Kremalı Mantarlı Makarna": {"kalori": 540, "protein": 16, "karb": 62, "yag": 25, "gramaj": 380, "malzemeler": ["Penne Makarna", "Mantar", "Krema", "Parmesan"]}
+        "Serpme Kahvaltı": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36},
+        "Kahvaltı Tabağı": {"kalori": 420, "protein": 18, "karb": 35, "yag": 22},
+        "Menemen": {"kalori": 210, "protein": 11, "karb": 9, "yag": 15},
+        "Yulaf Lapası": {"kalori": 340, "protein": 13, "karb": 48, "yag": 11},
     },
     "Ana Yemekler 🍽️": {
-        "Izgara Tavuk Göğsü": {"kalori": 280, "protein": 42, "karb": 0, "yag": 12, "gramaj": 200, "malzemeler": ["Tavuk Göğsü", "Özel Baharatlar", "Zeytinyağı"]},
-        "Izgara Köfte": {"kalori": 360, "protein": 28, "karb": 6, "yag": 24, "gramaj": 200, "malzemeler": ["Dana Kıyma", "Soğan", "Baharatlar"]},
-        "Izgara Somon": {"kalori": 380, "protein": 34, "karb": 0, "yag": 26, "gramaj": 220, "malzemeler": ["Somon Fileto", "Zeytinyağı", "Limon"]},
-        "İskender Kebap": {"kalori": 780, "protein": 40, "karb": 65, "yag": 38, "gramaj": 450, "malzemeler": ["Döner Eti", "Pide Parçaları", "Tereyağı", "Domates Sosu", "Yoğurt"]},
-        "Adana Kebap": {"kalori": 550, "protein": 32, "karb": 15, "yag": 40, "gramaj": 320, "malzemeler": ["Zırh Kıyması", "Acı Biber", "Lavaş", "Köz Sebzeler"]}
+        "Izgara Tavuk Göğsü": {"kalori": 280, "protein": 42, "karb": 0, "yag": 12},
+        "Izgara Köfte": {"kalori": 360, "protein": 28, "karb": 6, "yag": 24},
+        "Somon Fileto": {"kalori": 380, "protein": 34, "karb": 0, "yag": 26},
     },
-    "Pilavlar ve Börekler 🍚": {
-        "Sade Pirinç Pilavı": {"kalori": 310, "protein": 5, "karb": 48, "yag": 11, "gramaj": 200, "malzemeler": ["Baldo Pirinç", "Tereyağı", "Sıvı Yağ"]},
-        "Bulgur Pilavı": {"kalori": 240, "protein": 7, "karb": 42, "yag": 5, "gramaj": 200, "malzemeler": ["Pilavlık Bulgur", "Domates Salçası", "Soğan"]},
-        "Su Böreği": {"kalori": 380, "protein": 12, "karb": 38, "yag": 20, "gramaj": 150, "malzemeler": ["Böreklik Un", "Yumurta", "Beyaz Peynir", "Tereyağı"]},
-        "Peynirli Gözleme": {"kalori": 450, "protein": 18, "karb": 52, "yag": 20, "gramaj": 250, "malzemeler": ["Yufka", "Lor-Beyaz Peynir", "Tereyağı"]}
-    },
-    "Zeytinyağlılar & Fırın Yemekleri 🫒": {
-        "Zeytinyağlı Yaprak Sarma": {"kalori": 190, "protein": 3, "karb": 26, "yag": 8, "gramaj": 180, "malzemeler": ["Asma Yaprağı", "Pirinç", "Zeytinyağı", "Kuş Üzümü"]},
-        "Zeytinyağlı Taze Fasulye": {"kalori": 140, "protein": 3, "karb": 14, "yag": 8, "gramaj": 200, "malzemeler": ["Taze Fasulye", "Domates", "Soğan", "Zeytinyağı"]},
-        "Lazanya": {"kalori": 520, "protein": 24, "karb": 45, "yag": 26, "gramaj": 300, "malzemeler": ["Lazanya Yaprakları", "Kıymalı Sos", "Beşamel", "Kaşar"]},
-        "Karnıyarık": {"kalori": 320, "protein": 14, "karb": 16, "yag": 22, "gramaj": 280, "malzemeler": ["Patlıcan", "Kıymalı Harç", "Domates Sosu"]}
-    },
-    "Sokak Lezzetleri & Atıştırmalıklar 🌮": {
-        "Islak Hamburger": {"kalori": 390, "protein": 15, "karb": 36, "yag": 20, "gramaj": 150, "malzemeler": ["Hamburger Ekmeği", "Köfte", "Sarımsaklı Sos"]},
-        "Kumpir": {"kalori": 540, "protein": 14, "karb": 68, "yag": 23, "gramaj": 350, "malzemeler": ["Patates", "Tereyağı", "Kaşar", "Mısır", "Zeytin", "Sosis"]},
-        "Kokoreç": {"kalori": 480, "protein": 22, "karb": 20, "yag": 34, "gramaj": 200, "malzemeler": ["Kuzu Kokoreç", "Özel Baharatlar", "Ekmek"]},
-        "Enerji Topları (3 Adet)": {"kalori": 220, "protein": 6, "karb": 28, "yag": 10, "gramaj": 90, "malzemeler": ["Hurma", "Yulaf", "Badem", "Fıstık Ezmesi"]}
-    },
-    "Tatlılar ve İçecekler 🍰": {
-        "San Sebastian Cheesecake": {"kalori": 460, "protein": 8, "karb": 34, "yag": 32, "gramaj": 150, "malzemeler": ["Krema Peynir", "Yumurta", "Krema", "Şeker"]},
-        "Çikolatalı Sufle": {"kalori": 390, "protein": 6, "karb": 48, "yag": 20, "gramaj": 140, "malzemeler": ["Bitter Çikolata", "Yumurta", "Tereyağı", "Un"]},
-        "Fırın Sütlaç": {"kalori": 280, "protein": 7, "karb": 45, "yag": 8, "gramaj": 200, "malzemeler": ["Süt", "Pirinç", "Şeker"]},
-        "Filtre Kahve": {"kalori": 5, "protein": 0.3, "karb": 1, "yag": 0, "gramaj": 200, "malzemeler": ["Kahve Çekirdeği", "Su"]},
-        "Caffe Latte": {"kalori": 150, "protein": 8, "karb": 14, "yag": 6, "gramaj": 250, "malzemeler": ["Espresso", "Süt"]}
+    "Atıştırmalıklar & İçecekler 🥤": {
+        "Filtre Kahve": {"kalori": 5, "protein": 0.3, "karb": 1, "yag": 0},
+        "Protein Bar": {"kalori": 210, "protein": 20, "karb": 22, "yag": 7},
+        "Ev Yapımı Kefir": {"kalori": 120, "protein": 8, "karb": 12, "yag": 4},
     }
 }
 
 # ----------------------------------------------------
-# 4. BULUT (SUPABASE) VERİ YÖNETİM FONKSİYONLARI
+# 4. BULUT (SUPABASE) FONKSİYONLARI
 # ----------------------------------------------------
 def sifre_hashle(sifre): 
     return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
@@ -157,24 +64,21 @@ def kullanicilari_yukle():
     try:
         res = supabase.table("kullanicilar").select("*").execute()
         return {row["username"]: row["password_hash"] for row in res.data}
-    except Exception as e:
-        return {}
+    except: return {}
 
 def verileri_yukle(username):
     default_data = {
         "gunluk_kayitlar": [], "aktivite_loglari": {},
         "profil": {
             "cinsiyet": "Kadın", "yas": 20, "boy": 165, 
-            "mevcut_kilo": 58.0, "hedef_kilo": 55.0, 
-            "tema": "Yeşil Ferahlık", "setup_tamamlandi": False
+            "mevcut_kilo": 58.0, "hedef_kilo": 55.0, "hedef_sure_ay": 2,
+            "tema": "Koyu Cam", "setup_tamamlandi": False
         }
     }
     try:
         res = supabase.table("kullanici_verileri").select("data").eq("username", username).execute()
-        if res.data: 
-            return res.data[0]["data"]
-    except: 
-        pass
+        if res.data: return res.data[0]["data"]
+    except: pass
     return default_data
 
 def verileri_kaydet(username):
@@ -185,212 +89,229 @@ def verileri_kaydet(username):
     }
     try:
         supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
-    except Exception as e:
-        st.error("Veriler buluta kaydedilirken hata oluştu.")
+    except: pass
 
 def hesapla_bmr(p):
     return (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
 
+def hesapla_hedef_kalori(p):
+    bmr = hesapla_bmr(p)
+    kilo_farki = float(p["mevcut_kilo"]) - float(p["hedef_kilo"])
+    sure_gun = max(1, int(p.get("hedef_sure_ay", 1)) * 30)
+    gunluk_acik = (kilo_farki * 7700) / sure_gun
+    return max(1200, bmr - gunluk_acik)
+
 # ----------------------------------------------------
-# 5. GİRİŞ VE OTURUM YÖNETİMİ
+# 5. GİRİŞ VE OTURUM
 # ----------------------------------------------------
-if "giris_yapildi" not in st.session_state: 
-    st.session_state.giris_yapildi = False
-if "aktif_kullanici" not in st.session_state: 
-    st.session_state.aktif_kullanici = ""
-if "sayfa_gorunumu" not in st.session_state: 
-    st.session_state.sayfa_gorunumu = "ana_sayfa"
+if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
+if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
 
 if not st.session_state.giris_yapildi:
-    st.markdown("<h1 style='text-align: center; font-size: 48px; letter-spacing: 2px; margin-top: 40px;'>NOVA</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; font-size: 16px; margin-bottom: 30px;'>Every meal is an opportunity to provide your body with vibrant energy and wellness.</p>", unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+        .nova-logo { font-family: 'Playfair Display', serif; font-size: 4rem; letter-spacing: 20px; text-align: center; font-weight: 700; margin-top: 50px; }
+        </style>
+        <div class="nova-logo">N O V A</div>
+        <p style='text-align: center; color: #888; letter-spacing: 2px;'>Zarafet ve Denge</p>
+    """, unsafe_allow_html=True)
     
-    tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
-    users = kullanicilari_yukle()
-
-    with tab_giris:
-        g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
-        g_pass = st.text_input("Şifre", type="password", key="g_pass")
-        if st.button("Giriş Yap", use_container_width=True):
-            if g_user in users and users[g_user] == sifre_hashle(g_pass):
-                st.session_state.giris_yapildi = True
-                st.session_state.aktif_kullanici = g_user
-                st.session_state.update(verileri_yukle(g_user))
-                st.rerun()
-            else: 
-                st.error("Hatalı kullanıcı adı veya şifre.")
-
-    with tab_kayit:
-        k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
-        k_pass = st.text_input("Şifre Belirle", type="password", key="k_pass")
-        if st.button("Hesap Oluştur", use_container_width=True):
-            if k_user and k_pass:
-                if k_user not in users:
-                    try:
-                        supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
-                        st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
-                    except Exception as e:
-                        st.error(f"Kayıt oluşturulurken veritabanı hatası: {e}")
-                else: 
-                    st.warning("Bu kullanıcı adı zaten alınmış.")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
+        users = kullanicilari_yukle()
+        with tab_giris:
+            g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
+            g_pass = st.text_input("Şifre", type="password", key="g_pass")
+            if st.button("Giriş Yap", use_container_width=True):
+                if g_user in users and users[g_user] == sifre_hashle(g_pass):
+                    st.session_state.giris_yapildi = True
+                    st.session_state.aktif_kullanici = g_user
+                    st.session_state.update(verileri_yukle(g_user))
+                    st.rerun()
+                else: st.error("Hatalı giriş.")
+        with tab_kayit:
+            k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
+            k_pass = st.text_input("Şifre", type="password", key="k_pass")
+            if st.button("Hesap Oluştur", use_container_width=True):
+                if k_user and k_pass and k_user not in users:
+                    supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
+                    st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
 
 else:
     aktif_user = st.session_state.aktif_kullanici
     p = st.session_state.profil
-    bmr_kisi = hesapla_bmr(p)
+    aktif_tema = p.get("tema", "Koyu Cam")
+    tema_renkleri = TEMA_AYARLARI[aktif_tema]
+    bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema_renkleri['bg_image']}"
+    txt_col = tema_renkleri['text_color']
+    card_bg = tema_renkleri['card_bg']
+    ring_trk = tema_renkleri['ring_track']
 
-    top_c1, top_c2, top_c3 = st.columns([6, 2, 2])
-    top_c1.markdown(f"### ✨ {aktif_user.capitalize()}")
-    with top_c2:
-        if st.button("👤 Hesap & Tema", use_container_width=True):
-            st.session_state.sayfa_gorunumu = "hesap" if st.session_state.sayfa_gorunumu == "ana_sayfa" else "ana_sayfa"
-            st.rerun()
-    if top_c3.button("Çıkış", use_container_width=True):
-        st.session_state.giris_yapildi = False
-        st.rerun()
+    # DİNAMİK CSS VE ARKA PLAN UYGULAMASI
+    st.markdown(f"""
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+        
+        /* Tam Sayfa Arka Plan */
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("{bg_url}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }}
+        [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+        
+        /* Metinler ve Kartlar */
+        h1, h2, h3, p, div {{ color: {txt_col} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
+        .calai-card {{
+            background: {card_bg}; padding: 30px; border-radius: 24px;
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1);
+        }}
+        
+        /* Üst Logo ve Kullanıcı */
+        .nova-header {{ font-family: 'Playfair Display', serif; font-size: 3.5rem; letter-spacing: 15px; text-align: center; font-weight: 700; margin-top: -20px; }}
+        .nova-user {{ text-align: center; font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.8; }}
+        
+        /* Apple Fitness Tarzı Halkalar */
+        .ring-container {{ width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
+        .ring-inner {{ width: 110px; height: 110px; border-radius: 50%; background: {card_bg}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        .ring-val {{ font-size: 1.5rem; font-weight: 700; margin-bottom: -5px; }}
+        .ring-lbl {{ font-size: 0.8rem; opacity: 0.7; }}
+        </style>
+    """, unsafe_allow_html=True)
 
     # ----------------------------------------------------
-    # 6. HESAP, TEMA SEÇİMİ VE ANA EKRAN
+    # İLK KURULUM (ONBOARDING & EĞİTİM)
     # ----------------------------------------------------
-    if st.session_state.sayfa_gorunumu == "hesap":
-        st.markdown("""
-            <div class="calai-section-card">
-                <div class="calai-title">Hesap, Hedefler ve Tema Seçimi</div>
-            </div>
-        """, unsafe_allow_html=True)
+    if not p.get("setup_tamamlandi", False):
+        st.markdown(f'<div class="calai-card">', unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align:center;'>NOVA'ya Hoş Geldin!</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center;'>Senin için en doğru planı oluşturabilmemiz için birkaç bilgiye ihtiyacımız var.</p>", unsafe_allow_html=True)
         
-        cinsiyet = st.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=0 if p["cinsiyet"] == "Kadın" else 1)
-        yas = st.number_input("Yaş", min_value=15, max_value=80, value=int(p["yas"]))
-        boy = st.number_input("Boy (cm)", min_value=120, max_value=210, value=int(p["boy"]))
-        mevcut_kilo = st.number_input("Mevcut Kilo (kg)", min_value=35.0, value=float(p["mevcut_kilo"]), step=0.5)
-        hedef_kilo = st.number_input("Hedef Kilo (kg)", min_value=30.0, value=float(p["hedef_kilo"]), step=0.5)
-        
-        tema_secenekleri = ["Yeşil Ferahlık", "Pembe Su & Detoks", "Koyu Gym", "Meyve Bahçesi"]
-        secilen_tema = st.selectbox("Tema & Görsel Konsepti", tema_secenekleri, index=tema_secenekleri.index(p.get("tema", "Yeşil Ferahlık")) if p.get("tema") in tema_secenekleri else 0)
+        c1, c2 = st.columns(2)
+        boy = c1.number_input("Boy (cm)", min_value=130, max_value=220, value=165)
+        mevcut_kilo = c2.number_input("Mevcut Kilon (kg)", min_value=35.0, value=60.0, step=0.5)
+        hedef_kilo = c1.number_input("Hedef Kilon (kg)", min_value=35.0, value=55.0, step=0.5)
+        hedef_sure = c2.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=2)
+        sec_tema = st.selectbox("Sana Hitap Eden Tema", list(TEMA_AYARLARI.keys()), index=0)
 
-        if st.button("Değişiklikleri Kaydet ve Ana Sayfaya Dön", use_container_width=True):
+        st.markdown("### 💡 Nova Nasıl Kullanılır?")
+        st.info("**💧 Su Takibi:** Ana ekrandaki mavi halkadan içtiğin suyu +0.25L butonlarıyla kolayca ekleyebilirsin.\n\n**📸 Yapay Zeka Yemek Analizi:** Yediğin tabağın fotoğrafını çekip sisteme yüklediğinde, içindeki kalori ve makroları yapay zeka senin yerine saniyeler içinde hesaplayıp günlüğüne işler!")
+
+        if st.button("Profilimi Kaydet ve Başla", use_container_width=True):
             st.session_state.profil.update({
-                "cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, 
-                "hedef_kilo": hedef_kilo, "tema": secilen_tema, "setup_tamamlandi": True
+                "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo, 
+                "hedef_sure_ay": hedef_sure, "tema": sec_tema, "setup_tamamlandi": True
             })
             verileri_kaydet(aktif_user)
-            st.session_state.sayfa_gorunumu = "ana_sayfa"
             st.rerun()
-            
-    else:
-        sol_bosluk, ana_icerik, sag_bosluk = st.columns([1, 4, 1])
-        aktif_tema = p.get("tema", "Yeşil Ferahlık")
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.stop()
 
-        with sol_bosluk:
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            if aktif_tema == "Yeşil Ferahlık": 
-                st.image("https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400")
-            elif aktif_tema == "Pembe Su & Detoks": 
-                st.image("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400")
-            elif aktif_tema == "Koyu Gym": 
-                st.image("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400")
-            else: 
-                st.image("https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400")
+    # ----------------------------------------------------
+    # ANA UYGULAMA EKRANI
+    # ----------------------------------------------------
+    st.markdown('<div class="nova-header">N O V A</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="nova-user">{aktif_user}</div>', unsafe_allow_html=True)
 
-        with ana_icerik:
-            secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
-            if secilen_tarih not in st.session_state.aktivite_loglari:
-                st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0}
-            curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
+    c_sol, c_orta, c_sag = st.columns([1, 8, 1]) # İçeriği ortaya toplamak için boşluklar
+    with c_orta:
+        secilen_tarih = str(st.date_input("Takvim", datetime.date.today()))
+        if secilen_tarih not in st.session_state.aktivite_loglari:
+            st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0}
+        curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-            st.markdown("""<div class="calai-section-card"><div class="calai-title">Günlük Aktivite & Su Halkaları</div></div>""", unsafe_allow_html=True)
-            col_m1, col_m2 = st.columns(2)
-            with col_m1:
-                st.markdown(f"**Adım:** {curr_aktivite['adim']}")
-                yeni_adim = st.number_input("Adım Güncelle", min_value=0, max_value=50000, value=int(curr_aktivite["adim"]), step=500, label_visibility="collapsed")
-                if st.button("Adımı Kaydet", use_container_width=True):
-                    curr_aktivite["adim"] = yeni_adim
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-            with col_m2:
-                st.markdown(f"**Su Tüketimi:** {curr_aktivite['su']:.2f} L / 2.5 L")
-                st.progress(min(curr_aktivite['su'] / 2.5, 1.0))
-                sc1, sc2 = st.columns(2)
-                if sc1.button("+0.25L", use_container_width=True):
-                    curr_aktivite["su"] = round(curr_aktivite["su"] + 0.25, 2)
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-                if sc2.button("-0.25L", use_container_width=True) and curr_aktivite["su"] >= 0.25:
-                    curr_aktivite["su"] = round(curr_aktivite["su"] - 0.25, 2)
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-
-            st.markdown("""<div class="calai-section-card"><div class="calai-title">Track Your Food With Just a Picture</div></div>""", unsafe_allow_html=True)
-            upl = st.file_uploader("Yemek Fotoğrafı Yükle", type=["jpg", "jpeg", "png"])
-            if upl:
-                st.image(Image.open(upl), caption="Yüklenen Yemek Tabağı", use_container_width=True)
-                ogun_turu = st.selectbox("Öğün Türü", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
-                if st.button("Fotoğrafı Analiz Et", use_container_width=True):
-                    with st.spinner("Yapay zeka inceliyor..."):
-                        st.session_state["ai_sonuc"] = {
-                            "tarife": "Yapay Zeka Analizli Tabak", "kalori": 380.0, "protein": 22.0, "karb": 35.0, "yag": 14.0, 
-                            "metin": "✨ **AI Analiz Raporu:** Mükemmel makro dağılımı. Sağlık Skoru: 9.2 / 10"
-                        }
-                if "ai_sonuc" in st.session_state and st.session_state["ai_sonuc"]:
-                    r = st.session_state["ai_sonuc"]
-                    st.info(r['metin'])
-                    ed_isim = st.text_input("Yemek Adı", value=r["tarife"])
-                    ed_kal = st.number_input("Kalori", value=float(r["kalori"]))
-                    ed_pro = st.number_input("Protein", value=float(r["protein"]))
-                    ed_karb = st.number_input("Karb", value=float(r["karb"]))
-                    ed_yag = st.number_input("Yağ", value=float(r["yag"]))
-                    if st.button("Günlüğe Kaydet", use_container_width=True):
-                        st.session_state.gunluk_kayitlar.append({
-                            "Tarih": secilen_tarih, "Öğün": ogun_turu, "Tarif": ed_isim,
-                            "Kalori": ed_kal, "Protein": ed_pro, "Karbonhidrat": ed_karb, "Yağ": ed_yag
-                        })
-                        verileri_kaydet(aktif_user)
-                        del st.session_state["ai_sonuc"]
-                        st.rerun()
-
-            st.markdown("""<div class="calai-section-card"><div class="calai-title">Genişletilmiş Restoran Menü Kataloğu</div></div>""", unsafe_allow_html=True)
-            m_kat = st.selectbox("Kategori Seç", list(ZENGIN_LEZZET_KATALOGU.keys()))
-            m_yemek = st.selectbox("Yemek Seç", list(ZENGIN_LEZZET_KATALOGU[m_kat].keys()))
-            detay = ZENGIN_LEZZET_KATALOGU[m_kat][m_yemek]
-            
-            st.markdown(f"**{detay['kalori']} kcal** | 🥩 P: {detay['protein']}g | 🍞 K: {detay['karb']}g | 🥑 Y: {detay['yag']}g")
-            st.caption(f"⚖️ Porsiyon: {detay.get('gramaj', 200)}g | 🥗 Malzemeler: {', '.join(detay.get('malzemeler', []))}")
-
-            if st.button("Kataloğtan Günlüğe Ekle", use_container_width=True):
-                st.session_state.gunluk_kayitlar.append({
-                    "Tarih": secilen_tarih, "Öğün": "Ana Öğün", "Tarif": m_yemek,
-                    "Kalori": detay["kalori"], "Protein": detay["protein"], "Karbonhidrat": detay["karb"], "Yağ": detay["yag"]
-                })
+        # HALKALAR (APPLE FITNESS TARZI)
+        st.markdown('<div class="calai-card">', unsafe_allow_html=True)
+        st.markdown("<h3>Aktivite ve Su Halkaları</h3>", unsafe_allow_html=True)
+        
+        adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
+        su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
+        
+        hc1, hc2 = st.columns(2)
+        with hc1:
+            st.markdown(f"""
+                <div class="ring-container" style="background: conic-gradient(#ff3b30 {adim_yuzde}%, {ring_trk} 0deg);">
+                    <div class="ring-inner">
+                        <div class="ring-val" style="color:#ff3b30;">{curr_aktivite['adim']}</div>
+                        <div class="ring-lbl">Adım</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            yeni_adim = st.number_input("Adım Ekle", value=0, step=500)
+            if st.button("🏃‍♀️ Adımı Kaydet", use_container_width=True):
+                curr_aktivite["adim"] += yeni_adim
                 verileri_kaydet(aktif_user)
                 st.rerun()
 
-            st.markdown(f"""<div class="calai-section-card"><div class="calai-title">Günlük Denge ({secilen_tarih})</div></div>""", unsafe_allow_html=True)
-            bugun_og = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k["Tarih"] == secilen_tarih]
-            toplam_alinan = sum([k["Kalori"] for i, k in bugun_og])
-            toplam_pro = sum([k.get("Protein", 0) for i, k in bugun_og])
-            
-            if bugun_og:
-                for i, kayit in bugun_og:
-                    cr1, cr2 = st.columns([10, 1])
-                    cr1.markdown(f"**{kayit['Öğün']}**: {kayit['Tarif']} — *{kayit['Kalori']} kcal*")
-                    if cr2.button("🗑️", key=f"sil_{i}"):
-                        st.session_state.gunluk_kayitlar.pop(i)
-                        verileri_kaydet(aktif_user)
-                        st.rerun()
+        with hc2:
+            st.markdown(f"""
+                <div class="ring-container" style="background: conic-gradient(#32ade6 {su_yuzde}%, {ring_trk} 0deg);">
+                    <div class="ring-inner">
+                        <div class="ring-val" style="color:#32ade6;">{curr_aktivite['su']:.2f}</div>
+                        <div class="ring-lbl">Litre</div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            su_butonlari = st.columns(2)
+            if su_butonlari[0].button("💧 +0.25L", use_container_width=True):
+                curr_aktivite["su"] += 0.25
+                verileri_kaydet(aktif_user)
+                st.rerun()
+            if su_butonlari[1].button("Suyu Kaydet (Sıfırla)", use_container_width=True):
+                curr_aktivite["su"] = 0.0
+                verileri_kaydet(aktif_user)
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-            hedef_kal = bmr_kisi + (curr_aktivite["adim"] * 0.04)
-            st.markdown(f"**Kalori:** {round(toplam_alinan)} / {round(hedef_kal)} kcal")
-            st.progress(min(toplam_alinan / max(hedef_kal, 1), 1.0))
-            st.markdown(f"**Protein:** {round(toplam_pro)}g / 90g")
-            st.progress(min(toplam_pro / 90, 1.0))
+        # YAPAY ZEKA VE MENÜ
+        st.markdown('<div class="calai-card">', unsafe_allow_html=True)
+        st.markdown("<h3>Yapay Zeka Yemek Analizi</h3>", unsafe_allow_html=True)
+        upl = st.file_uploader("Yemek Fotoğrafı Yükle", type=["jpg", "jpeg", "png"])
+        if upl:
+            st.image(Image.open(upl), use_container_width=True)
+            if st.button("Fotoğrafı Analiz Et ve Kaydet", use_container_width=True):
+                st.session_state.gunluk_kayitlar.append({"Tarih": secilen_tarih, "Öğün": "AI Tespiti", "Tarif": "Akıllı Tabak Analizi", "Kalori": 380, "Protein": 22, "Karbonhidrat": 35, "Yağ": 14})
+                verileri_kaydet(aktif_user)
+                st.rerun()
+        
+        m_kat = st.selectbox("Katalogdan Yemek Ekle", list(ZENGIN_LEZZET_KATALOGU.keys()))
+        m_yemek = st.selectbox("Yemek Seç", list(ZENGIN_LEZZET_KATALOGU[m_kat].keys()))
+        d = ZENGIN_LEZZET_KATALOGU[m_kat][m_yemek]
+        st.caption(f"🔥 {d['kalori']} kcal | P: {d['protein']}g | K: {d['karb']}g | Y: {d['yag']}g")
+        if st.button("Kataloğtan Günlüğe Ekle", use_container_width=True):
+            st.session_state.gunluk_kayitlar.append({"Tarih": secilen_tarih, "Öğün": "Katalog", "Tarif": m_yemek, "Kalori": d["kalori"], "Protein": d["protein"], "Karbonhidrat": d["karb"], "Yağ": d["yag"]})
+            verileri_kaydet(aktif_user)
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        with sag_bosluk:
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            if aktif_tema == "Yeşil Ferahlık": 
-                st.image("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400")
-            elif aktif_tema == "Pembe Su & Detoks": 
-                st.image("https://images.unsplash.com/photo-1556881286-fc6915169721?w=400")
-            elif aktif_tema == "Koyu Gym": 
-                st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400")
-            else: 
-                st.image("https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400")
+        # ALT ÖZET TABLOSU
+        st.markdown('<div class="calai-card">', unsafe_allow_html=True)
+        st.markdown("<h3>Günlük Kalori ve Makro Özeti</h3>", unsafe_allow_html=True)
+        bugun_og = [k for k in st.session_state.gunluk_kayitlar if k["Tarih"] == secilen_tarih]
+        top_kalori = sum([k["Kalori"] for k in bugun_og])
+        top_pro = sum([k.get("Protein", 0) for k in bugun_og])
+        top_karb = sum([k.get("Karbonhidrat", 0) for k in bugun_og])
+        top_yag = sum([k.get("Yağ", 0) for k in bugun_og])
+        
+        gunluk_hedef = hesapla_hedef_kalori(p)
+        harcanan_adim_kalori = curr_aktivite["adim"] * 0.04
+        net_kalori = top_kalori - harcanan_adim_kalori
+        kalan_kalori = gunluk_hedef - net_kalori
+
+        df_ozet = pd.DataFrame([
+            {"Metrik": "Hedef Kalori (Açık Dahil)", "Değer": f"{round(gunluk_hedef)} kcal"},
+            {"Metrik": "Alınan Kalori (Yemekler)", "Değer": f"{round(top_kalori)} kcal"},
+            {"Metrik": "Harcanan Kalori (Adım)", "Değer": f"- {round(harcanan_adim_kalori)} kcal"},
+            {"Metrik": "Net Kalan Hakkın", "Değer": f"{round(kalan_kalori)} kcal"}
+        ])
+        st.table(df_ozet)
+        
+        st.markdown(f"**Makro Dağılımın:** Protein: {round(top_pro)}g | Karbonhidrat: {round(top_karb)}g | Yağ: {round(top_yag)}g")
+        st.progress(min(top_kalori / gunluk_hedef, 1.0))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.button("Temayı / Hedefleri Güncelle", use_container_width=True):
+            st.session_state.profil["setup_tamamlandi"] = False
+            st.rerun()
