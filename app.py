@@ -120,7 +120,7 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # GÜNCELLENMİŞ TEMA CSS (YAZI VE BUTON İZOLASYONU)
+    # GÜNCELLENMİŞ TEMA CSS (KESİN YAZI VE BUTON İZOLASYONU)
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -128,16 +128,30 @@ else:
         [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']}; background-image: url("{bg_url}"); background-size: cover; background-position: center; background-attachment: fixed; }}
         [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
         
-        /* Özel metinleri renklendir, Streamlit inputlarını bozma */
-        .calai-card {{ background: {tema['card_bg']}; color: {tema['text_color']}; font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
-        .calai-card h1, .calai-card h2, .calai-card h3, .calai-card p, .calai-card label, .calai-card th, .calai-card td {{ color: {tema['text_color']}; font-family: 'Plus Jakarta Sans', sans-serif; }}
+        .nova-header {{ color: {tema['text_color']} !important; font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
+        .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
         
-        .nova-header {{ color: {tema['text_color']}; font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
-        .nova-user {{ color: {tema['text_color']}; text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
+        /* Kartların ve metinlerin dinamik renkleri */
+        .calai-card {{ background: {tema['card_bg']}; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
+        .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card td, .calai-card th, .calai-card span {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
         
-        /* Butonları görünür kıl */
-        .stButton button {{ background-color: rgba(255,255,255,0.15) !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.4) !important; font-weight: bold; backdrop-filter: blur(10px); }}
-        .stButton button:hover {{ background-color: rgba(255,255,255,0.3) !important; border-color: #ffffff !important; }}
+        /* Streamlit varsayılan input başlıklarını görünür yap */
+        .stTextInput label, .stSelectbox label, .stDateInput label, .stNumberInput label, .stFileUploader label {{ color: {tema['text_color']} !important; font-weight: 600; }}
+        
+        /* Tüm butonları temaya uyumlu ve belirgin hale getir */
+        div.stButton > button:first-child {{
+            background-color: transparent !important;
+            color: {tema['text_color']} !important;
+            border: 2px solid {tema['text_color']} !important;
+            font-weight: 800 !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(10px);
+        }}
+        div.stButton > button:first-child:hover {{
+            background-color: {tema['text_color']} !important;
+            color: {tema['fallback_bg']} !important;
+            border-color: {tema['fallback_bg']} !important;
+        }}
         
         /* Halka Grafikleri */
         .ring-container {{ width: 200px; height: 200px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
@@ -253,9 +267,9 @@ else:
         
         st.markdown(f"""
         <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 20px; border-left: 5px solid #ff3b30;">
-            <h3 style="margin-top:0;">{g_egz['kanal']}</h3>
-            <p style="font-size: 1.2rem;">{g_egz['baslik']}</p>
-            <p>🤖 <b>Yapay Zeka Analizi:</b> Bu videodaki hareket dinamiğine göre <b>{g_egz['kalori']} kcal</b> yakacaksın.</p>
+            <h3 style="margin-top:0; color: #ffffff !important;">{g_egz['kanal']}</h3>
+            <p style="font-size: 1.2rem; color: #ffffff !important;">{g_egz['baslik']}</p>
+            <p style="color: #ffffff !important;">🤖 <b>Yapay Zeka Analizi:</b> Bu videodaki hareket dinamiğine göre <b>{g_egz['kalori']} kcal</b> yakacaksın.</p>
             <a href="{g_egz['link']}" target="_blank" style="display: inline-block; background-color: #ff3b30; color: white !important; padding: 12px 25px; border-radius: 8px; text-decoration: none !important; font-weight: bold; margin-top: 10px;">▶️ YouTube'da Aç ve İzle</a>
         </div>
         """, unsafe_allow_html=True)
@@ -269,7 +283,7 @@ else:
             st.success(f"🔥 Harika iş çıkardın! Tabloya günlük **{curr_aktivite['egzersiz_kalori']} kcal** egzersiz harcaması eklendi.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 3) KALORİ, BMR VE TABLO
+        # 3) DÜZELTİLMİŞ DOĞRU KALORİ MATEMATİĞİ VE TABLOSU
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
         
@@ -282,13 +296,10 @@ else:
         bmr, gunluk_acik, hedef_kalori_alim = hesapla_hedef_kalori(p)
         harcanan_adim_kalori = curr_aktivite["adim"] * 0.04
         harcanan_egzersiz = curr_aktivite.get("egzersiz_kalori", 0)
+        aktif_harcanan = harcanan_adim_kalori + harcanan_egzersiz
         
-        # TOPLAM HARCANAN (BMR EKLENDİ)
-        toplam_harcanan = bmr + harcanan_adim_kalori + harcanan_egzersiz
-        
-        # NET KALORİ (Alınan - Harcanan)
-        net_kalori = top_kalori - toplam_harcanan
-        hedef_net_acik = -gunluk_acik # Kilo vermek için gereken eksi değer
+        # DOĞRU MATEMATİK (Hedef - Alınan + Harcanan)
+        kalan_kalori = hedef_kalori_alim - top_kalori + aktif_harcanan
         
         hedef_pro = (hedef_kalori_alim * 0.3) / 4
         hedef_karb = (hedef_kalori_alim * 0.4) / 4
@@ -297,21 +308,22 @@ else:
         st.markdown(f"""
         <table>
             <tr><th>Metrik</th><th style="text-align: right;">Değer</th></tr>
-            <tr><td>🫀 Dinlenik Metabolizma (BMR - Yan Gelip Yatma)</td><td style="text-align: right; color: #34c759;"><b>- {round(bmr)} kcal</b></td></tr>
-            <tr><td>🏃‍♀️ Hareket ve Egzersizle Yakılan</td><td style="text-align: right; color: #34c759;"><b>- {round(harcanan_adim_kalori + harcanan_egzersiz)} kcal</b></td></tr>
-            <tr><td>🍽️ Alınan Toplam Kalori (Yemekler)</td><td style="text-align: right; color: #ff9500;"><b>+ {round(top_kalori)} kcal</b></td></tr>
+            <tr><td>🫀 Dinlenik Metabolizma (BMR - Sadece Bilgi İçin)</td><td style="text-align: right; opacity: 0.7;"><b>{round(bmr)} kcal</b></td></tr>
+            <tr><td>🎯 Günlük Hedef Kalori Alımı</td><td style="text-align: right; color: #007aff;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
+            <tr><td>🍽️ Alınan Toplam Kalori (Yemekler)</td><td style="text-align: right; color: #ff3b30;"><b>- {round(top_kalori)} kcal</b></td></tr>
+            <tr><td>🏃‍♀️ Aktif Harcanan (Adım + Egzersiz)</td><td style="text-align: right; color: #34c759;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
             <tr style="border-top: 2px solid rgba(255,255,255,0.5);">
-                <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Gün Sonunda Net Vücut Dengesi</td>
-                <td style="text-align: right; font-size: 1.4rem; font-weight: 800;">{round(net_kalori)} kcal</td>
+                <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Kalan Kalori Hakkın</td>
+                <td style="text-align: right; font-size: 1.4rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
             </tr>
         </table>
         <br>
         """, unsafe_allow_html=True)
         
-        if net_kalori > hedef_net_acik: 
-            st.error(f"⚠️ Hedef açığına ulaşmak için bugün {round(net_kalori - hedef_net_acik)} kcal fazlan var. Biraz daha hareket edebilirsin!")
+        if kalan_kalori < 0: 
+            st.error(f"⚠️ Limitini {abs(round(kalan_kalori))} kcal aştın. Hedefe dönmek için biraz egzersiz yapmalısın!")
         else: 
-            st.success(f"✅ Harika! Hedef açığını yakaladın, hatta {round(hedef_net_acik - net_kalori)} kcal daha avantajlısın.")
+            st.success(f"✅ Çok iyi gidiyorsun! Günün geri kalanı için {round(kalan_kalori)} kcal daha yemek yeme hakkın var.")
 
         def render_makro(isim, mevcut, hedef, renk):
             yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
@@ -384,14 +396,12 @@ else:
             g_alinan = sum([k["Kalori"] for k in g_ogunler])
             g_akt = st.session_state.aktivite_loglari.get(g, {"adim": 0, "egzersiz_kalori": 0})
             
-            # Dinlenik Metabolizma (BMR) + Adım + Egzersiz = Toplam Harcanan
+            # Dinlenik Metabolizma (BMR) + Adım + Egzersiz = Toplam Harcanan Vücut Enerjisi
             g_harcanan = bmr + (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
             
-            grafik_data.append({"Gün": g[5:], "Alınan Kalori": g_alinan, "Harcanan Kalori": g_harcanan})
+            grafik_data.append({"Gün": g[5:], "Vücuda Giren Kalori (Yemekler)": g_alinan, "Vücudun Yaktığı Toplam (BMR + Egzersiz)": g_harcanan})
         
         df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
-        
-        # Şık çizgi grafik
-        st.line_chart(df_grafik, color=["#ff9500", "#34c759"])
-        st.caption("ℹ️ **Nasıl Okunur:** Çizgilerdeki **Turuncu hat** gün içinde vücuduna giren kaloriyi, **Yeşil hat** ise (BMR ve egzersizler dahil) yaktığın toplam enerjiyi gösterir. Yeşil hat, turuncunun üstünde kalıyorsa doğru yoldasın demektir.")
+        st.line_chart(df_grafik, color=["#ff3b30", "#34c759"])
+        st.caption("ℹ️ **Nasıl Okunur:** **Kırmızı Hat** yediğin öğünleri, **Yeşil Hat** ise vücudunun gün içinde tamamen harcadığı (Metabolizma + Egzersiz) enerjiyi gösterir. Yeşil hat kırmızının üstündeyse zayıflıyorsun demektir.")
         st.markdown('</div>', unsafe_allow_html=True)
