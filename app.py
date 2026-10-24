@@ -14,7 +14,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", layout="wide", initial_sidebar_state="collapsed")
 
 # ----------------------------------------------------
-# DİNAMİK TEMA VE ARKA PLAN YÖNETİMİ (YEDEK RENKLİ)
+# DİNAMİK TEMA VE ARKA PLAN YÖNETİMİ
 # ----------------------------------------------------
 TEMA_AYARLARI = {
     "Yakut Kızılı": {"bg_image": "tema_kirmizi.jpg", "fallback_bg": "#2A0808", "text_color": "#ffffff", "card_bg": "rgba(35, 5, 10, 0.85)", "ring_track": "rgba(255,255,255,0.15)"},
@@ -26,42 +26,24 @@ TEMA_AYARLARI = {
 }
 
 # ----------------------------------------------------
-# KAPSAMLI LEZZET KATALOĞU
+# KAPSAMLI YEMEK VERİTABANINI BULUTTAN ÇEKME
 # ----------------------------------------------------
-ZENGIN_LEZZET_KATALOGU = {
-    "Kahvaltılıklar 🥐": {
-        "Serpme Kahvaltı": {"kalori": 650, "protein": 24, "karb": 55, "yag": 36},
-        "Kahvaltı Tabağı": {"kalori": 420, "protein": 18, "karb": 35, "yag": 22},
-        "Menemen": {"kalori": 210, "protein": 11, "karb": 9, "yag": 15},
-        "Kaşarlı Tost": {"kalori": 320, "protein": 14, "karb": 30, "yag": 16},
-        "Yulaf Lapası": {"kalori": 340, "protein": 13, "karb": 48, "yag": 11}
-    },
-    "Çorbalar 🍲": {
-        "Mercimek Çorbası": {"kalori": 160, "protein": 8, "karb": 22, "yag": 4.5},
-        "Ezogelin Çorbası": {"kalori": 170, "protein": 8, "karb": 24, "yag": 5},
-        "Tavuk Suyu Çorbası": {"kalori": 130, "protein": 10, "karb": 14, "yag": 3.5}
-    },
-    "Salatalar 🥗": {
-        "Mevsim Salata": {"kalori": 90, "protein": 2, "karb": 8, "yag": 6},
-        "Tavuklu Sezar Salata": {"kalori": 340, "protein": 28, "karb": 13, "yag": 20},
-        "Ton Balıklı Salata": {"kalori": 290, "protein": 28, "karb": 9, "yag": 15}
-    },
-    "Ana Yemekler 🍽️": {
-        "Izgara Tavuk Göğsü": {"kalori": 280, "protein": 42, "karb": 0, "yag": 12},
-        "Izgara Köfte": {"kalori": 360, "protein": 28, "karb": 6, "yag": 24},
-        "Somon Fileto": {"kalori": 380, "protein": 34, "karb": 0, "yag": 26},
-        "İskender Kebap": {"kalori": 780, "protein": 40, "karb": 65, "yag": 38}
-    },
-    "Atıştırmalıklar & İçecekler 🥤": {
-        "Filtre Kahve": {"kalori": 5, "protein": 0.3, "karb": 1, "yag": 0},
-        "Caffe Latte": {"kalori": 150, "protein": 8, "karb": 14, "yag": 6},
-        "Protein Bar": {"kalori": 210, "protein": 20, "karb": 22, "yag": 7},
-        "Ev Yapımı Kefir": {"kalori": 120, "protein": 8, "karb": 12, "yag": 4}
-    }
-}
+@st.cache_data
+def yemek_veritabanini_yukle():
+    try:
+        # Senin GitHub depondaki CSV dosyasını çeker
+        df = pd.read_csv("https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/cok_daha_kapsamli_yemek_veritabani.csv")
+        return df
+    except:
+        return pd.DataFrame({
+            "Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], 
+            "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]
+        })
+
+df_yemek = yemek_veritabanini_yukle()
 
 # ----------------------------------------------------
-# VERİTABANI FONKSİYONLARI
+# VERİTABANI VE HESAPLAMA FONKSİYONLARI
 # ----------------------------------------------------
 def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
 
@@ -243,14 +225,13 @@ else:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 2) GÜNLÜK OTOMATİK VİDEO VE EGZERSİZ MODÜLÜ
+        # 2) GÜNLÜK OTOMATİK LİNK EGZERSİZ MODÜLÜ
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Günün Egzersizi</h2>", unsafe_allow_html=True)
         
         tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
         gun_indeksi = tarih_obj.weekday()
         
-        # GERÇEK YOUTUBE VİDEOLARI
         GUNLUK_EGZERSIZLER = {
             0: {"kanal": "Growwithjo", "baslik": "20 Dakika Tam Vücut Yağ Yakımı (Pazartesi)", "link": "https://www.youtube.com/watch?v=7M_dD_I3nGU", "kalori": 240},
             1: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Full Body Pilates (Salı)", "link": "https://www.youtube.com/watch?v=C2M6uD7J-1w", "kalori": 180},
@@ -260,12 +241,10 @@ else:
             5: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Alt Vücut ve Kalça (Cumartesi)", "link": "https://www.youtube.com/watch?v=vI1JXIbzC30", "kalori": 190},
             6: {"kanal": "Growwithjo", "baslik": "20 Dakika Tüm Vücut Ev Egzersizi (Pazar)", "link": "https://www.youtube.com/watch?v=4_Q_iQ4w0s4", "kalori": 270},
         }
-        
         g_egz = GUNLUK_EGZERSIZLER[gun_indeksi]
         
-        st.markdown(f"**Kanal:** {g_egz['kanal']} | **Program:** {g_egz['baslik']}")
-        st.markdown(f"🤖 **Yapay Zeka Analizi:** Bu videodaki hareket dinamiğine göre **{g_egz['kalori']} kcal** yakacaksın.")
-        st.video(g_egz['link'])
+        st.markdown(f"📺 **[{g_egz['kanal']} - {g_egz['baslik']} (İzlemek İçin Tıklayın)]({g_egz['link']})**")
+        st.markdown(f"🤖 **Yapay Zeka Analizi:** Bu antrenmanı tamamlarsan yaklaşık **{g_egz['kalori']} kcal** yakacaksın.")
         
         if st.button("✅ Antrenmanı Tamamladım", use_container_width=True):
             curr_aktivite["egzersiz_kalori"] = g_egz['kalori']
@@ -334,41 +313,59 @@ else:
         else: st.success(f"✅ Hedefine ulaşmak için bugün {round(hedef_kalori - net_kalori)} kalori daha hakkın var.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 4) YAPAY ZEKA VE MENÜ
+        # 4) ETKİLEŞİMLİ ARAMA ÇUBUĞU VE ÖĞÜN SİLME
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-        st.markdown("<h2 style='font-size: 2.2rem;'>Yapay Zeka Yemek Analizi</h2>", unsafe_allow_html=True)
-        upl = st.file_uploader("Yemek Fotoğrafı Yükle", type=["jpg", "jpeg", "png"])
-        if upl:
-            st.image(Image.open(upl), use_container_width=True)
-            if st.button("Fotoğrafı Analiz Et ve Kaydet", use_container_width=True):
-                st.session_state.gunluk_kayitlar.append({"Tarih": secilen_tarih, "Öğün": "AI Tespiti", "Tarif": "Akıllı Tabak", "Kalori": 380, "Protein": 22, "Karbonhidrat": 35, "Yağ": 14})
+        st.markdown("<h2 style='font-size: 2.2rem;'>🔎 Yemek Ara & Günlüğüne Ekle</h2>", unsafe_allow_html=True)
+        
+        a_col1, a_col2 = st.columns([3, 1])
+        with a_col1:
+            yemek_isimleri = df_yemek["Yemek Adı"].tolist()
+            secilen_yemek = st.selectbox("Yediğin yemeği yazmaya başla...", yemek_isimleri)
+        with a_col2:
+            secilen_ogun = st.selectbox("Hangi Öğün?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"])
+            
+        if secilen_yemek and secilen_yemek != "Önce CSV'yi GitHub'a Yükleyin":
+            detay = df_yemek[df_yemek["Yemek Adı"] == secilen_yemek].iloc[0]
+            st.caption(f"🔥 **İçerik:** {detay['Kalori (kcal)']} kcal | P: {detay['Protein (g)']}g | K: {detay['Karbonhidrat (g)']}g | Y: {detay['Yağ (g)']}g")
+            if st.button("➕ Günlüğe Ekle", use_container_width=True):
+                st.session_state.gunluk_kayitlar.append({
+                    "Tarih": secilen_tarih, "Öğün": secilen_ogun, "Tarif": secilen_yemek,
+                    "Kalori": float(detay["Kalori (kcal)"]), "Protein": float(detay["Protein (g)"]), 
+                    "Karbonhidrat": float(detay["Karbonhidrat (g)"]), "Yağ": float(detay["Yağ (g)"])
+                })
                 verileri_kaydet(aktif_user)
                 st.rerun()
-        
-        st.markdown("<br><h3>Veya Menüden Seç</h3>", unsafe_allow_html=True)
-        m_kat = st.selectbox("Kategori", list(ZENGIN_LEZZET_KATALOGU.keys()))
-        m_yemek = st.selectbox("Yemek", list(ZENGIN_LEZZET_KATALOGU[m_kat].keys()))
-        d = ZENGIN_LEZZET_KATALOGU[m_kat][m_yemek]
-        st.caption(f"🔥 Kalori: {d['kalori']} kcal | P: {d['protein']}g | K: {d['karb']}g | Y: {d['yag']}g")
-        if st.button("Günlüğe Ekle", use_container_width=True):
-            st.session_state.gunluk_kayitlar.append({"Tarih": secilen_tarih, "Öğün": "Katalog", "Tarif": m_yemek, "Kalori": d["kalori"], "Protein": d["protein"], "Karbonhidrat": d["karb"], "Yağ": d["yag"]})
-            verileri_kaydet(aktif_user)
-            st.rerun()
+
+        st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+        st.markdown("<h3>🍽️ Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
+        for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün", "AI Tespiti"]:
+            ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
+            if ogun_yemekleri:
+                st.markdown(f"**{ogun_turu}**")
+                for i, k in ogun_yemekleri:
+                    c1, c2 = st.columns([10, 1])
+                    c1.markdown(f"• {k['Tarif']} — *{k['Kalori']} kcal*")
+                    if c2.button("🗑️", key=f"sil_{i}", help="Bu öğünü sil"):
+                        st.session_state.gunluk_kayitlar.pop(i)
+                        verileri_kaydet(aktif_user)
+                        st.rerun()
+                        
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # 5) HAFTALIK GRAFİK
+        # 5) YENİ TASARIM HAFTALIK GRAFİK
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>📈 Haftalık Gelişim Grafiği</h2>", unsafe_allow_html=True)
         bugun_tarih = datetime.date.today()
         grafik_data = []
         for i in range(6, -1, -1):
             g = str(bugun_tarih - datetime.timedelta(days=i))
-            g_ogunler = [k for k in st.session_state.gunluk_kayitlar if k["Tarih"] == g]
+            g_ogunler = [k for k in st.session_state.gunluk_kayitlar if k.get("Tarih") == g]
             g_alinan = sum([k["Kalori"] for k in g_ogunler])
             g_akt = st.session_state.aktivite_loglari.get(g, {"adim": 0, "egzersiz_kalori": 0})
             g_harcanan = (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
             grafik_data.append({"Gün": g[5:], "Alınan Kalori": g_alinan, "Harcanan Kalori": g_harcanan})
         
         df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
-        st.line_chart(df_grafik, color=["#ff9500", "#34c759"])
+        st.bar_chart(df_grafik, color=["#ff9500", "#34c759"])
+        st.caption("ℹ️ **Nasıl Okunur:** Yan yana duran çubuklardan **Turuncu** olanlar gün içinde yediğin toplam kaloriyi, **Yeşil** olanlar ise attığın adımlar ve egzersizlerle yaktığın toplam kaloriyi gösterir.")
         st.markdown('</div>', unsafe_allow_html=True)
