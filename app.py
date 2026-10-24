@@ -14,15 +14,15 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", layout="wide", initial_sidebar_state="collapsed")
 
 # ----------------------------------------------------
-# DİNAMİK TEMA VE ARKA PLAN YÖNETİMİ
+# DİNAMİK TEMA VE ARKA PLAN YÖNETİMİ (YEDEK RENKLİ)
 # ----------------------------------------------------
 TEMA_AYARLARI = {
-    "Yakut Kızılı": {"bg_image": "tema_kirmizi.jpg", "text_color": "#ffffff", "card_bg": "rgba(35, 5, 10, 0.75)", "ring_track": "rgba(255,255,255,0.15)"},
-    "Turkuaz Ferahlığı": {"bg_image": "tema_turkuaz.jpg", "text_color": "#002b2b", "card_bg": "rgba(230, 250, 245, 0.85)", "ring_track": "rgba(0,0,0,0.1)"},
-    "Altın Zarafet": {"bg_image": "tema_altin.jpg", "text_color": "#3e2723", "card_bg": "rgba(255, 245, 220, 0.85)", "ring_track": "rgba(0,0,0,0.1)"},
-    "Bordo Kadife": {"bg_image": "tema_bordo.jpg", "text_color": "#ffebee", "card_bg": "rgba(45, 0, 15, 0.80)", "ring_track": "rgba(255,255,255,0.15)"},
-    "Derin Mavi": {"bg_image": "tema_mavi.jpg", "text_color": "#e3f2fd", "card_bg": "rgba(0, 15, 45, 0.75)", "ring_track": "rgba(255,255,255,0.15)"},
-    "Koyu Cam": {"bg_image": "tema_siyah.jpg", "text_color": "#ffffff", "card_bg": "rgba(15, 15, 15, 0.75)", "ring_track": "rgba(255,255,255,0.15)"}
+    "Yakut Kızılı": {"bg_image": "tema_kirmizi.jpg", "fallback_bg": "#2A0808", "text_color": "#ffffff", "card_bg": "rgba(35, 5, 10, 0.85)", "ring_track": "rgba(255,255,255,0.15)"},
+    "Turkuaz Ferahlığı": {"bg_image": "tema_turkuaz.jpg", "fallback_bg": "#E0F2F1", "text_color": "#004d40", "card_bg": "rgba(230, 250, 245, 0.95)", "ring_track": "rgba(0,0,0,0.1)"},
+    "Altın Zarafet": {"bg_image": "tema_altin.jpg", "fallback_bg": "#3e2723", "text_color": "#ffffff", "card_bg": "rgba(40, 25, 20, 0.85)", "ring_track": "rgba(255,255,255,0.15)"},
+    "Bordo Kadife": {"bg_image": "tema_bordo.jpg", "fallback_bg": "#310000", "text_color": "#ffebee", "card_bg": "rgba(45, 0, 15, 0.90)", "ring_track": "rgba(255,255,255,0.15)"},
+    "Derin Mavi": {"bg_image": "tema_mavi.jpg", "fallback_bg": "#00102A", "text_color": "#e3f2fd", "card_bg": "rgba(0, 15, 45, 0.90)", "ring_track": "rgba(255,255,255,0.15)"},
+    "Koyu Cam": {"bg_image": "tema_siyah.jpg", "fallback_bg": "#0f0f0f", "text_color": "#ffffff", "card_bg": "rgba(20, 20, 20, 0.90)", "ring_track": "rgba(255,255,255,0.15)"}
 }
 
 # ----------------------------------------------------
@@ -104,10 +104,12 @@ if not st.session_state.giris_yapildi:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 30px; text-align: center; font-weight: 700; margin-top: 10vh; margin-left: 15px;}
+        [data-testid="stAppViewContainer"] { background-color: #111111; }
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 30px; text-align: center; font-weight: 700; margin-top: 10vh; color: #ffffff;}
+        p, label, span { color: #ffffff !important; }
         </style>
         <div class="nova-logo-giris">N O V A</div>
-        <p style='text-align: center; color: #888; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 50px;'>ZARAFET VE DENGE</p>
+        <p style='text-align: center; color: #aaaaaa !important; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 50px;'>ZARAFET VE DENGE</p>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
@@ -137,31 +139,38 @@ else:
     p = st.session_state.profil
     aktif_tema = p.get("tema", "Koyu Cam")
     
-    # Güvenlik Kilidi: Veritabanındaki tema güncel listede yoksa sıfırla
     if aktif_tema not in TEMA_AYARLARI:
         aktif_tema = "Koyu Cam"
         
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # TEMA CSS ENJEKSİYONU
+    # TEMA CSS ENJEKSİYONU (YEDEK ARKA PLAN RENKLERİ İLE)
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         
         [data-testid="stAppViewContainer"] {{
+            background-color: {tema['fallback_bg']};
             background-image: url("{bg_url}");
-            background-size: cover; background-position: center; background-attachment: fixed;
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
         }}
         [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
         
-        h1, h2, h3, p, div, span, label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
+        /* Yazı izolasyonu - tüm div'leri seçmeyiz ki Streamlit'in kendi kutuları bozulmasın */
+        h1, h2, h3, p, span, label, th, td {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
         
         .calai-card {{
-            background: {tema['card_bg']}; padding: 40px; border-radius: 32px;
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: {tema['card_bg']}; 
+            padding: 40px; 
+            border-radius: 32px;
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            margin-bottom: 35px; 
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
         }}
         
         .nova-header {{ font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
@@ -199,7 +208,7 @@ else:
         bmr, gunluk_acik, hedef_kalori = hesapla_hedef_kalori(gecici_p)
         
         st.markdown(f"""
-        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; margin-top: 20px;">
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.1);">
             <h3 style="margin-top:0;">📊 Kişisel Analizin</h3>
             <p>Vücudunun dinlenik haldeki enerji harcaması (BMR): <b>{round(bmr)} kcal</b><br>
             Belirttiğin hedefe ulaşmak için oluşturman gereken günlük açık: <b>{round(gunluk_acik)} kcal</b><br>
