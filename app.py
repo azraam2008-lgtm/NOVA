@@ -120,24 +120,35 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # TEMA CSS
+    # GÜNCELLENMİŞ TEMA CSS (YAZI VE BUTON İZOLASYONU)
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
         [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']}; background-image: url("{bg_url}"); background-size: cover; background-position: center; background-attachment: fixed; }}
         [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
-        h1, h2, h3, p, span, label, th, td {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        .calai-card {{ background: {tema['card_bg']}; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
-        .nova-header {{ font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
-        .nova-user {{ text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
+        
+        /* Özel metinleri renklendir, Streamlit inputlarını bozma */
+        .calai-card {{ background: {tema['card_bg']}; color: {tema['text_color']}; font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
+        .calai-card h1, .calai-card h2, .calai-card h3, .calai-card p, .calai-card label, .calai-card th, .calai-card td {{ color: {tema['text_color']}; font-family: 'Plus Jakarta Sans', sans-serif; }}
+        
+        .nova-header {{ color: {tema['text_color']}; font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
+        .nova-user {{ color: {tema['text_color']}; text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
+        
+        /* Butonları görünür kıl */
+        .stButton button {{ background-color: rgba(255,255,255,0.15) !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.4) !important; font-weight: bold; backdrop-filter: blur(10px); }}
+        .stButton button:hover {{ background-color: rgba(255,255,255,0.3) !important; border-color: #ffffff !important; }}
+        
+        /* Halka Grafikleri */
         .ring-container {{ width: 200px; height: 200px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
         .ring-inner {{ width: 155px; height: 155px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-        .ring-val {{ font-size: 2.2rem; font-weight: 800; margin-bottom: -5px; }}
-        .ring-lbl {{ font-size: 1.1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }}
+        .ring-val {{ font-size: 2.2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
+        .ring-lbl {{ font-size: 1.1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']}; }}
+        
         table {{ width: 100%; font-size: 1.2rem; background: transparent; border-collapse: collapse; }}
         th, td {{ padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
         th {{ font-weight: 800; font-size: 1.3rem; opacity: 0.9; }}
-        a {{ color: #ffffff !important; text-decoration: underline !important; font-weight: bold; }}
+        a {{ color: {tema['text_color']} !important; text-decoration: underline !important; font-weight: bold; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -222,14 +233,13 @@ else:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 2) GÜNLÜK OTOMATİK LİNK EGZERSİZ MODÜLÜ (SORUNSUZ YOUTUBE)
+        # 2) GÜNLÜK OTOMATİK LİNK EGZERSİZ MODÜLÜ
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Günün Egzersizi</h2>", unsafe_allow_html=True)
         
         tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
         gun_indeksi = tarih_obj.weekday()
         
-        # GERÇEK 20-25 DAKİKALIK VİDEO LİNKLERİ (ST.VİDEO OLMADAN, DOĞRUDAN TIKLANABİLİR LİNK)
         GUNLUK_EGZERSIZLER = {
             0: {"kanal": "Growwithjo", "baslik": "20 Dakika Yoğun Alt Karın Antrenmanı", "link": "https://www.youtube.com/watch?v=2haf-ZqA808", "kalori": 230},
             1: {"kanal": "Nikola's Pilates", "baslik": "20 Dakika Tam Vücut Sıkılaşma Pilatesi", "link": "https://www.youtube.com/watch?v=azvLOvw4NU8", "kalori": 190},
@@ -259,7 +269,7 @@ else:
             st.success(f"🔥 Harika iş çıkardın! Tabloya günlük **{curr_aktivite['egzersiz_kalori']} kcal** egzersiz harcaması eklendi.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 3) KALORİ, TABLO VE İNCE MAKRO ÇUBUKLARI
+        # 3) KALORİ, BMR VE TABLO
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
         
@@ -269,30 +279,40 @@ else:
         top_karb = sum([k.get("Karbonhidrat", 0) for k in bugun_og])
         top_yag = sum([k.get("Yağ", 0) for k in bugun_og])
         
-        bmr, gunluk_acik, hedef_kalori = hesapla_hedef_kalori(p)
+        bmr, gunluk_acik, hedef_kalori_alim = hesapla_hedef_kalori(p)
         harcanan_adim_kalori = curr_aktivite["adim"] * 0.04
         harcanan_egzersiz = curr_aktivite.get("egzersiz_kalori", 0)
-        toplam_harcanan = harcanan_adim_kalori + harcanan_egzersiz
-        net_kalori = top_kalori - toplam_harcanan
         
-        hedef_pro = (hedef_kalori * 0.3) / 4
-        hedef_karb = (hedef_kalori * 0.4) / 4
-        hedef_yag = (hedef_kalori * 0.3) / 9
+        # TOPLAM HARCANAN (BMR EKLENDİ)
+        toplam_harcanan = bmr + harcanan_adim_kalori + harcanan_egzersiz
+        
+        # NET KALORİ (Alınan - Harcanan)
+        net_kalori = top_kalori - toplam_harcanan
+        hedef_net_acik = -gunluk_acik # Kilo vermek için gereken eksi değer
+        
+        hedef_pro = (hedef_kalori_alim * 0.3) / 4
+        hedef_karb = (hedef_kalori_alim * 0.4) / 4
+        hedef_yag = (hedef_kalori_alim * 0.3) / 9
         
         st.markdown(f"""
         <table>
             <tr><th>Metrik</th><th style="text-align: right;">Değer</th></tr>
-            <tr><td>🎯 Hedeflenen Günlük Kalori Alımı</td><td style="text-align: right;"><b>{round(hedef_kalori)} kcal</b></td></tr>
+            <tr><td>🫀 Dinlenik Metabolizma (BMR - Yan Gelip Yatma)</td><td style="text-align: right; color: #34c759;"><b>- {round(bmr)} kcal</b></td></tr>
+            <tr><td>🏃‍♀️ Hareket ve Egzersizle Yakılan</td><td style="text-align: right; color: #34c759;"><b>- {round(harcanan_adim_kalori + harcanan_egzersiz)} kcal</b></td></tr>
             <tr><td>🍽️ Alınan Toplam Kalori (Yemekler)</td><td style="text-align: right; color: #ff9500;"><b>+ {round(top_kalori)} kcal</b></td></tr>
-            <tr><td>🔥 Verilen Toplam Kalori (Adım & Egzersiz)</td><td style="text-align: right; color: #34c759;"><b>- {round(toplam_harcanan)} kcal</b></td></tr>
             <tr style="border-top: 2px solid rgba(255,255,255,0.5);">
-                <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Vücutta Kalan Net Kalori</td>
+                <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Gün Sonunda Net Vücut Dengesi</td>
                 <td style="text-align: right; font-size: 1.4rem; font-weight: 800;">{round(net_kalori)} kcal</td>
             </tr>
         </table>
         <br>
         """, unsafe_allow_html=True)
         
+        if net_kalori > hedef_net_acik: 
+            st.error(f"⚠️ Hedef açığına ulaşmak için bugün {round(net_kalori - hedef_net_acik)} kcal fazlan var. Biraz daha hareket edebilirsin!")
+        else: 
+            st.success(f"✅ Harika! Hedef açığını yakaladın, hatta {round(hedef_net_acik - net_kalori)} kcal daha avantajlısın.")
+
         def render_makro(isim, mevcut, hedef, renk):
             yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
             return f"""
@@ -311,10 +331,6 @@ else:
         st.markdown(render_makro("🥩 Protein", top_pro, hedef_pro, "#ff3b30"), unsafe_allow_html=True)
         st.markdown(render_makro("🍞 Karbonhidrat", top_karb, hedef_karb, "#007aff"), unsafe_allow_html=True)
         st.markdown(render_makro("🥑 Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        if net_kalori > hedef_kalori: st.error(f"⚠️ Hedefinin {round(net_kalori - hedef_kalori)} kalori üstündesin.")
-        else: st.success(f"✅ Hedefine ulaşmak için bugün {round(hedef_kalori - net_kalori)} kalori daha hakkın var.")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # 4) ETKİLEŞİMLİ ARAMA ÇUBUĞU VE ÖĞÜN YÖNETİMİ
@@ -356,20 +372,26 @@ else:
                         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # 5) YENİ TASARIM HAFTALIK GRAFİK
+        # 5) ESTETİK ÇİZGİ GRAFİK (LINE CHART)
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-        st.markdown("<h2 style='font-size: 2.2rem;'>📈 Haftalık Gelişim Grafiği</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='font-size: 2.2rem;'>📈 Haftalık Gelişim (Çizgi Grafik)</h2>", unsafe_allow_html=True)
         bugun_tarih = datetime.date.today()
         grafik_data = []
+        
         for i in range(6, -1, -1):
             g = str(bugun_tarih - datetime.timedelta(days=i))
             g_ogunler = [k for k in st.session_state.gunluk_kayitlar if k.get("Tarih") == g]
             g_alinan = sum([k["Kalori"] for k in g_ogunler])
             g_akt = st.session_state.aktivite_loglari.get(g, {"adim": 0, "egzersiz_kalori": 0})
-            g_harcanan = (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
+            
+            # Dinlenik Metabolizma (BMR) + Adım + Egzersiz = Toplam Harcanan
+            g_harcanan = bmr + (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
+            
             grafik_data.append({"Gün": g[5:], "Alınan Kalori": g_alinan, "Harcanan Kalori": g_harcanan})
         
         df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
-        st.bar_chart(df_grafik, color=["#ff9500", "#34c759"])
-        st.caption("ℹ️ **Nasıl Okunur:** Yan yana duran çubuklardan **Turuncu** olanlar gün içinde yediğin toplam kaloriyi, **Yeşil** olanlar ise attığın adımlar ve egzersizlerle yaktığın toplam kaloriyi gösterir.")
+        
+        # Şık çizgi grafik
+        st.line_chart(df_grafik, color=["#ff9500", "#34c759"])
+        st.caption("ℹ️ **Nasıl Okunur:** Çizgilerdeki **Turuncu hat** gün içinde vücuduna giren kaloriyi, **Yeşil hat** ise (BMR ve egzersizler dahil) yaktığın toplam enerjiyi gösterir. Yeşil hat, turuncunun üstünde kalıyorsa doğru yoldasın demektir.")
         st.markdown('</div>', unsafe_allow_html=True)
