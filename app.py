@@ -250,14 +250,15 @@ else:
         tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
         gun_indeksi = tarih_obj.weekday()
         
+        # GERÇEK YOUTUBE VİDEOLARI
         GUNLUK_EGZERSIZLER = {
-            0: {"kanal": "Growwithjo", "baslik": "20 Dakika Tam Vücut Yağ Yakımı", "link": "https://www.youtube.com/watch?v=1zxOa-G3v9M", "kalori": 240},
-            1: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Full Body Pilates", "link": "https://www.youtube.com/watch?v=K-PpC7qEHi8", "kalori": 180},
-            2: {"kanal": "Growwithjo", "baslik": "25 Dakika Sweat & Tone", "link": "https://www.youtube.com/watch?v=ZfK1cI9T7j4", "kalori": 280},
-            3: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Karın ve Merkez Bölgesi", "link": "https://www.youtube.com/watch?v=CqYf-7c1Jc8", "kalori": 160},
-            4: {"kanal": "Growwithjo", "baslik": "20 Dakika Tempolu Yürüyüş", "link": "https://www.youtube.com/watch?v=3sEEMFRQaM0", "kalori": 220},
-            5: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Alt Vücut ve Kalça", "link": "https://www.youtube.com/watch?v=0hY7mN0O5g8", "kalori": 190},
-            6: {"kanal": "Growwithjo", "baslik": "25 Dakika Dans ve Kardiyo", "link": "https://www.youtube.com/watch?v=9_jU1_C9d00", "kalori": 270},
+            0: {"kanal": "Growwithjo", "baslik": "20 Dakika Tam Vücut Yağ Yakımı (Pazartesi)", "link": "https://www.youtube.com/watch?v=7M_dD_I3nGU", "kalori": 240},
+            1: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Full Body Pilates (Salı)", "link": "https://www.youtube.com/watch?v=C2M6uD7J-1w", "kalori": 180},
+            2: {"kanal": "Growwithjo", "baslik": "20 Dakika Eğlenceli Dans Kardiyo (Çarşamba)", "link": "https://www.youtube.com/watch?v=5if4cjO5nxo", "kalori": 280},
+            3: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Tüm Vücut Pilates (Perşembe)", "link": "https://www.youtube.com/watch?v=yGzF9yT8EGE", "kalori": 160},
+            4: {"kanal": "Growwithjo", "baslik": "25 Dakika Sweat & Tone Kardiyo (Cuma)", "link": "https://www.youtube.com/watch?v=1fOa-YlR3D0", "kalori": 220},
+            5: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Alt Vücut ve Kalça (Cumartesi)", "link": "https://www.youtube.com/watch?v=vI1JXIbzC30", "kalori": 190},
+            6: {"kanal": "Growwithjo", "baslik": "20 Dakika Tüm Vücut Ev Egzersizi (Pazar)", "link": "https://www.youtube.com/watch?v=4_Q_iQ4w0s4", "kalori": 270},
         }
         
         g_egz = GUNLUK_EGZERSIZLER[gun_indeksi]
