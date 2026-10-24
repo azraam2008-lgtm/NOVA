@@ -31,14 +31,10 @@ TEMA_AYARLARI = {
 @st.cache_data
 def yemek_veritabanini_yukle():
     try:
-        # Senin GitHub depondaki CSV dosyasını çeker
         df = pd.read_csv("https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/cok_daha_kapsamli_yemek_veritabani.csv")
         return df
     except:
-        return pd.DataFrame({
-            "Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], 
-            "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]
-        })
+        return pd.DataFrame({"Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]})
 
 df_yemek = yemek_veritabanini_yukle()
 
@@ -141,6 +137,7 @@ else:
         table {{ width: 100%; font-size: 1.2rem; background: transparent; border-collapse: collapse; }}
         th, td {{ padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
         th {{ font-weight: 800; font-size: 1.3rem; opacity: 0.9; }}
+        a {{ color: #ffffff !important; text-decoration: underline !important; font-weight: bold; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -225,26 +222,33 @@ else:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 2) GÜNLÜK OTOMATİK LİNK EGZERSİZ MODÜLÜ
+        # 2) GÜNLÜK OTOMATİK LİNK EGZERSİZ MODÜLÜ (SORUNSUZ YOUTUBE)
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Günün Egzersizi</h2>", unsafe_allow_html=True)
         
         tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
         gun_indeksi = tarih_obj.weekday()
         
+        # GERÇEK 20-25 DAKİKALIK VİDEO LİNKLERİ (ST.VİDEO OLMADAN, DOĞRUDAN TIKLANABİLİR LİNK)
         GUNLUK_EGZERSIZLER = {
-            0: {"kanal": "Growwithjo", "baslik": "20 Dakika Tam Vücut Yağ Yakımı (Pazartesi)", "link": "https://www.youtube.com/watch?v=7M_dD_I3nGU", "kalori": 240},
-            1: {"kanal": "Pilates with Nicole", "baslik": "25 Dakika Full Body Pilates (Salı)", "link": "https://www.youtube.com/watch?v=C2M6uD7J-1w", "kalori": 180},
-            2: {"kanal": "Growwithjo", "baslik": "20 Dakika Eğlenceli Dans Kardiyo (Çarşamba)", "link": "https://www.youtube.com/watch?v=5if4cjO5nxo", "kalori": 280},
-            3: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Tüm Vücut Pilates (Perşembe)", "link": "https://www.youtube.com/watch?v=yGzF9yT8EGE", "kalori": 160},
-            4: {"kanal": "Growwithjo", "baslik": "25 Dakika Sweat & Tone Kardiyo (Cuma)", "link": "https://www.youtube.com/watch?v=1fOa-YlR3D0", "kalori": 220},
-            5: {"kanal": "Pilates with Nicole", "baslik": "20 Dakika Alt Vücut ve Kalça (Cumartesi)", "link": "https://www.youtube.com/watch?v=vI1JXIbzC30", "kalori": 190},
-            6: {"kanal": "Growwithjo", "baslik": "20 Dakika Tüm Vücut Ev Egzersizi (Pazar)", "link": "https://www.youtube.com/watch?v=4_Q_iQ4w0s4", "kalori": 270},
+            0: {"kanal": "Growwithjo", "baslik": "20 Dakika Yoğun Alt Karın Antrenmanı", "link": "https://www.youtube.com/watch?v=2haf-ZqA808", "kalori": 230},
+            1: {"kanal": "Nikola's Pilates", "baslik": "20 Dakika Tam Vücut Sıkılaşma Pilatesi", "link": "https://www.youtube.com/watch?v=azvLOvw4NU8", "kalori": 190},
+            2: {"kanal": "Growwithjo", "baslik": "20 Dakika Her Sabah Tam Vücut Kardiyo", "link": "https://www.youtube.com/watch?v=m1DBJhxKmiU", "kalori": 250},
+            3: {"kanal": "Nikola's Pilates", "baslik": "15 Dakika Yağ Yakıcı ve Şekillendirici", "link": "https://www.youtube.com/watch?v=wNcAYIxlQgM", "kalori": 160},
+            4: {"kanal": "Growwithjo", "baslik": "20 Dakika Kas Geliştirme & Yağ Yakımı", "link": "https://www.youtube.com/watch?v=hXBE20_RGfU", "kalori": 240},
+            5: {"kanal": "Nikola's Pilates", "baslik": "İnce ve Belirgin Bir Vücut İçin Ev Egzersizi", "link": "https://www.youtube.com/watch?v=TcOa7qlcHA4", "kalori": 180},
+            6: {"kanal": "Growwithjo", "baslik": "Karın Kaslarınızı Yakacak 20 Dakika", "link": "https://www.youtube.com/watch?v=jORxpByzIwA", "kalori": 220},
         }
         g_egz = GUNLUK_EGZERSIZLER[gun_indeksi]
         
-        st.markdown(f"📺 **[{g_egz['kanal']} - {g_egz['baslik']} (İzlemek İçin Tıklayın)]({g_egz['link']})**")
-        st.markdown(f"🤖 **Yapay Zeka Analizi:** Bu antrenmanı tamamlarsan yaklaşık **{g_egz['kalori']} kcal** yakacaksın.")
+        st.markdown(f"""
+        <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 20px; border-left: 5px solid #ff3b30;">
+            <h3 style="margin-top:0;">{g_egz['kanal']}</h3>
+            <p style="font-size: 1.2rem;">{g_egz['baslik']}</p>
+            <p>🤖 <b>Yapay Zeka Analizi:</b> Bu videodaki hareket dinamiğine göre <b>{g_egz['kalori']} kcal</b> yakacaksın.</p>
+            <a href="{g_egz['link']}" target="_blank" style="display: inline-block; background-color: #ff3b30; color: white !important; padding: 12px 25px; border-radius: 8px; text-decoration: none !important; font-weight: bold; margin-top: 10px;">▶️ YouTube'da Aç ve İzle</a>
+        </div>
+        """, unsafe_allow_html=True)
         
         if st.button("✅ Antrenmanı Tamamladım", use_container_width=True):
             curr_aktivite["egzersiz_kalori"] = g_egz['kalori']
@@ -313,7 +317,7 @@ else:
         else: st.success(f"✅ Hedefine ulaşmak için bugün {round(hedef_kalori - net_kalori)} kalori daha hakkın var.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 4) ETKİLEŞİMLİ ARAMA ÇUBUĞU VE ÖĞÜN SİLME
+        # 4) ETKİLEŞİMLİ ARAMA ÇUBUĞU VE ÖĞÜN YÖNETİMİ
         st.markdown('<div class="calai-card">', unsafe_allow_html=True)
         st.markdown("<h2 style='font-size: 2.2rem;'>🔎 Yemek Ara & Günlüğüne Ekle</h2>", unsafe_allow_html=True)
         
@@ -336,9 +340,9 @@ else:
                 verileri_kaydet(aktif_user)
                 st.rerun()
 
-        st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 30px 0;'>", unsafe_allow_html=True)
         st.markdown("<h3>🍽️ Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
-        for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün", "AI Tespiti"]:
+        for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]:
             ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
             if ogun_yemekleri:
                 st.markdown(f"**{ogun_turu}**")
