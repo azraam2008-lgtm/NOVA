@@ -150,13 +150,15 @@ ZENGIN_LEZZET_KATALOGU = {
 # ----------------------------------------------------
 # 4. BULUT (SUPABASE) VERİ YÖNETİM FONKSİYONLARI
 # ----------------------------------------------------
-def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
+def sifre_hashle(sifre): 
+    return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
 
 def kullanicilari_yukle():
     try:
         res = supabase.table("kullanicilar").select("*").execute()
         return {row["username"]: row["password_hash"] for row in res.data}
-    except: return {}
+    except Exception as e:
+        return {}
 
 def verileri_yukle(username):
     default_data = {
@@ -169,8 +171,10 @@ def verileri_yukle(username):
     }
     try:
         res = supabase.table("kullanici_verileri").select("data").eq("username", username).execute()
-        if res.data: return res.data[0]["data"]
-    except: pass
+        if res.data: 
+            return res.data[0]["data"]
+    except: 
+        pass
     return default_data
 
 def verileri_kaydet(username):
@@ -190,9 +194,12 @@ def hesapla_bmr(p):
 # ----------------------------------------------------
 # 5. GİRİŞ VE OTURUM YÖNETİMİ
 # ----------------------------------------------------
-if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
-if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
-if "sayfa_gorunumu" not in st.session_state: st.session_state.sayfa_gorunumu = "ana_sayfa"
+if "giris_yapildi" not in st.session_state: 
+    st.session_state.giris_yapildi = False
+if "aktif_kullanici" not in st.session_state: 
+    st.session_state.aktif_kullanici = ""
+if "sayfa_gorunumu" not in st.session_state: 
+    st.session_state.sayfa_gorunumu = "ana_sayfa"
 
 if not st.session_state.giris_yapildi:
     st.markdown("<h1 style='text-align: center; font-size: 48px; letter-spacing: 2px; margin-top: 40px;'>NOVA</h1>", unsafe_allow_html=True)
@@ -210,7 +217,8 @@ if not st.session_state.giris_yapildi:
                 st.session_state.aktif_kullanici = g_user
                 st.session_state.update(verileri_yukle(g_user))
                 st.rerun()
-            else: st.error("Hatalı kullanıcı adı veya şifre.")
+            else: 
+                st.error("Hatalı kullanıcı adı veya şifre.")
 
     with tab_kayit:
         k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
@@ -218,9 +226,13 @@ if not st.session_state.giris_yapildi:
         if st.button("Hesap Oluştur", use_container_width=True):
             if k_user and k_pass:
                 if k_user not in users:
-                    supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
-                    st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
-                else: st.warning("Bu kullanıcı adı zaten alınmış.")
+                    try:
+                        supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
+                        st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
+                    except Exception as e:
+                        st.error(f"Kayıt oluşturulurken veritabanı hatası: {e}")
+                else: 
+                    st.warning("Bu kullanıcı adı zaten alınmış.")
 
 else:
     aktif_user = st.session_state.aktif_kullanici
@@ -271,10 +283,14 @@ else:
 
         with sol_bosluk:
             st.markdown("<br><br>", unsafe_allow_html=True)
-            if aktif_tema == "Yeşil Ferahlık": st.image("https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400")
-            elif aktif_tema == "Pembe Su & Detoks": st.image("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400")
-            elif aktif_tema == "Koyu Gym": st.image("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400")
-            else: st.image("https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400")
+            if aktif_tema == "Yeşil Ferahlık": 
+                st.image("https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400")
+            elif aktif_tema == "Pembe Su & Detoks": 
+                st.image("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400")
+            elif aktif_tema == "Koyu Gym": 
+                st.image("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400")
+            else: 
+                st.image("https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400")
 
         with ana_icerik:
             secilen_tarih = str(st.date_input("Kayıt Tarihi", datetime.date.today()))
@@ -370,7 +386,11 @@ else:
 
         with sag_bosluk:
             st.markdown("<br><br>", unsafe_allow_html=True)
-            if aktif_tema == "Yeşil Ferahlık": st.image("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400")
-            elif aktif_tema == "Pembe Su & Detoks": st.image("https://images.unsplash.com/photo-1556881286-fc6915169721?w=400")
-            elif aktif_tema == "Koyu Gym": st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400")
-            else: st.image("https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400")
+            if aktif_tema == "Yeşil Ferahlık": 
+                st.image("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400")
+            elif aktif_tema == "Pembe Su & Detoks": 
+                st.image("https://images.unsplash.com/photo-1556881286-fc6915169721?w=400")
+            elif aktif_tema == "Koyu Gym": 
+                st.image("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400")
+            else: 
+                st.image("https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400")
