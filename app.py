@@ -142,12 +142,19 @@ if not st.session_state.giris_yapildi:
 else:
     aktif_user = st.session_state.aktif_kullanici
     p = st.session_state.profil
+    else:
+    aktif_user = st.session_state.aktif_kullanici
+    p = st.session_state.profil
     aktif_tema = p.get("tema", "Koyu Cam")
-    # Eğer veritabanındaki eski tema yeni listede yoksa, varsayılan olarak Koyu Cam yap:
-    if aktif_tema not in TEMA_AYARLARI: 
+    
+    # Güvenlik Kilidi: Eski tema adı varsa Koyu Cam yap
+    if aktif_tema not in TEMA_AYARLARI:
         aktif_tema = "Koyu Cam"
+        
     tema = TEMA_AYARLARI[aktif_tema]
-    bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema_renkleri['bg_image']}"
+    tema_renkleri = tema  # İsim uyuşmazlığı hatasını çözen altın vuruş!
+    
+    bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
     txt_col = tema_renkleri['text_color']
     card_bg = tema_renkleri['card_bg']
     ring_trk = tema_renkleri['ring_track']
