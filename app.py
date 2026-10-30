@@ -10,7 +10,6 @@ from supabase import create_client, Client
 from meal_scan import meal_scan_page
 from nova_pages import coach_page, ask_page
 
-# Favicon olarak Kuğu (Swan) ikonu ayarlandı
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="🦢", layout="wide", initial_sidebar_state="collapsed")
 
 # --- SUPABASE BAĞLANTI AYARLARI ---
@@ -57,7 +56,7 @@ def kullanicilari_yukle():
 def verileri_yukle(username):
     default_data = {
         "gunluk_kayitlar": [], "aktivite_loglari": {},
-        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 60.0, "hedef_kilo": 55.0, "hedef_sure_ay": 2, "tema": "Koyu Cam", "setup_tamamlandi": False}
+        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 60.0, "hedef_kilo": 55.0, "hedef_sure_ay": 2, "tema": "Koyu Cam", "amaclar": [], "setup_tamamlandi": False}
     }
     try:
         res = supabase.table("kullanici_verileri").select("data").eq("username", username).execute()
@@ -70,35 +69,61 @@ def verileri_kaydet(username):
     try: supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
     except: pass
 
-def hesapla_bmr(p): return (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
-def hesapla_hedef_kalori(p):
-    bmr = hesapla_bmr(p)
+def hesapla_bmr_ve_hedef(p):
+    # Cinsiyete göre BMR (Mifflin-St Jeor)
+    if p.get("cinsiyet", "Kadın") == "Kadın":
+        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
+    else:
+        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) + 5
+
+    # Amaca göre hareketlilik çarpanı
+    amaclar = p.get("amaclar", [])
+    if "Kas kazanmak" in amaclar:
+        tdee = bmr * 1.55
+    elif "Kilo vermek" in amaclar or "Sağlıklı beslenmek" in amaclar:
+        tdee = bmr * 1.35
+    else:
+        tdee = bmr * 1.2
+
     kilo_farki = float(p["mevcut_kilo"]) - float(p["hedef_kilo"])
     gunluk_acik = (kilo_farki * 7700) / max(1, int(p.get("hedef_sure_ay", 1)) * 30)
-    return bmr, gunluk_acik, max(1200, bmr - gunluk_acik)
+    
+    hedef_kalori = tdee - gunluk_acik
+    # Sağlıklı minimum sınır
+    hedef_kalori = max(1200 if p.get("cinsiyet") == "Kadın" else 1500, hedef_kalori)
+    
+    return bmr, tdee, gunluk_acik, hedef_kalori
 
 # ----------------------------------------------------
-# OTURUM YÖNETİMİ VE ANA AKIŞ
+# OTURUM YÖNETİMİ VE GİRİŞ (SOCIAL LOGIN ARAYÜZÜ İLE)
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
+if "onboarding_step" not in st.session_state: st.session_state.onboarding_step = 1
 
 if not st.session_state.giris_yapildi:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-        [data-testid="stAppViewContainer"] { background-color: #111111; }
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 30px; text-align: center; font-weight: 700; margin-top: 10vh; color: #ffffff;}
+        [data-testid="stAppViewContainer"] { background-color: #0a0a0a; }
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 30px; text-align: center; font-weight: 700; margin-top: 5vh; color: #ffffff;}
         p, label, span { color: #ffffff !important; }
+        .social-btn { display: block; width: 100%; text-align: center; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-weight: bold; text-decoration: none; color: black; background: white; border: 1px solid #ccc; cursor: pointer; }
+        .social-btn.apple { background: black; color: white; border: 1px solid white; }
         </style>
         <div class="nova-logo-giris">N O V A</div>
-        <p style='text-align: center; color: #aaaaaa !important; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 50px;'>ZARAFET VE DENGE</p>
+        <p style='text-align: center; color: #aaaaaa !important; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 40px;'>ZARAFET VE DENGE</p>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
+        st.markdown('<a class="social-btn" href="#">🔵 Google ile Devam Et</a>', unsafe_allow_html=True)
+        st.markdown('<a class="social-btn apple" href="#"> Apple ile Devam Et</a>', unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; opacity:0.6; margin: 15px 0;'>veya</p>", unsafe_allow_html=True)
+        
         tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
         users = kullanicilari_yukle()
+        
         with tab_giris:
             g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
             g_pass = st.text_input("Şifre", type="password", key="g_pass")
@@ -125,122 +150,127 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # GÜNCELLENMİŞ TEMA CSS (KESİN YAZI, BUTON VE KUTU İZOLASYONU + TABS STİLİ)
+    # TEMA CSS
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
         [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']}; background-image: url("{bg_url}"); background-size: cover; background-position: center; background-attachment: fixed; }}
         [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
-        
         .nova-header {{ color: {tema['text_color']} !important; font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
         .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
-        
-        /* Kartların içindeki metinler temanın belirlediği renk olacak */
         .calai-card {{ background: {tema['card_bg']}; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        
-        /* 🚨 STREAMLİT KUTULARINI BEYAZ/AYDINLIK VE BELİRGİN YAPMA 🚨 */
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            border-radius: 8px !important;
-            border: 2px solid rgba(0,0,0,0.2) !important;
-        }}
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 8px !important; border: 2px solid rgba(0,0,0,0.2) !important; }}
         div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
-        
-        /* Sekmeler (Tabs) Tasarımı */
-        button[data-baseweb="tab"] {{
-            background-color: transparent !important;
-            color: {tema['text_color']} !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-            font-size: 1.1rem !important;
-        }}
-        button[data-baseweb="tab"][aria-selected="true"] {{
-            border-bottom: 3px solid {tema['text_color']} !important;
-            font-weight: 800 !important;
-        }}
-        
-        /* Butonları temaya uyumlu ve çok belirgin hale getir */
-        div.stButton > button:first-child {{
-            background-color: {tema['fallback_bg']} !important;
-            color: {tema['text_color']} !important;
-            border: 2px solid {tema['text_color']} !important;
-            font-weight: 800 !important;
-            border-radius: 12px !important;
-            backdrop-filter: blur(10px);
-        }}
-        div.stButton > button:first-child:hover {{
-            background-color: {tema['text_color']} !important;
-            color: {tema['fallback_bg']} !important;
-            border-color: {tema['fallback_bg']} !important;
-        }}
-        
-        /* Halka Grafikleri */
+        button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; }}
+        button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; }}
+        div.stButton > button:first-child {{ background-color: {tema['fallback_bg']} !important; color: {tema['text_color']} !important; border: 2px solid {tema['text_color']} !important; font-weight: 800 !important; border-radius: 12px !important; backdrop-filter: blur(10px); }}
+        div.stButton > button:first-child:hover {{ background-color: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['fallback_bg']} !important; }}
         .ring-container {{ width: 200px; height: 200px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
         .ring-inner {{ width: 155px; height: 155px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
         .ring-val {{ font-size: 2.2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
         .ring-lbl {{ font-size: 1.1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']}; }}
-        
         table {{ width: 100%; font-size: 1.2rem; background: transparent; border-collapse: collapse; }}
         th, td {{ padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
         th {{ font-weight: 800; font-size: 1.3rem; opacity: 0.9; }}
-        a {{ color: {tema['text_color']} !important; text-decoration: underline !important; font-weight: bold; }}
         </style>
     """, unsafe_allow_html=True)
 
     # ----------------------------------------------------
-    # EĞİTİCİ İLK KURULUM (ONBOARDING)
+    # EĞİTİCİ İLK KURULUM (MULTI-STEP ONBOARDING)
     # ----------------------------------------------------
     if not p.get("setup_tamamlandi", False):
+        st.markdown('<div class="nova-header" style="font-size:4rem; margin-top:20px;">N O V A</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="calai-card">', unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align:center; font-size: 3rem;'>NOVA'ya Hoş Geldin!</h1>", unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        boy = c1.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
-        mevcut_kilo = c2.number_input("Mevcut Kilon (kg)", min_value=35.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
-        hedef_kilo = c1.number_input("Hedef Kilon (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
-        hedef_sure = c2.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
-        sec_tema = st.selectbox("Kişisel Temanı Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
-
-        if st.button("Profilimi Kaydet ve Başla", use_container_width=True):
-            st.session_state.profil.update({"boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure, "tema": sec_tema, "setup_tamamlandi": True})
-            verileri_kaydet(aktif_user)
-            st.rerun()
+        
+        step = st.session_state.onboarding_step
+        
+        if step == 1:
+            st.markdown("<h2 style='text-align:center;'>Nova'yı Hangi Amaçla Kullanmak İstiyorsun?</h2>", unsafe_allow_html=True)
+            amaclar = st.multiselect("Hedeflerin (Birden fazla seçebilirsin)", ["Kilo vermek", "Kilo almak", "Kas kazanmak", "Sağlıklı beslenmek"], default=p.get("amaclar", []))
+            
+            if st.button("İleri ➔", use_container_width=True):
+                st.session_state.profil["amaclar"] = amaclar
+                st.session_state.onboarding_step = 2
+                st.rerun()
+                
+        elif step == 2:
+            st.markdown("<h2 style='text-align:center;'>Seni Biraz Tanıyalım</h2>", unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            cinsiyet = c1.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
+            yas = c2.number_input("Yaş", min_value=12, max_value=100, value=int(p.get("yas", 20)))
+            boy = c1.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
+            mevcut_kilo = c2.number_input("Mevcut Kilon (kg)", min_value=35.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
+            hedef_kilo = c1.number_input("Hedef Kilon (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
+            hedef_sure = c2.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
+            sec_tema = st.selectbox("Kişisel Temanı Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"):
+                st.session_state.onboarding_step = 1
+                st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil.update({"cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure, "tema": sec_tema})
+                st.session_state.onboarding_step = 3
+                st.rerun()
+                
+        elif step == 3:
+            st.markdown("<h2 style='text-align:center;'>İşte Kişisel Planın 🎯</h2>", unsafe_allow_html=True)
+            bmr, tdee, gunluk_acik, hedef_kalori = hesapla_bmr_ve_hedef(p)
+            
+            st.markdown(f"""
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+                <p><b>Amacın:</b> {', '.join(p.get('amaclar', ['Belirtilmedi']))}</p>
+                <p><b>Dinlenik Metabolizman (BMR):</b> {round(bmr)} kcal</p>
+                <p><b>Tahmini Günlük Harcaman:</b> {round(tdee)} kcal</p>
+                <hr>
+                <h3 style="color: #007aff !important;">Günlük Alman Gereken Kalori: {round(hedef_kalori)} kcal</h3>
+                <p style="opacity:0.8;"><i>(Seçtiğin hedeflere ve süreye göre oluşturulmuştur.)</i></p>
+            </div><br>
+            """, unsafe_allow_html=True)
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"):
+                st.session_state.onboarding_step = 2
+                st.rerun()
+            if b2.button("🚀 Uygulamaya Başla", type="primary"):
+                st.session_state.profil["setup_tamamlandi"] = True
+                verileri_kaydet(aktif_user)
+                st.rerun()
+                
         st.markdown('</div>', unsafe_allow_html=True)
         st.stop()
 
     # ----------------------------------------------------
-    # ANA EKRAN VE SEKMELER (TABS)
+    # ANA EKRAN
     # ----------------------------------------------------
     st.markdown('<div class="nova-header">N O V A</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="nova-user">{aktif_user}</div>', unsafe_allow_html=True)
 
     c_sol, c_orta, c_sag = st.columns([1, 10, 1])
     with c_orta:
-        # ÜST BAR: TARİH VE AYARLAR
         t_col1, t_col2 = st.columns([8, 2])
         with t_col1:
             secilen_tarih = str(st.date_input("🗓️ Tarih Seçimi", datetime.date.today()))
         with t_col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("⚙️ Ayarlar / Tema", use_container_width=True):
+            if st.button("⚙️ Ayarlar", use_container_width=True):
                 st.session_state.profil["setup_tamamlandi"] = False
+                st.session_state.onboarding_step = 1
                 st.rerun()
 
         if secilen_tarih not in st.session_state.aktivite_loglari:
             st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0, "egzersiz_kalori": 0}
         curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-        # ANA İÇERİK SEKMELERİ
         tab_ozet, tab_ai_ogun, tab_ai_koc, tab_ai_asistan = st.tabs(["📊 Günlük Özet", "📸 AI Öğün Tarama", "🏋️‍♀️ AI Koç", "💬 AI Asistan"])
 
         # ==========================================
-        # 1. SEKME: GÜNLÜK ÖZET (KLASİK EKRAN)
+        # 1. SEKME: GÜNLÜK ÖZET & MANUEL EKLEME
         # ==========================================
         with tab_ozet:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             st.markdown("<h2 style='text-align:center; font-size: 2.2rem; margin-bottom: 30px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
-            
             adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
             su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
             
@@ -259,7 +289,6 @@ else:
                     curr_aktivite["adim"] += yeni_adim
                     verileri_kaydet(aktif_user)
                     st.rerun()
-
             with hc2:
                 st.markdown(f"""
                     <div class="ring-container" style="background: conic-gradient(#007aff {su_yuzde}%, {tema['ring_track']} 0deg);">
@@ -276,41 +305,7 @@ else:
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-            st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2.2rem;'>🏋️‍♀️ Günün Egzersizi</h2>", unsafe_allow_html=True)
-            
-            tarih_obj = datetime.datetime.strptime(secilen_tarih, "%Y-%m-%d")
-            gun_indeksi = tarih_obj.weekday()
-            
-            GUNLUK_EGZERSIZLER = {
-                0: {"kanal": "Growwithjo", "baslik": "20 Dakika Yoğun Alt Karın Antrenmanı", "link": "https://www.youtube.com/watch?v=2haf-ZqA808", "kalori": 230},
-                1: {"kanal": "Nikola's Pilates", "baslik": "20 Dakika Tam Vücut Sıkılaşma Pilatesi", "link": "https://www.youtube.com/watch?v=azvLOvw4NU8", "kalori": 190},
-                2: {"kanal": "Growwithjo", "baslik": "20 Dakika Her Sabah Tam Vücut Kardiyo", "link": "https://www.youtube.com/watch?v=m1DBJhxKmiU", "kalori": 250},
-                3: {"kanal": "Nikola's Pilates", "baslik": "15 Dakika Yağ Yakıcı ve Şekillendirici", "link": "https://www.youtube.com/watch?v=wNcAYIxlQgM", "kalori": 160},
-                4: {"kanal": "Growwithjo", "baslik": "20 Dakika Kas Geliştirme & Yağ Yakımı", "link": "https://www.youtube.com/watch?v=hXBE20_RGfU", "kalori": 240},
-                5: {"kanal": "Nikola's Pilates", "baslik": "İnce ve Belirgin Bir Vücut İçin Ev Egzersizi", "link": "https://www.youtube.com/watch?v=TcOa7qlcHA4", "kalori": 180},
-                6: {"kanal": "Growwithjo", "baslik": "Karın Kaslarınızı Yakacak 20 Dakika", "link": "https://www.youtube.com/watch?v=jORxpByzIwA", "kalori": 220},
-            }
-            g_egz = GUNLUK_EGZERSIZLER[gun_indeksi]
-            
-            st.markdown(f"""
-            <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 15px; margin-bottom: 20px; border-left: 5px solid #ff3b30;">
-                <h3 style="margin-top:0; color: #ffffff !important;">{g_egz['kanal']}</h3>
-                <p style="font-size: 1.2rem; color: #ffffff !important;">{g_egz['baslik']}</p>
-                <p style="color: #ffffff !important;">🤖 <b>Yapay Zeka Analizi:</b> Bu videodaki hareket dinamiğine göre <b>{g_egz['kalori']} kcal</b> yakacaksın.</p>
-                <a href="{g_egz['link']}" target="_blank" style="display: inline-block; background-color: #ff3b30; color: white !important; padding: 12px 25px; border-radius: 8px; text-decoration: none !important; font-weight: bold; margin-top: 10px;">▶️ YouTube'da Aç ve İzle</a>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("✅ Antrenmanı Tamamladım", use_container_width=True):
-                curr_aktivite["egzersiz_kalori"] = g_egz['kalori']
-                verileri_kaydet(aktif_user)
-                st.rerun()
-                
-            if curr_aktivite.get("egzersiz_kalori", 0) > 0:
-                st.success(f"🔥 Harika iş çıkardın! Tabloya günlük **{curr_aktivite['egzersiz_kalori']} kcal** egzersiz harcaması eklendi.")
-            st.markdown('</div>', unsafe_allow_html=True)
-
+            # KALORİ TABLOSU
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             st.markdown("<h2 style='font-size: 2.2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
             
@@ -320,10 +315,8 @@ else:
             top_karb = sum([k.get("Karbonhidrat", 0) for k in bugun_og])
             top_yag = sum([k.get("Yağ", 0) for k in bugun_og])
             
-            bmr, gunluk_acik, hedef_kalori_alim = hesapla_hedef_kalori(p)
-            harcanan_adim_kalori = curr_aktivite["adim"] * 0.04
-            harcanan_egzersiz = curr_aktivite.get("egzersiz_kalori", 0)
-            aktif_harcanan = harcanan_adim_kalori + harcanan_egzersiz
+            bmr, tdee, gunluk_acik, hedef_kalori_alim = hesapla_bmr_ve_hedef(p)
+            aktif_harcanan = (curr_aktivite["adim"] * 0.04) + curr_aktivite.get("egzersiz_kalori", 0)
             kalan_kalori = hedef_kalori_alim - top_kalori + aktif_harcanan
             
             hedef_pro = (hedef_kalori_alim * 0.3) / 4
@@ -340,8 +333,7 @@ else:
                     <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Geriye Kalan Yeme Hakkın</td>
                     <td style="text-align: right; font-size: 1.4rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
                 </tr>
-            </table>
-            <br>
+            </table><br>
             """, unsafe_allow_html=True)
             
             if kalan_kalori < 0: 
@@ -362,15 +354,15 @@ else:
                     </div>
                 </div>
                 """
-                
             st.markdown("<h4>Günlük Makro İhtiyaçları</h4>", unsafe_allow_html=True)
             st.markdown(render_makro("🥩 Protein", top_pro, hedef_pro, "#ff3b30"), unsafe_allow_html=True)
             st.markdown(render_makro("🍞 Karbonhidrat", top_karb, hedef_karb, "#007aff"), unsafe_allow_html=True)
             st.markdown(render_makro("🥑 Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
+            # MANUEL YEMEK ARAMA VE MAKRO DÜZENLEME (YENİ ÖZELLİK)
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2.2rem;'>🔎 Yemek Ara & Günlüğüne Ekle (Veritabanı)</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2.2rem;'>🔎 Yemek Ara & İnce Ayar Yap</h2>", unsafe_allow_html=True)
             
             a_col1, a_col2 = st.columns([3, 1])
             with a_col1:
@@ -381,12 +373,27 @@ else:
                 
             if secilen_yemek and secilen_yemek != "Önce CSV'yi GitHub'a Yükleyin":
                 detay = df_yemek[df_yemek["Yemek Adı"] == secilen_yemek].iloc[0]
-                st.caption(f"🔥 **İçerik:** {detay['Kalori (kcal)']} kcal | P: {detay['Protein (g)']}g | K: {detay['Karbonhidrat (g)']}g | Y: {detay['Yağ (g)']}g")
+                base_p = float(detay['Protein (g)'])
+                base_c = float(detay['Karbonhidrat (g)'])
+                base_f = float(detay['Yağ (g)'])
+                
+                st.caption("100g Standart Değerleri: P: {}g | K: {}g | Y: {}g".format(base_p, base_c, base_f))
+                porsiyon_g = st.number_input("Porsiyon (Gram)", min_value=10, max_value=2000, value=100, step=10)
+                carp = porsiyon_g / 100.0
+                
+                with st.expander("🛠️ İçeriği Kendine Göre Ayarla (Örn: Yağsız yaptıysan yağı kıs)"):
+                    new_p = st.slider("Protein (g)", 0.0, 150.0, float(base_p * carp), 0.1)
+                    new_c = st.slider("Karbonhidrat (g)", 0.0, 300.0, float(base_c * carp), 0.1)
+                    new_f = st.slider("Yağ (g)", 0.0, 150.0, float(base_f * carp), 0.1)
+                
+                new_kcal = round((new_p * 4) + (new_c * 4) + (new_f * 9))
+                st.info(f"🔥 Hesaplanmış Son Kalori: **{new_kcal} kcal**")
+                
                 if st.button("➕ Günlüğe Ekle", use_container_width=True):
                     st.session_state.gunluk_kayitlar.append({
                         "Tarih": secilen_tarih, "Öğün": secilen_ogun, "Tarif": secilen_yemek,
-                        "Kalori": float(detay["Kalori (kcal)"]), "Protein": float(detay["Protein (g)"]), 
-                        "Karbonhidrat": float(detay["Karbonhidrat (g)"]), "Yağ": float(detay["Yağ (g)"])
+                        "Kalori": new_kcal, "Protein": round(new_p, 1), 
+                        "Karbonhidrat": round(new_c, 1), "Yağ": round(new_f, 1)
                     })
                     verileri_kaydet(aktif_user)
                     st.rerun()
@@ -417,55 +424,37 @@ else:
                 g_alinan = sum([k["Kalori"] for k in g_ogunler])
                 g_akt = st.session_state.aktivite_loglari.get(g, {"adim": 0, "egzersiz_kalori": 0})
                 g_harcanan = bmr + (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
-                grafik_data.append({"Gün": g[5:], "Yediğin Kalori": g_alinan, "Vücudunun Toplam Yaktığı (BMR dahil)": g_harcanan})
+                grafik_data.append({"Gün": g[5:], "Yediğin Kalori": g_alinan, "Vücudunun Toplam Yaktığı": g_harcanan})
             
             df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
             st.line_chart(df_grafik, color=["#ff3b30", "#34c759"])
-            st.caption("ℹ️ **Nasıl Okunur:** **Kırmızı Hat** yediğin öğünleri, **Yeşil Hat** ise vücudunun gün içinde tamamen harcadığı (Metabolizma + Egzersiz) enerjiyi gösterir. Yeşil hat kırmızının üstündeyse zayıflıyorsun demektir.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # 2. SEKME: YZ FOTOĞRAF TABANLI ÖĞÜN TARAMA
-        # ==========================================
         with tab_ai_ogun:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             secilen_ogun_ai = st.selectbox("Hangi Öğün İçin Tarama Yapıyorsun?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="ai_ogun_sec")
-            
             totals = meal_scan_page()
-            
             if totals:
                 for item in totals["items"]:
                     st.session_state.gunluk_kayitlar.append({
-                        "Tarih": secilen_tarih, 
-                        "Öğün": secilen_ogun_ai, 
-                        "Tarif": f"🤖 {item['Yemek']}",
-                        "Kalori": float(item["Kalori"]), 
-                        "Protein": float(item["Protein (g)"]), 
-                        "Karbonhidrat": float(item["Karb. (g)"]), 
-                        "Yağ": float(item["Yağ (g)"])
+                        "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai, "Tarif": f"🤖 {item['Yemek']}",
+                        "Kalori": float(item["Kalori"]), "Protein": float(item["Protein (g)"]), 
+                        "Karbonhidrat": float(item["Karb. (g)"]), "Yağ": float(item["Yağ (g)"])
                     })
                 verileri_kaydet(aktif_user)
                 st.success(f"{totals['kcal']} kcal başarıyla günlüğüne eklendi!")
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # 3. SEKME: YZ ANTRENMAN KOÇU
-        # ==========================================
         with tab_ai_koc:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             log = coach_page()
-            
             if log:
-                # Modül üzerinden plan başarılı girildiğinde otomatik 250 kcal yaktığı farz edilir
                 curr_aktivite["egzersiz_kalori"] += 250
                 verileri_kaydet(aktif_user)
                 st.success("🤖 Harika! AI Antrenmanını tamamladın, günlüğüne 250 kcal harcama eklendi.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # 4. SEKME: YZ BESLENME VE SPOR ASİSTANI
-        # ==========================================
         with tab_ai_asistan:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             ask_page()
