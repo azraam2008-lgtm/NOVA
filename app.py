@@ -6,7 +6,7 @@ import streamlit as st
 from PIL import Image
 from supabase import create_client, Client
 
-# --- YENİ AI MODÜLLERİ ---
+# --- AI MODÜLLERİ ---
 from meal_scan import meal_scan_page
 from nova_pages import coach_page, ask_page
 
@@ -70,13 +70,11 @@ def verileri_kaydet(username):
     except: pass
 
 def hesapla_bmr_ve_hedef(p):
-    # Cinsiyete göre BMR (Mifflin-St Jeor)
     if p.get("cinsiyet", "Kadın") == "Kadın":
         bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
     else:
         bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) + 5
 
-    # Amaca göre hareketlilik çarpanı
     amaclar = p.get("amaclar", [])
     if "Kas kazanmak" in amaclar:
         tdee = bmr * 1.55
@@ -89,13 +87,12 @@ def hesapla_bmr_ve_hedef(p):
     gunluk_acik = (kilo_farki * 7700) / max(1, int(p.get("hedef_sure_ay", 1)) * 30)
     
     hedef_kalori = tdee - gunluk_acik
-    # Sağlıklı minimum sınır
     hedef_kalori = max(1200 if p.get("cinsiyet") == "Kadın" else 1500, hedef_kalori)
     
     return bmr, tdee, gunluk_acik, hedef_kalori
 
 # ----------------------------------------------------
-# OTURUM YÖNETİMİ VE GİRİŞ (SOCIAL LOGIN ARAYÜZÜ İLE)
+# OTURUM YÖNETİMİ VE GİRİŞ (NET VE OKUNABİLİR ARAYÜZ)
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
@@ -104,22 +101,32 @@ if "onboarding_step" not in st.session_state: st.session_state.onboarding_step =
 if not st.session_state.giris_yapildi:
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-        [data-testid="stAppViewContainer"] { background-color: #0a0a0a; }
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 30px; text-align: center; font-weight: 700; margin-top: 5vh; color: #ffffff;}
-        p, label, span { color: #ffffff !important; }
-        .social-btn { display: block; width: 100%; text-align: center; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-weight: bold; text-decoration: none; color: black; background: white; border: 1px solid #ccc; cursor: pointer; }
-        .social-btn.apple { background: black; color: white; border: 1px solid white; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #121212 0%, #1f1f1f 100%); }
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 3vh; color: #ffffff;}
+        p, label, span { color: #f0f0f0 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .login-card { background: rgba(30, 30, 30, 0.9); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+        .social-btn { display: block; width: 100%; text-align: center; padding: 14px; margin-bottom: 12px; border-radius: 10px; font-weight: 700; text-decoration: none; color: #000000; background: #ffffff; border: 1px solid #ddd; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .social-btn.apple { background: #000000; color: #ffffff; border: 1px solid #444; }
+        div.stButton > button:first-child { background-color: #ffffff !important; color: #000000 !important; font-weight: 800 !important; border-radius: 10px !important; width: 100%; padding: 10px; }
+        div[data-baseweb="input"] > div { background-color: #2a2a2a !important; color: #ffffff !important; border-radius: 8px !important; border: 1px solid #555 !important; }
+        input { color: #ffffff !important; }
         </style>
-        <div class="nova-logo-giris">N O V A</div>
-        <p style='text-align: center; color: #aaaaaa !important; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 40px;'>ZARAFET VE DENGE</p>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        st.markdown('<a class="social-btn" href="#">🔵 Google ile Devam Et</a>', unsafe_allow_html=True)
-        st.markdown('<a class="social-btn apple" href="#"> Apple ile Devam Et</a>', unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center; opacity:0.6; margin: 15px 0;'>veya</p>", unsafe_allow_html=True)
+    st.markdown('<div class="nova-logo-giris">N O V A</div>', unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #bbbbbb !important; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;'>ZARAFET VE DENGE</p>", unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns([1, 1.5, 1])
+    with c2:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        # Sosyal Girişler (Supabase OAuth yönlendirmeleri için hazır)
+        if st.button("🔵 Google ile Devam Et", use_container_width=True):
+            st.info("Google OAuth entegrasyonu için Supabase ayarlarını kontrol ediniz.")
+        if st.button(" Apple ile Devam Et", use_container_width=True):
+            st.info("Apple OAuth entegrasyonu için Supabase ayarlarını kontrol ediniz.")
+            
+        st.markdown("<p style='text-align:center; opacity:0.6; margin: 20px 0;'>veya e-posta ile</p>", unsafe_allow_html=True)
         
         tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
         users = kullanicilari_yukle()
@@ -127,20 +134,23 @@ if not st.session_state.giris_yapildi:
         with tab_giris:
             g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
             g_pass = st.text_input("Şifre", type="password", key="g_pass")
-            if st.button("Giriş Yap", use_container_width=True):
+            if st.button("Giriş Yap", key="btn_giris"):
                 if g_user in users and users[g_user] == sifre_hashle(g_pass):
                     st.session_state.giris_yapildi = True
                     st.session_state.aktif_kullanici = g_user
                     st.session_state.update(verileri_yukle(g_user))
                     st.rerun()
-                else: st.error("Hatalı giriş.")
+                else: st.error("Hatalı kullanıcı adı veya şifre.")
         with tab_kayit:
             k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
             k_pass = st.text_input("Şifre", type="password", key="k_pass")
-            if st.button("Hesap Oluştur", use_container_width=True):
+            if st.button("Hesap Oluştur", key="btn_kayit"):
                 if k_user and k_pass and k_user not in users:
                     supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
                     st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
+                else:
+                    st.error("Kullanıcı adı boş olamaz veya zaten kullanımda.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 else:
     aktif_user = st.session_state.aktif_kullanici
@@ -156,23 +166,23 @@ else:
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']}; background-image: url("{bg_url}"); background-size: cover; background-position: center; background-attachment: fixed; }}
         [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
-        .nova-header {{ color: {tema['text_color']} !important; font-family: 'Playfair Display', serif; font-size: 5.5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: -30px; margin-left: 12px; }}
-        .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.5rem; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9; font-weight: 600; }}
-        .calai-card {{ background: {tema['card_bg']}; padding: 40px; border-radius: 32px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 35px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
+        .nova-header {{ color: {tema['text_color']} !important; font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 20px; text-align: center; font-weight: 700; margin-top: -20px; }}
+        .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.4rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; opacity: 0.9; font-weight: 600; }}
+        .nova-tarih {{ color: {tema['text_color']} !important; text-align: center; font-size: 1rem; letter-spacing: 2px; margin-bottom: 35px; opacity: 0.7; }}
+        .calai-card {{ background: {tema['card_bg']}; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 8px !important; border: 2px solid rgba(0,0,0,0.2) !important; }}
         div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
         button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; }}
         button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; }}
-        div.stButton > button:first-child {{ background-color: {tema['fallback_bg']} !important; color: {tema['text_color']} !important; border: 2px solid {tema['text_color']} !important; font-weight: 800 !important; border-radius: 12px !important; backdrop-filter: blur(10px); }}
-        div.stButton > button:first-child:hover {{ background-color: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['fallback_bg']} !important; }}
-        .ring-container {{ width: 200px; height: 200px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
-        .ring-inner {{ width: 155px; height: 155px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-        .ring-val {{ font-size: 2.2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
-        .ring-lbl {{ font-size: 1.1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']}; }}
-        table {{ width: 100%; font-size: 1.2rem; background: transparent; border-collapse: collapse; }}
-        th, td {{ padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
-        th {{ font-weight: 800; font-size: 1.3rem; opacity: 0.9; }}
+        div.stButton > button:first-child {{ background-color: {tema['fallback_bg']} !important; color: {tema['text_color']} !important; border: 2px solid {tema['text_color']} !important; font-weight: 800 !important; border-radius: 12px !important; }}
+        .ring-container {{ width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
+        .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        .ring-val {{ font-size: 2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
+        .ring-lbl {{ font-size: 1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']}; }}
+        table {{ width: 100%; font-size: 1.1rem; background: transparent; border-collapse: collapse; }}
+        th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
+        th {{ font-weight: 800; font-size: 1.2rem; opacity: 0.9; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -180,7 +190,7 @@ else:
     # EĞİTİCİ İLK KURULUM (MULTI-STEP ONBOARDING)
     # ----------------------------------------------------
     if not p.get("setup_tamamlandi", False):
-        st.markdown('<div class="nova-header" style="font-size:4rem; margin-top:20px;">N O V A</div>', unsafe_allow_html=True)
+        st.markdown('<div class="nova-header" style="font-size:3.5rem; margin-top:20px;">N O V A</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="calai-card">', unsafe_allow_html=True)
         
         step = st.session_state.onboarding_step
@@ -225,7 +235,6 @@ else:
                 <p><b>Tahmini Günlük Harcaman:</b> {round(tdee)} kcal</p>
                 <hr>
                 <h3 style="color: #007aff !important;">Günlük Alman Gereken Kalori: {round(hedef_kalori)} kcal</h3>
-                <p style="opacity:0.8;"><i>(Seçtiğin hedeflere ve süreye göre oluşturulmuştur.)</i></p>
             </div><br>
             """, unsafe_allow_html=True)
             
@@ -246,12 +255,42 @@ else:
     # ----------------------------------------------------
     st.markdown('<div class="nova-header">N O V A</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="nova-user">{aktif_user}</div>', unsafe_allow_html=True)
+    
+    # Türkçe Tarih Gösterimi
+    aylar_tr = {1: "Ocak", 2: "Şubat", 3: "Mart", 4: "Nisan", 5: "Mayıs", 6: "Haziran", 7: "Temmuz", 8: "Ağustos", 9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık"}
+    gunler_tr = {0: "Pazartesi", 1: "Salı", 2: "Çarşamba", 3: "Perşembe", 4: "Cuma", 5: "Cumartesi", 6: "Pazar"}
+    bugun_dt = datetime.date.today()
+    tarih_str = f"{bugun_dt.day} {aylar_tr[bugun_dt.month]} {bugun_dt.year} {gunler_tr[bugun_dt.weekday()]}"
+    st.markdown(f'<div class="nova-tarih">📅 {tarih_str}</div>', unsafe_allow_html=True)
+
+    # ----------------------------------------------------
+    # PAZAR GÜNÜ TARTI & HEDEF GÜNCELLEME KONTROLÜ
+    # ----------------------------------------------------
+    bugun_pazar_mu = (bugun_dt.weekday() == 6) # 6 Pazar demektir
+    pazar_guncellendi_key = f"pazar_tartildi_{str(bugun_dt)}"
+    
+    if bugun_pazar_mu and not st.session_state.get(pazar_guncellendi_key, False):
+        st.markdown(f"""
+            <div class="calai-card" style="border: 2px solid #ffcc00; background: rgba(50, 40, 0, 0.9);">
+                <h3 style="color: #ffcc00 !important;">⚖️ Pazar Günü Tartı ve Durum Güncellemesi!</h3>
+                <p>Harika bir hafta geçirdik! Haftayı kapatmadan önce bugün sabah tartıldığın güncel kilonu girerek hedeflerini ve kalori planını yeni kilosuna göre güncelleyebilirsin.</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        yeni_tartilinan_kilo = st.number_input("Bugünkü Güncel Kilon (kg)", min_value=30.0, max_value=250.0, value=float(p["mevcut_kilo"]), step=0.1, key="pazar_kilo_input")
+        if st.button("⚖️ Kilomu Güncelle ve Hedeflerimi Yenile", use_container_width=True):
+            p["mevcut_kilo"] = yeni_tartilinan_kilo
+            st.session_state[pazar_guncellendi_key] = True
+            verileri_kaydet(aktif_user)
+            st.success("🎉 Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!")
+            st.rerun()
+        st.markdown("<br>", unsafe_allow_html=True)
 
     c_sol, c_orta, c_sag = st.columns([1, 10, 1])
     with c_orta:
         t_col1, t_col2 = st.columns([8, 2])
         with t_col1:
-            secilen_tarih = str(st.date_input("🗓️ Tarih Seçimi", datetime.date.today()))
+            secilen_tarih = str(st.date_input("🗓️ Geçmiş Tarih İnceleme", datetime.date.today()))
         with t_col2:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⚙️ Ayarlar", use_container_width=True):
@@ -270,7 +309,7 @@ else:
         # ==========================================
         with tab_ozet:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='text-align:center; font-size: 2.2rem; margin-bottom: 30px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align:center; font-size: 2rem; margin-bottom: 25px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
             adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
             su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
             
@@ -307,7 +346,7 @@ else:
 
             # KALORİ TABLOSU
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2.2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
             
             bugun_og = [k for k in st.session_state.gunluk_kayitlar if k["Tarih"] == secilen_tarih]
             top_kalori = sum([k["Kalori"] for k in bugun_og])
@@ -330,8 +369,8 @@ else:
                 <tr><td>🍽️ Bugüne Kadar Yediklerin</td><td style="text-align: right; color: #ff3b30;"><b>- {round(top_kalori)} kcal</b></td></tr>
                 <tr><td>🏃‍♀️ Hareket ve Egzersizle Kazandıkların</td><td style="text-align: right; color: #34c759;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
                 <tr style="border-top: 2px solid rgba(255,255,255,0.5);">
-                    <td style="font-size: 1.4rem; font-weight: 800;">⚖️ Geriye Kalan Yeme Hakkın</td>
-                    <td style="text-align: right; font-size: 1.4rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
+                    <td style="font-size: 1.3rem; font-weight: 800;">⚖️ Geriye Kalan Yeme Hakkın</td>
+                    <td style="text-align: right; font-size: 1.3rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
                 </tr>
             </table><br>
             """, unsafe_allow_html=True)
@@ -360,9 +399,9 @@ else:
             st.markdown(render_makro("🥑 Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # MANUEL YEMEK ARAMA VE MAKRO DÜZENLEME (YENİ ÖZELLİK)
+            # MANUEL YEMEK ARAMA VE MAKRO DÜZENLEME
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2.2rem;'>🔎 Yemek Ara & İnce Ayar Yap</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem;'>🔎 Yemek Ara & İnce Ayar Yap</h2>", unsafe_allow_html=True)
             
             a_col1, a_col2 = st.columns([3, 1])
             with a_col1:
@@ -398,7 +437,7 @@ else:
                     verileri_kaydet(aktif_user)
                     st.rerun()
 
-            st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 30px 0;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>", unsafe_allow_html=True)
             st.markdown("<h3>🍽️ Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
             for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]:
                 ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
@@ -414,7 +453,7 @@ else:
             st.markdown('</div>', unsafe_allow_html=True)
             
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2.2rem;'>📈 Haftalık Gelişim (Çizgi Grafik)</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem;'>📈 Haftalık Gelişim</h2>", unsafe_allow_html=True)
             bugun_tarih = datetime.date.today()
             grafik_data = []
             
