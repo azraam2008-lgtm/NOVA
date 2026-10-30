@@ -47,6 +47,15 @@ df_yemek = yemek_veritabanini_yukle()
 # ----------------------------------------------------
 def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
 
+def sifre_kontrol(sifre):
+    if len(sifre) < 6:
+        return "Şifre en az 6 karakter olmalıdır."
+    if not any(c.isupper() for c in sifre):
+        return "Şifre en az bir büyük harf içermelidir."
+    if not any(c.isalpha() for c in sifre):
+        return "Şifre en az bir harf içermelidir."
+    return None
+
 def kullanicilari_yukle():
     try:
         res = supabase.table("kullanicilar").select("*").execute()
@@ -92,7 +101,7 @@ def hesapla_bmr_ve_hedef(p):
     return bmr, tdee, gunluk_acik, hedef_kalori
 
 # ----------------------------------------------------
-# OTURUM YÖNETİMİ VE GİRİŞ (NET VE OKUNABİLİR ARAYÜZ)
+# OTURUM YÖNETİMİ (ST.SESSION_STATE PERSISTENCE)
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
@@ -103,11 +112,9 @@ if not st.session_state.giris_yapildi:
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #121212 0%, #1f1f1f 100%); }
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 3vh; color: #ffffff;}
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #ffffff;}
         p, label, span { color: #f0f0f0 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
         .login-card { background: rgba(30, 30, 30, 0.9); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
-        .social-btn { display: block; width: 100%; text-align: center; padding: 14px; margin-bottom: 12px; border-radius: 10px; font-weight: 700; text-decoration: none; color: #000000; background: #ffffff; border: 1px solid #ddd; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .social-btn.apple { background: #000000; color: #ffffff; border: 1px solid #444; }
         div.stButton > button:first-child { background-color: #ffffff !important; color: #000000 !important; font-weight: 800 !important; border-radius: 10px !important; width: 100%; padding: 10px; }
         div[data-baseweb="input"] > div { background-color: #2a2a2a !important; color: #ffffff !important; border-radius: 8px !important; border: 1px solid #555 !important; }
         input { color: #ffffff !important; }
@@ -120,14 +127,6 @@ if not st.session_state.giris_yapildi:
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        # Sosyal Girişler (Supabase OAuth yönlendirmeleri için hazır)
-        if st.button("🔵 Google ile Devam Et", use_container_width=True):
-            st.info("Google OAuth entegrasyonu için Supabase ayarlarını kontrol ediniz.")
-        if st.button(" Apple ile Devam Et", use_container_width=True):
-            st.info("Apple OAuth entegrasyonu için Supabase ayarlarını kontrol ediniz.")
-            
-        st.markdown("<p style='text-align:center; opacity:0.6; margin: 20px 0;'>veya e-posta ile</p>", unsafe_allow_html=True)
-        
         tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
         users = kullanicilari_yukle()
         
@@ -143,9 +142,12 @@ if not st.session_state.giris_yapildi:
                 else: st.error("Hatalı kullanıcı adı veya şifre.")
         with tab_kayit:
             k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
-            k_pass = st.text_input("Şifre", type="password", key="k_pass")
+            k_pass = st.text_input("Şifre (En az 6 karakter, büyük harf ve harf içermeli)", type="password", key="k_pass")
             if st.button("Hesap Oluştur", key="btn_kayit"):
-                if k_user and k_pass and k_user not in users:
+                hata = sifre_kontrol(k_pass)
+                if hata:
+                    st.error(hata)
+                elif k_user and k_user not in users:
                     supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
                     st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
                 else:
@@ -266,7 +268,7 @@ else:
     # ----------------------------------------------------
     # PAZAR GÜNÜ TARTI & HEDEF GÜNCELLEME KONTROLÜ
     # ----------------------------------------------------
-    bugun_pazar_mu = (bugun_dt.weekday() == 6) # 6 Pazar demektir
+    bugun_pazar_mu = (bugun_dt.weekday() == 6)
     pazar_guncellendi_key = f"pazar_tartildi_{str(bugun_dt)}"
     
     if bugun_pazar_mu and not st.session_state.get(pazar_guncellendi_key, False):
