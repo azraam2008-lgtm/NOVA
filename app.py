@@ -101,7 +101,7 @@ def hesapla_bmr_ve_hedef(p):
     return bmr, tdee, gunluk_acik, hedef_kalori
 
 # ----------------------------------------------------
-# OTURUM YÖNETİMİ (ST.SESSION_STATE PERSISTENCE)
+# OTURUM YÖNETİMİ & TERTEMİZ AÇIK TEMA GİRİŞ EKRANI
 # ----------------------------------------------------
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
@@ -111,18 +111,36 @@ if not st.session_state.giris_yapildi:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #121212 0%, #1f1f1f 100%); }
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #ffffff;}
-        p, label, span { color: #f0f0f0 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .login-card { background: rgba(30, 30, 30, 0.9); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
-        div.stButton > button:first-child { background-color: #ffffff !important; color: #000000 !important; font-weight: 800 !important; border-radius: 10px !important; width: 100%; padding: 10px; }
-        div[data-baseweb="input"] > div { background-color: #2a2a2a !important; color: #ffffff !important; border-radius: 8px !important; border: 1px solid #555 !important; }
-        input { color: #ffffff !important; }
+        [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%); }
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a;}
+        p, label, span { color: #333333 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .login-card { background: rgba(255, 255, 255, 0.85); padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        
+        /* Apple Dock Estetiğinde Estetik Butonlar */
+        div.stButton > button:first-child { 
+            background: linear-gradient(180deg, #ffffff 0%, #f0f2f5) !important; 
+            color: #1a1a1a !important; 
+            font-weight: 700 !important; 
+            border-radius: 14px !important; 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid rgba(0,0,0,0.12) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        div.stButton > button:first-child:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            background: linear-gradient(180deg, #ffffff 0%, #e2e6eb) !important;
+            border-color: rgba(0,0,0,0.2) !important;
+        }
+        div[data-baseweb="input"] > div { background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 1px solid rgba(0,0,0,0.15) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        input { color: #000000 !important; }
         </style>
     """, unsafe_allow_html=True)
     
     st.markdown('<div class="nova-logo-giris">N O V A</div>', unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #bbbbbb !important; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;'>ZARAFET VE DENGE</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666666 !important; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;'>ZARAFET VE DENGE</p>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
@@ -162,7 +180,7 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # TEMA CSS
+    # TEMA CSS VE APPLE DOCK ESTETİĞİNDE BUTONLAR
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -173,11 +191,31 @@ else:
         .nova-tarih {{ color: {tema['text_color']} !important; text-align: center; font-size: 1rem; letter-spacing: 2px; margin-bottom: 35px; opacity: 0.7; }}
         .calai-card {{ background: {tema['card_bg']}; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 8px !important; border: 2px solid rgba(0,0,0,0.2) !important; }}
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 2px solid rgba(0,0,0,0.15) !important; }}
         div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
         button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; }}
         button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; }}
-        div.stButton > button:first-child {{ background-color: {tema['fallback_bg']} !important; color: {tema['text_color']} !important; border: 2px solid {tema['text_color']} !important; font-weight: 800 !important; border-radius: 12px !important; }}
+        
+        /* Apple Dock Squircle Estetiğinde Butonlar */
+        div.stButton > button:first-child {{ 
+            background: {tema['card_bg']} !important; 
+            color: {tema['text_color']} !important; 
+            border: 1px solid rgba(255,255,255,0.3) !important; 
+            font-weight: 700 !important; 
+            border-radius: 16px !important; 
+            padding: 10px 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }}
+        div.stButton > button:first-child:hover {{
+            transform: translateY(-2px);
+            background: {tema['text_color']} !important; 
+            color: {tema['fallback_bg']} !important; 
+            border-color: {tema['text_color']} !important;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }}
+        
         .ring-container {{ width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
         .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
         .ring-val {{ font-size: 2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
@@ -454,8 +492,9 @@ else:
                             st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
             
+            # --- ESTETİK HAFİF KIVRIMLI HAFTALIK GRAFİK ---
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2rem;'>📈 Haftalık Gelişim</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>📈 Haftalık Gelişim ve Denge Analizi</h2>", unsafe_allow_html=True)
             bugun_tarih = datetime.date.today()
             grafik_data = []
             
@@ -468,7 +507,7 @@ else:
                 grafik_data.append({"Gün": g[5:], "Yediğin Kalori": g_alinan, "Vücudunun Toplam Yaktığı": g_harcanan})
             
             df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
-            st.line_chart(df_grafik, color=["#ff3b30", "#34c759"])
+            st.line_chart(df_grafik, color=["#ff3b30", "#34c759"], use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
         with tab_ai_ogun:
