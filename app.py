@@ -114,9 +114,8 @@ if not st.session_state.giris_yapildi:
         [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%); }
         .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a;}
         p, label, span { color: #333333 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .login-card { background: rgba(255, 255, 255, 0.85); padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .login-card { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         
-        /* Apple Dock Estetiğinde Estetik Butonlar */
         div.stButton > button:first-child { 
             background: linear-gradient(180deg, #ffffff 0%, #f0f2f5) !important; 
             color: #1a1a1a !important; 
@@ -134,8 +133,26 @@ if not st.session_state.giris_yapildi:
             background: linear-gradient(180deg, #ffffff 0%, #e2e6eb) !important;
             border-color: rgba(0,0,0,0.2) !important;
         }
-        div[data-baseweb="input"] > div { background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 1px solid rgba(0,0,0,0.15) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-        input { color: #000000 !important; }
+
+        /* GİRİŞ ALANLARI (INPUT) - AÇIK TEMA VE GÖRÜNÜRLÜK DÜZELTMESİ */
+        div[data-baseweb="input"] > div, div[data-baseweb="input"] > div:focus-within { 
+            background-color: #ffffff !important; 
+            border-radius: 12px !important; 
+            border: 1px solid rgba(0,0,0,0.15) !important; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important; 
+        }
+        input, input:focus, input:active { 
+            color: #000000 !important; 
+            background-color: transparent !important;
+            caret-color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            font-weight: 600 !important;
+        }
+        /* Tarayıcı Otomatik Doldurma (Autofill) Kararmasını Önleme */
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -180,7 +197,7 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # TEMA CSS VE APPLE DOCK ESTETİĞİNDE BUTONLAR
+    # TEMA CSS VE SEKLER / BUTONLAR İÇİN GÜÇLENDİRİLMİŞ ESTETİK TASARIM
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -191,10 +208,14 @@ else:
         .nova-tarih {{ color: {tema['text_color']} !important; text-align: center; font-size: 1rem; letter-spacing: 2px; margin-bottom: 35px; opacity: 0.7; }}
         .calai-card {{ background: {tema['card_bg']}; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
+        
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 2px solid rgba(0,0,0,0.15) !important; }}
         div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
-        button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; }}
-        button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; }}
+        
+        /* SEKLERİN (TABS) YAZI VE OKUNABİLİRLİK DÜZENLEMESİ */
+        button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; font-weight: 600 !important; opacity: 0.85; }}
+        button[data-baseweb="tab"]:hover {{ opacity: 1.0 !important; }}
+        button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; opacity: 1.0 !important; }}
         
         /* Apple Dock Squircle Estetiğinde Butonlar */
         div.stButton > button:first-child {{ 
@@ -492,7 +513,7 @@ else:
                             st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # --- ESTETİK HAFİF KIVRIMLI HAFTALIK GRAFİK ---
+            # --- HAFTALIK GRAFİK ---
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>📈 Haftalık Gelişim ve Denge Analizi</h2>", unsafe_allow_html=True)
             bugun_tarih = datetime.date.today()
