@@ -159,29 +159,78 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
+    # STREAMLIT KOYU MOD ÇAKIŞMASINI %100 BİTİREN GÜNCEL CSS EKLENDİ
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']}; background-image: url("{bg_url}"); background-size: cover; background-position: center; background-attachment: fixed; }}
-        [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+        
+        /* CİHAZ KOYU MODDA OLSA BİLE TEMA BOZULMASINI ENGELLEYEN KÖK AYAR */
+        :root {{ color-scheme: light !important; }}
+        
+        [data-testid="stAppViewContainer"] {{ background-color: {tema['fallback_bg']} !important; background-image: url("{bg_url}") !important; background-size: cover; background-position: center; background-attachment: fixed; }}
+        [data-testid="stHeader"] {{ background: rgba(0,0,0,0) !important; }}
+        
         .nova-header {{ color: {tema['text_color']} !important; font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 20px; text-align: center; font-weight: 700; margin-top: -20px; }}
         .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.4rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; opacity: 0.9; font-weight: 600; }}
         .nova-tarih {{ color: {tema['text_color']} !important; text-align: center; font-size: 1rem; letter-spacing: 2px; margin-bottom: 35px; opacity: 0.7; }}
-        .calai-card {{ background: {tema['card_bg']}; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
-        .info-box {{ background: rgba(255,255,255,0.1); border-left: 4px solid {tema['text_color']}; padding: 15px; border-radius: 8px; margin-bottom: 25px; }}
-        .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 2px solid rgba(0,0,0,0.15) !important; }}
-        div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
+        
+        .calai-card {{ background: {tema['card_bg']} !important; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
+        
+        .info-box {{ background: rgba(255,255,255,0.1) !important; border-left: 4px solid {tema['text_color']} !important; padding: 15px; border-radius: 8px; margin-bottom: 25px; color: {tema['text_color']} !important; font-weight: 600; }}
+        
+        /* BÜTÜN YAZILARI TEMA RENGİNE ZORLAMA (KOYU MOD/AÇIK MOD ÇAKIŞMASINI KESİN OLARAK ENGELLER) */
+        .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, 
+        .calai-card td, .calai-card th, .calai-card span, .calai-card label,
+        div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] h2, 
+        div[data-testid="stMarkdownContainer"] h3, div[data-testid="stMarkdownContainer"] h4,
+        div[data-testid="stWidgetLabel"] p, label[data-baseweb="radio"] div {{ 
+            color: {tema['text_color']} !important; 
+            font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        }}
+        
+        /* GİRİŞ ALANLARI KESİN BEYAZ ZEMİN, SİYAH YAZI OLMALIDIR */
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, 
+        input[type="text"], input[type="number"], textarea {{ 
+            background-color: #ffffff !important; 
+            color: #000000 !important; 
+            border-radius: 12px !important; 
+            border: 2px solid rgba(0,0,0,0.15) !important; 
+        }}
+        /* İnput içi yazılar ve seçim kutusu etiketleri görünür kılınır */
+        div[data-baseweb="select"] span, input, input::placeholder {{ color: #000000 !important; font-weight: bold; }}
+        
+        /* DROPDOWN (AÇILIR LİSTELER VE POPOVER) KOYU MOD DÜZELTMESİ (Örn: Cinsiyet seçimi kutusu içeriği) */
+        div[data-baseweb="popover"], ul[role="listbox"], ul[role="listbox"] li, ul[role="listbox"] span {{
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }}
+        
+        /* MULTISELECT (ÇOKLU SEÇİM) TAG'LERİ DÜZELTMESİ (Örn: Amaç seçimindeki butonlar) */
+        span[data-baseweb="tag"] {{
+            background-color: {tema['text_color']} !important;
+            color: {tema['fallback_bg']} !important;
+        }}
+        span[data-baseweb="tag"] span {{
+            color: {tema['fallback_bg']} !important;
+        }}
+        
+        /* Sayı inputlarının yanındaki + ve - tuşları sorununu çözer */
+        div[data-baseweb="input"] button {{
+            color: #000000 !important;
+        }}
+        
+        /* TAB VE BUTON ESTETİĞİ */
         button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; font-weight: 600 !important; opacity: 0.85; }}
         button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; opacity: 1.0 !important; }}
         div.stButton > button:first-child {{ background: {tema['card_bg']} !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.3) !important; font-weight: 700 !important; border-radius: 16px !important; padding: 10px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }}
         div.stButton > button:first-child:hover {{ transform: translateY(-2px); background: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['text_color']} !important; box-shadow: 0 12px 30px rgba(0,0,0,0.3); }}
+        
         .ring-container {{ width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
-        .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-        .ring-val {{ font-size: 2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
-        .ring-lbl {{ font-size: 1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']}; }}
+        .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']} !important; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        .ring-val {{ font-size: 2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']} !important; }}
+        .ring-lbl {{ font-size: 1rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: {tema['text_color']} !important; }}
         table {{ width: 100%; font-size: 1.1rem; background: transparent; border-collapse: collapse; }}
-        th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; }}
+        th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; color: {tema['text_color']} !important; }}
         th {{ font-weight: 800; font-size: 1.2rem; opacity: 0.9; }}
         </style>
     """, unsafe_allow_html=True)
@@ -389,7 +438,7 @@ else:
                 st.markdown(f"""
                     <div class="ring-container" style="background: conic-gradient(#ff3b30 {adim_yuzde}%, {tema['ring_track']} 0deg);">
                         <div class="ring-inner">
-                            <div class="ring-val" style="color:#ff3b30;">{curr_aktivite['adim']}</div>
+                            <div class="ring-val" style="color:#ff3b30 !important;">{curr_aktivite['adim']}</div>
                             <div class="ring-lbl">ADIM</div>
                         </div>
                     </div><br>
@@ -403,7 +452,7 @@ else:
                 st.markdown(f"""
                     <div class="ring-container" style="background: conic-gradient(#007aff {su_yuzde}%, {tema['ring_track']} 0deg);">
                         <div class="ring-inner">
-                            <div class="ring-val" style="color:#007aff;">{curr_aktivite['su']:.2f}</div>
+                            <div class="ring-val" style="color:#007aff !important;">{curr_aktivite['su']:.2f}</div>
                             <div class="ring-lbl">LİTRE</div>
                         </div>
                     </div><br>
@@ -436,9 +485,9 @@ else:
             st.markdown(f"""
             <table>
                 <tr><th>Metrik</th><th style="text-align: right;">Değer</th></tr>
-                <tr><td>🎯 Günlük Hedef Kalori Bütçen</td><td style="text-align: right; color: #007aff;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
-                <tr><td>🍽️ Bugüne Kadar Yediklerin</td><td style="text-align: right; color: #ff3b30;"><b>- {round(top_kalori)} kcal</b></td></tr>
-                <tr><td>🏃‍♀️ Hareket ve Egzersizle Kazandıkların</td><td style="text-align: right; color: #34c759;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
+                <tr><td>🎯 Günlük Hedef Kalori Bütçen</td><td style="text-align: right; color: #007aff !important;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
+                <tr><td>🍽️ Bugüne Kadar Yediklerin</td><td style="text-align: right; color: #ff3b30 !important;"><b>- {round(top_kalori)} kcal</b></td></tr>
+                <tr><td>🏃‍♀️ Hareket ve Egzersizle Kazandıkların</td><td style="text-align: right; color: #34c759 !important;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
                 <tr style="border-top: 2px solid rgba(255,255,255,0.5);">
                     <td style="font-size: 1.3rem; font-weight: 800;">⚖️ Geriye Kalan Yeme Hakkın</td>
                     <td style="text-align: right; font-size: 1.3rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
