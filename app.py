@@ -48,12 +48,9 @@ df_yemek = yemek_veritabanini_yukle()
 def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
 
 def sifre_kontrol(sifre):
-    if len(sifre) < 6:
-        return "Şifre en az 6 karakter olmalıdır."
-    if not any(c.isupper() for c in sifre):
-        return "Şifre en az bir büyük harf içermelidir."
-    if not any(c.isalpha() for c in sifre):
-        return "Şifre en az bir harf içermelidir."
+    if len(sifre) < 6: return "Şifre en az 6 karakter olmalıdır."
+    if not any(c.isupper() for c in sifre): return "Şifre en az bir büyük harf içermelidir."
+    if not any(c.isalpha() for c in sifre): return "Şifre en az bir harf içermelidir."
     return None
 
 def kullanicilari_yukle():
@@ -65,7 +62,7 @@ def kullanicilari_yukle():
 def verileri_yukle(username):
     default_data = {
         "gunluk_kayitlar": [], "aktivite_loglari": {},
-        "profil": {"cinsiyet": "Kadın", "yas": 20, "boy": 165, "mevcut_kilo": 60.0, "hedef_kilo": 55.0, "hedef_sure_ay": 2, "tema": "Koyu Cam", "amaclar": [], "setup_tamamlandi": False}
+        "profil": {"ad": "", "cinsiyet": "Kadın", "dogum_yili": 2000, "boy": 165, "mevcut_kilo": 60.0, "hedef_kilo": 55.0, "hedef_sure_ay": 2, "tema": "Koyu Cam", "amaclar": [], "setup_tamamlandi": False}
     }
     try:
         res = supabase.table("kullanici_verileri").select("data").eq("username", username).execute()
@@ -79,25 +76,22 @@ def verileri_kaydet(username):
     except: pass
 
 def hesapla_bmr_ve_hedef(p):
+    yas = datetime.date.today().year - int(p.get("dogum_yili", 2000))
     if p.get("cinsiyet", "Kadın") == "Kadın":
-        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) - 161
+        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * yas) - 161
     else:
-        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * int(p["yas"])) + 5
+        bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * yas) + 5
 
     amaclar = p.get("amaclar", [])
-    if "Kas kazanmak" in amaclar:
-        tdee = bmr * 1.55
-    elif "Kilo vermek" in amaclar or "Sağlıklı beslenmek" in amaclar:
-        tdee = bmr * 1.35
-    else:
-        tdee = bmr * 1.2
+    if "Kas kazanmak istiyorum" in amaclar: tdee = bmr * 1.55
+    elif "Kilo vermek istiyorum" in amaclar: tdee = bmr * 1.35
+    else: tdee = bmr * 1.2
 
     kilo_farki = float(p["mevcut_kilo"]) - float(p["hedef_kilo"])
     gunluk_acik = (kilo_farki * 7700) / max(1, int(p.get("hedef_sure_ay", 1)) * 30)
     
     hedef_kalori = tdee - gunluk_acik
     hedef_kalori = max(1200 if p.get("cinsiyet") == "Kadın" else 1500, hedef_kalori)
-    
     return bmr, tdee, gunluk_acik, hedef_kalori
 
 # ----------------------------------------------------
@@ -111,48 +105,16 @@ if not st.session_state.giris_yapildi:
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%); }
-        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a;}
+        :root { color-scheme: light !important; }
+        [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%) !important; color-scheme: light !important; }
+        .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a !important;}
         p, label, span { color: #333333 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .login-card { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        
-        div.stButton > button:first-child { 
-            background: linear-gradient(180deg, #ffffff 0%, #f0f2f5) !important; 
-            color: #1a1a1a !important; 
-            font-weight: 700 !important; 
-            border-radius: 14px !important; 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid rgba(0,0,0,0.12) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        div.stButton > button:first-child:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-            background: linear-gradient(180deg, #ffffff 0%, #e2e6eb) !important;
-            border-color: rgba(0,0,0,0.2) !important;
-        }
-
-        /* GİRİŞ ALANLARI (INPUT) - AÇIK TEMA VE GÖRÜNÜRLÜK DÜZELTMESİ */
-        div[data-baseweb="input"] > div, div[data-baseweb="input"] > div:focus-within { 
-            background-color: #ffffff !important; 
-            border-radius: 12px !important; 
-            border: 1px solid rgba(0,0,0,0.15) !important; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important; 
-        }
-        input, input:focus, input:active { 
-            color: #000000 !important; 
-            background-color: transparent !important;
-            caret-color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            font-weight: 600 !important;
-        }
-        /* Tarayıcı Otomatik Doldurma (Autofill) Kararmasını Önleme */
-        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-            -webkit-text-fill-color: #000000 !important;
-        }
+        .login-card { background: rgba(255, 255, 255, 0.95) !important; padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        div.stButton > button:first-child { background: linear-gradient(180deg, #ffffff 0%, #f0f2f5) !important; color: #1a1a1a !important; font-weight: 700 !important; border-radius: 14px !important; width: 100%; padding: 12px; border: 1px solid rgba(0,0,0,0.12) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        div.stButton > button:first-child:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); background: linear-gradient(180deg, #ffffff 0%, #e2e6eb) !important; border-color: rgba(0,0,0,0.2) !important; }
+        .stTextInput > div > div > div, div[data-baseweb="input"] > div, div[data-baseweb="input"] > div:focus-within { background-color: #ffffff !important; border-radius: 12px !important; border: 1px solid rgba(0,0,0,0.15) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important; }
+        .stTextInput input, .stTextInput input:focus, .stTextInput input:active, input, input:focus, input:active { color: #000000 !important; background-color: #ffffff !important; caret-color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-weight: 600 !important; }
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active { -webkit-box-shadow: 0 0 0 30px white inset !important; -webkit-text-fill-color: #000000 !important; transition: background-color 5000s ease-in-out 0s; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -197,7 +159,6 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
-    # TEMA CSS VE SEKLER / BUTONLAR İÇİN GÜÇLENDİRİLMİŞ ESTETİK TASARIM
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -207,36 +168,14 @@ else:
         .nova-user {{ color: {tema['text_color']} !important; text-align: center; font-size: 1.4rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; opacity: 0.9; font-weight: 600; }}
         .nova-tarih {{ color: {tema['text_color']} !important; text-align: center; font-size: 1rem; letter-spacing: 2px; margin-bottom: 35px; opacity: 0.7; }}
         .calai-card {{ background: {tema['card_bg']}; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
+        .info-box {{ background: rgba(255,255,255,0.1); border-left: 4px solid {tema['text_color']}; padding: 15px; border-radius: 8px; margin-bottom: 25px; }}
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, .calai-card td, .calai-card th, .calai-card span, .calai-card label {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 2px solid rgba(0,0,0,0.15) !important; }}
         div[data-baseweb="select"] span {{ color: #000000 !important; font-weight: bold; }}
-        
-        /* SEKLERİN (TABS) YAZI VE OKUNABİLİRLİK DÜZENLEMESİ */
         button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; font-weight: 600 !important; opacity: 0.85; }}
-        button[data-baseweb="tab"]:hover {{ opacity: 1.0 !important; }}
         button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; opacity: 1.0 !important; }}
-        
-        /* Apple Dock Squircle Estetiğinde Butonlar */
-        div.stButton > button:first-child {{ 
-            background: {tema['card_bg']} !important; 
-            color: {tema['text_color']} !important; 
-            border: 1px solid rgba(255,255,255,0.3) !important; 
-            font-weight: 700 !important; 
-            border-radius: 16px !important; 
-            padding: 10px 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }}
-        div.stButton > button:first-child:hover {{
-            transform: translateY(-2px);
-            background: {tema['text_color']} !important; 
-            color: {tema['fallback_bg']} !important; 
-            border-color: {tema['text_color']} !important;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-        }}
-        
+        div.stButton > button:first-child {{ background: {tema['card_bg']} !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.3) !important; font-weight: 700 !important; border-radius: 16px !important; padding: 10px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }}
+        div.stButton > button:first-child:hover {{ transform: translateY(-2px); background: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['text_color']} !important; box-shadow: 0 12px 30px rgba(0,0,0,0.3); }}
         .ring-container {{ width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
         .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']}; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
         .ring-val {{ font-size: 2rem; font-weight: 800; margin-bottom: -5px; color: {tema['text_color']}; }}
@@ -248,7 +187,7 @@ else:
     """, unsafe_allow_html=True)
 
     # ----------------------------------------------------
-    # EĞİTİCİ İLK KURULUM (MULTI-STEP ONBOARDING)
+    # FATSECRET TARZI DETAYLI ONBOARDING SÜRECİ
     # ----------------------------------------------------
     if not p.get("setup_tamamlandi", False):
         st.markdown('<div class="nova-header" style="font-size:3.5rem; margin-top:20px;">N O V A</div>', unsafe_allow_html=True)
@@ -257,53 +196,123 @@ else:
         step = st.session_state.onboarding_step
         
         if step == 1:
-            st.markdown("<h2 style='text-align:center;'>Nova'yı Hangi Amaçla Kullanmak İstiyorsun?</h2>", unsafe_allow_html=True)
-            amaclar = st.multiselect("Hedeflerin (Birden fazla seçebilirsin)", ["Kilo vermek", "Kilo almak", "Kas kazanmak", "Sağlıklı beslenmek"], default=p.get("amaclar", []))
-            
-            if st.button("İleri ➔", use_container_width=True):
-                st.session_state.profil["amaclar"] = amaclar
+            st.markdown("<h2 style='text-align:center;'>Tanıştığımıza memnun oldum,<br>Nova'ya Hoş Geldin! 🦢</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; opacity:0.9;'>Hedeflerine ulaşmanda sana yardımcı olmak için buradayız.<br>Başlamak için birkaç kısa sorumuz olacak.</p>", unsafe_allow_html=True)
+            st.markdown('<div class="info-box">ℹ️ Cevapların, hedeflerini anlamamıza ve uygulamayı senin için kişiselleştirmemize yardımcı olacak.</div>', unsafe_allow_html=True)
+            if st.button("Başla ➔", use_container_width=True):
                 st.session_state.onboarding_step = 2
                 st.rerun()
-                
+
         elif step == 2:
-            st.markdown("<h2 style='text-align:center;'>Seni Biraz Tanıyalım</h2>", unsafe_allow_html=True)
-            c1, c2 = st.columns(2)
-            cinsiyet = c1.selectbox("Cinsiyet", ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
-            yas = c2.number_input("Yaş", min_value=12, max_value=100, value=int(p.get("yas", 20)))
-            boy = c1.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
-            mevcut_kilo = c2.number_input("Mevcut Kilon (kg)", min_value=35.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
-            hedef_kilo = c1.number_input("Hedef Kilon (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
-            hedef_sure = c2.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
-            sec_tema = st.selectbox("Kişisel Temanı Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
+            st.markdown("<h2 style='text-align:center;'>Merhaba! Adın nedir?</h2>", unsafe_allow_html=True)
+            ad_input = st.text_input("Adını Gir", value=p.get("ad", ""))
+            st.markdown('<div class="info-box">ℹ️ Nova uygulamasını sana özel hale getirmek ve sana hitap edebilmek için adını kullanacağız.</div>', unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"):
-                st.session_state.onboarding_step = 1
-                st.rerun()
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 1; st.rerun()
             if b2.button("İleri ➔"):
-                st.session_state.profil.update({"cinsiyet": cinsiyet, "yas": yas, "boy": boy, "mevcut_kilo": mevcut_kilo, "hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure, "tema": sec_tema})
-                st.session_state.onboarding_step = 3
-                st.rerun()
-                
+                if ad_input:
+                    st.session_state.profil["ad"] = ad_input
+                    st.session_state.onboarding_step = 3
+                    st.rerun()
+                else: st.error("Lütfen adını gir.")
+
         elif step == 3:
-            st.markdown("<h2 style='text-align:center;'>İşte Kişisel Planın 🎯</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align:center;'>Nova'yı Hangi Amaçla Kullanmak İstiyorsun {p.get('ad', '')}?</h2>", unsafe_allow_html=True)
+            amaclar = st.multiselect("Hedeflerin (Birden fazla seçebilirsin)", ["Kilo vermek istiyorum", "Kilomu korumak istiyorum", "Kilo almak istiyorum", "Kas kazanmak istiyorum", "Sağlıklı beslenmek istiyorum"], default=p.get("amaclar", []))
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 2; st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil["amaclar"] = amaclar
+                st.session_state.onboarding_step = 4
+                st.rerun()
+
+        elif step == 4:
+            st.markdown("<h2 style='text-align:center;'>Cinsiyetin nedir?</h2>", unsafe_allow_html=True)
+            cinsiyet = st.selectbox("Seçimini yap:", ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
+            st.markdown('<div class="info-box">ℹ️ Cinsiyetin, vücudunun günlük enerji ihtiyacını hesaplamamızı doğrudan etkiler.</div>', unsafe_allow_html=True)
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 3; st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil["cinsiyet"] = cinsiyet
+                st.session_state.onboarding_step = 5
+                st.rerun()
+
+        elif step == 5:
+            st.markdown("<h2 style='text-align:center;'>Doğum yılın ne?</h2>", unsafe_allow_html=True)
+            mevcut_yil = datetime.date.today().year
+            dogum_yili = st.number_input("Yıl", min_value=1920, max_value=mevcut_yil-10, value=int(p.get("dogum_yili", 2000)))
+            yas = mevcut_yil - dogum_yili
+            st.markdown(f"<h4 style='text-align:center;'>Şu an <b>{yas}</b> yaşındasın.</h4>", unsafe_allow_html=True)
+            st.markdown('<div class="info-box">ℹ️ Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>', unsafe_allow_html=True)
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 4; st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil["dogum_yili"] = dogum_yili
+                st.session_state.onboarding_step = 6
+                st.rerun()
+
+        elif step == 6:
+            st.markdown("<h2 style='text-align:center;'>Boyun kaç?</h2>", unsafe_allow_html=True)
+            boy = st.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
+            st.markdown('<div class="info-box">ℹ️ Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.</div>', unsafe_allow_html=True)
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 5; st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil["boy"] = boy
+                st.session_state.onboarding_step = 7
+                st.rerun()
+
+        elif step == 7:
+            st.markdown("<h2 style='text-align:center;'>Şu andaki kilon ne?</h2>", unsafe_allow_html=True)
+            mevcut_kilo = st.number_input("Kilo (kg)", min_value=35.0, max_value=250.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
+            st.markdown('<div class="info-box">ℹ️ Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>', unsafe_allow_html=True)
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 6; st.rerun()
+            if b2.button("İleri ➔"):
+                st.session_state.profil["mevcut_kilo"] = mevcut_kilo
+                st.session_state.onboarding_step = 8
+                st.rerun()
+
+        elif step == 8:
+            st.markdown("<h2 style='text-align:center;'>Hedef kilon nedir?</h2>", unsafe_allow_html=True)
+            hedef_kilo = st.number_input("Hedef Kilo (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
+            hedef_sure = st.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
+            sec_tema = st.selectbox("Nova Deneyimin İçin Bir Tema Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
+            
+            b1, b2 = st.columns(2)
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 7; st.rerun()
+            if b2.button("Kalori Hedefimi Hesapla ➔"):
+                st.session_state.profil.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure, "tema": sec_tema})
+                st.session_state.onboarding_step = 9
+                st.rerun()
+
+        elif step == 9:
+            st.markdown(f"<h2 style='text-align:center;'>Paylaştığın için teşekkürler, {p.get('ad', '')} 🎉</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; font-size:1.2rem; opacity:0.9;'>Bize söylediklerin, seni nasıl destekleyeceğimizi şekillendirmemize yardımcı olacak.</p>", unsafe_allow_html=True)
+            
             bmr, tdee, gunluk_acik, hedef_kalori = hesapla_bmr_ve_hedef(p)
             
             st.markdown(f"""
-            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px;">
+            <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin-top:20px;">
+                <h3 style="text-align:center; margin-bottom: 20px;">İşte Kişisel Kalori Hedefin</h3>
                 <p><b>Amacın:</b> {', '.join(p.get('amaclar', ['Belirtilmedi']))}</p>
                 <p><b>Dinlenik Metabolizman (BMR):</b> {round(bmr)} kcal</p>
                 <p><b>Tahmini Günlük Harcaman:</b> {round(tdee)} kcal</p>
                 <hr>
-                <h3 style="color: #007aff !important;">Günlük Alman Gereken Kalori: {round(hedef_kalori)} kcal</h3>
+                <h2 style="color: #007aff !important; text-align:center;">Günlük Hedefin: {round(hedef_kalori)} kcal</h2>
+                <p style="opacity:0.8; font-size: 0.9rem; text-align:center;"><i>Nova Kalori Hedefin, amacına ulaşmak için her gün kaç kalori tüketmen gerektiğini gösterir. Her gün bu hedefe yakın miktarda tüketirsen başarıya ulaşırsın.</i></p>
             </div><br>
             """, unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"):
-                st.session_state.onboarding_step = 2
-                st.rerun()
-            if b2.button("🚀 Uygulamaya Başla", type="primary"):
+            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 8; st.rerun()
+            if b2.button("🚀 Harika, Uygulamaya Başla!", type="primary"):
                 st.session_state.profil["setup_tamamlandi"] = True
                 verileri_kaydet(aktif_user)
                 st.rerun()
@@ -314,8 +323,9 @@ else:
     # ----------------------------------------------------
     # ANA EKRAN
     # ----------------------------------------------------
+    gosterilecek_isim = p.get("ad", aktif_user).capitalize()
     st.markdown('<div class="nova-header">N O V A</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="nova-user">{aktif_user}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="nova-user">{gosterilecek_isim}</div>', unsafe_allow_html=True)
     
     # Türkçe Tarih Gösterimi
     aylar_tr = {1: "Ocak", 2: "Şubat", 3: "Mart", 4: "Nisan", 5: "Mayıs", 6: "Haziran", 7: "Temmuz", 8: "Ağustos", 9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık"}
@@ -356,7 +366,7 @@ else:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("⚙️ Ayarlar", use_container_width=True):
                 st.session_state.profil["setup_tamamlandi"] = False
-                st.session_state.onboarding_step = 1
+                st.session_state.onboarding_step = 2
                 st.rerun()
 
         if secilen_tarih not in st.session_state.aktivite_loglari:
