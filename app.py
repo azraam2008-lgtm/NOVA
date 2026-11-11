@@ -190,18 +190,18 @@ else:
         div[data-baseweb="input"] button {{ color: #000000 !important; }}
         
         /* ------------------------------------------------------------------ */
-        /* YENİ NESİL iOS/APPLE SQUIRCLE SEKME (TAB) TASARIMI                 */
+        /* DAHA GENİŞ, DAHA FERAH SQUIRCLE SEKME (TAB) TASARIMI               */
         /* ------------------------------------------------------------------ */
         
         /* Sekme Taşıyıcı Konteyner (Cam Efektli Zemin) */
         div[data-testid="stTabs"] > div > div[role="tablist"] {{
             background: {tema['card_bg']} !important;
-            padding: 8px !important;
-            border-radius: 22px !important;
-            gap: 10px !important;
+            padding: 10px !important; /* Dış boşluk artırıldı */
+            border-radius: 24px !important;
+            gap: 25px !important; /* SEKMELER ARASI BOŞLUK (BÜYÜTÜLDÜ) */
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
-            margin-bottom: 15px !important;
+            margin-bottom: 25px !important;
             display: flex;
             justify-content: center;
         }}
@@ -213,12 +213,12 @@ else:
             font-family: 'Plus Jakarta Sans', sans-serif !important; 
             font-size: 1.05rem !important; 
             font-weight: 600 !important; 
-            padding: 10px 22px !important;
-            border-radius: 16px !important;
+            padding: 12px 30px !important; /* İÇ BOŞLUK (Tıklama alanı büyütüldü) */
+            margin: 0 5px !important; /* Dış kenar ekstra ferahlık */
+            border-radius: 18px !important;
             border: none !important;
-            opacity: 0.65; 
+            opacity: 0.70; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            margin: 0 !important;
         }}
         
         /* Sekme Butonu Üzerine Gelince (Hover) */
