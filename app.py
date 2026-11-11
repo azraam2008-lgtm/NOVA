@@ -189,8 +189,59 @@ else:
         span[data-baseweb="tag"] span {{ color: {tema['fallback_bg']} !important; }}
         div[data-baseweb="input"] button {{ color: #000000 !important; }}
         
-        button[data-baseweb="tab"] {{ background-color: transparent !important; color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.1rem !important; font-weight: 600 !important; opacity: 0.85; }}
-        button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom: 3px solid {tema['text_color']} !important; font-weight: 800 !important; opacity: 1.0 !important; }}
+        /* ------------------------------------------------------------------ */
+        /* YENİ NESİL iOS/APPLE SQUIRCLE SEKME (TAB) TASARIMI                 */
+        /* ------------------------------------------------------------------ */
+        
+        /* Sekme Taşıyıcı Konteyner (Cam Efektli Zemin) */
+        div[data-testid="stTabs"] > div > div[role="tablist"] {{
+            background: {tema['card_bg']} !important;
+            padding: 8px !important;
+            border-radius: 22px !important;
+            gap: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+            margin-bottom: 15px !important;
+            display: flex;
+            justify-content: center;
+        }}
+        
+        /* Standart Sekme Butonu (Sönük Hal) */
+        button[data-baseweb="tab"] {{ 
+            background-color: transparent !important; 
+            color: {tema['text_color']} !important; 
+            font-family: 'Plus Jakarta Sans', sans-serif !important; 
+            font-size: 1.05rem !important; 
+            font-weight: 600 !important; 
+            padding: 10px 22px !important;
+            border-radius: 16px !important;
+            border: none !important;
+            opacity: 0.65; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            margin: 0 !important;
+        }}
+        
+        /* Sekme Butonu Üzerine Gelince (Hover) */
+        button[data-baseweb="tab"]:hover {{
+            opacity: 1 !important;
+            background-color: rgba(255,255,255,0.08) !important;
+            transform: translateY(-1px);
+        }}
+        
+        /* Seçili Aktif Sekme (Kapsül Tasarımı) */
+        button[data-baseweb="tab"][aria-selected="true"] {{ 
+            background-color: {tema['text_color']} !important; 
+            color: {tema['fallback_bg']} !important;
+            font-weight: 800 !important; 
+            opacity: 1.0 !important; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+            transform: translateY(0);
+        }}
+        
+        /* Streamlit'in varsayılan hareketli renkli alt çizgisini yok et */
+        div[data-baseweb="tab-highlight"] {{ display: none !important; }}
+        /* ------------------------------------------------------------------ */
+        
         div.stButton > button:first-child {{ background: {tema['card_bg']} !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.3) !important; font-weight: 700 !important; border-radius: 16px !important; padding: 10px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }}
         div.stButton > button:first-child:hover {{ transform: translateY(-2px); background: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['text_color']} !important; box-shadow: 0 12px 30px rgba(0,0,0,0.3); }}
         
