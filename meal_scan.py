@@ -1,81 +1,161 @@
-import streamlit as st
-import google.generativeai as genai
-from PIL import Image
-import json
+"""
+meal_scan.py - Öğün taraması sayfası
 
-# --- GEMINI API AYARLARI ---
-# Kendi Gemini API anahtarını buraya tırnak içinde yazmalısın.
-# Örnek: GEMINI_API_KEY = "AIzaSyD-xxxxxxxxxxxx"
-GEMINI_API_KEY = "AQ.Ab8RN6K_y2G2iYd_R6dfaiSAmSWPMu-gFgD1tCSMvn1Sa6kEvg" 
-genai.configure(api_key=GEMINI_API_KEY)
+    from meal_scan import meal_scan_page
+    totals = meal_scan_page()
+    if totals:        # kullanıcı "Günlüğe ekle"ye bastıysa
+        kaydet(totals)   # {"kcal", "protein", "carbs", "fat", "grams", "items"}
+"""
+
+import hashlib
+
+import pandas as pd
+import streamlit as st
+
+from nova_core import (
+    QuotaError,
+    friendly_error,
+    prepare_image,
+    quota_caption,
+    run_mode,
+    show_limit_reached,
+    support_slot,
+)
+from nutrition_check import kcal, verify
+
+
+def _render_editor(data: dict, scan_id: str):
+    st.markdown("#### Değerleri düzenle")
+    st.caption("Gramajı kaydırarak değiştir. Bir kalemi çıkarmak için 0'a çek.")
+    prefer_ref = st.toggle(
+        "Referans değerlerle doğrula",
+        value=True,
+        help="Yumurta, elma gibi basit besinlerde model değeri referanstan çok sapıyorsa referansı kullanır.",
+        key="meal_verify_toggle",
+    )
+
+    rows = []
+    for i, item in enumerate(data["items"]):
+        check = verify(
+            item["name"],
+            item["protein_per_100g"],
+            item["carbs_per_100g"],
+            item["fat_per_100g"],
+            prefer_reference=prefer_ref,
+        )
+        p100, c100, f100 = check.values
+
+        start = max(5, min(int(round(item["grams"] / 5) * 5), 2000))
+        grams = st.slider(
+            item["name"],
+            min_value=0,
+            max_value=max(300, start * 3),
+            value=start,
+            step=5,
+            key=f"grams_{scan_id}_{i}",
+        )
+        for message in check.messages:
+            st.caption(message)
+        if item["confidence"] < 0.6:
+            st.caption("Bu kalemden emin değilim. Gramajı kontrol et.")
+
+        factor = grams / 100
+        protein, carbs, fat = p100 * factor, c100 * factor, f100 * factor
+        rows.append(
+            {
+                "Yemek": item["name"],
+                "Gram": grams,
+                "Kalori": round(kcal(protein, carbs, fat)),
+                "Protein (g)": round(protein, 1),
+                "Karb. (g)": round(carbs, 1),
+                "Yağ (g)": round(fat, 1),
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    df = df[df["Gram"] > 0]
+    if df.empty:
+        st.info("Tüm kalemler 0 gram. En az birini artır.")
+        return None
+
+    totals = {
+        "kcal": int(df["Kalori"].sum()),
+        "protein": round(df["Protein (g)"].sum(), 1),
+        "carbs": round(df["Karb. (g)"].sum(), 1),
+        "fat": round(df["Yağ (g)"].sum(), 1),
+        "grams": int(df["Gram"].sum()),
+    }
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Kalori", f'{totals["kcal"]} kcal')
+    c2.metric("Protein", f'{totals["protein"]} g')
+    c3.metric("Karbonhidrat", f'{totals["carbs"]} g')
+    c4.metric("Yağ", f'{totals["fat"]} g')
+
+    st.dataframe(df, hide_index=True)
+
+    if data.get("assumptions"):
+        st.info(data["assumptions"])
+    st.caption("Değerler fotoğraftan yapılan tahmindir ve gerçek değerden sapabilir.")
+
+    clicked = st.button("Günlüğe ekle", type="primary", key=f"save_{scan_id}")
+    support_slot()
+    if clicked:
+        totals["items"] = df.to_dict("records")
+        return totals
+    return None
+
+
+def _flow():
+    source = st.radio("Kaynak", ["Galeri", "Kamera"], horizontal=True, label_visibility="collapsed")
+    if source == "Kamera":
+        file = st.camera_input("Yemeğin fotoğrafını çek")
+    else:
+        file = st.file_uploader("Yemeğin fotoğrafını seç", type=["jpg", "jpeg", "png", "webp"])
+
+    hint = st.text_input(
+        "Not (isteğe bağlı)",
+        placeholder="Örn: 1 yemek kaşığı zeytinyağı kullandım",
+        max_chars=200,
+    )
+    if not file:
+        return None
+
+    file_id = hashlib.md5(file.getvalue()).hexdigest()[:10]
+    st.image(file, width=320)
+
+    if st.button("Analiz et", type="primary"):
+        try:
+            with st.spinner("Öğün analiz ediliyor..."):
+                image_bytes = prepare_image(file)
+                result = run_mode("meal", hint.strip(), image_bytes=image_bytes)
+            st.session_state["scan_result"] = result
+            st.session_state["scan_file"] = file_id
+        except QuotaError as e:
+            show_limit_reached(str(e))
+            return None
+        except Exception as e:  # noqa: BLE001
+            st.error(friendly_error(e))
+            return None
+
+    # Sonuç sadece analiz edilen fotoğraf hâlâ seçiliyse gösterilir
+    data = st.session_state.get("scan_result")
+    if not data or st.session_state.get("scan_file") != file_id:
+        return None
+    if not data["is_food"] or not data["items"]:
+        st.info("Fotoğrafta yiyecek bulamadım. Daha yakından ve iyi ışıkta çekip tekrar dene.")
+        return None
+    return _render_editor(data, file_id)
+
 
 def meal_scan_page():
-    st.markdown("<p style='text-align:center; font-size:1.1rem;'>Yemeğinin fotoğrafını çek veya yükle, Nova içeriğini ve kalorisini tahmin etsin.</p>", unsafe_allow_html=True)
-    
-    upload_method = st.radio("Fotoğraf Ekleme Yöntemi:", ["Dosya Yükle", "Kameradan Çek"], horizontal=True)
-    
-    img_file = None
-    if upload_method == "Kameradan Çek":
-        img_file = st.camera_input("Yemeğini Çek")
-    else:
-        img_file = st.file_uploader("Yemek Fotoğrafı Yükle", type=["png", "jpg", "jpeg"])
-        
-    if img_file is not None:
-        img = Image.open(img_file)
-        st.image(img, caption="İncelenecek Fotoğraf", use_container_width=True)
-        
-        if st.button("🔍 Yapay Zeka ile Analiz Et", type="primary", use_container_width=True):
-            with st.spinner("🤖 Nova yemeğini inceliyor, lütfen bekle..."):
-                # Yapay zekaya ne yapması gerektiğini anlattığımız komut (Prompt)
-                prompt = """
-                Sen uzman bir diyetisyensin. Bu fotoğraftaki yemeği/yemekleri analiz et.
-                Her bir malzemenin porsiyonunu tahmin et.
-                Lütfen SADECE aşağıdaki JSON formatında, geçerli bir JSON objesi döndür.
-                Başka hiçbir açıklama veya markdown karakteri (```json) yazma.
-                
-                Format:
-                {
-                    "items": [
-                        {
-                            "Yemek": "Yemek Adı",
-                            "Kalori": 150.0,
-                            "Protein (g)": 10.5,
-                            "Karb. (g)": 20.0,
-                            "Yağ (g)": 5.0
-                        }
-                    ]
-                }
-                """
-                
-                # Modeli başlat
-                model = genai.GenerativeModel("gemini-1.5-flash")
-                
-                # --- İŞTE HATA KORUMA (TRY-EXCEPT) BLOĞU BURADA ---
-                try:
-                    response = model.generate_content([prompt, img])
-                    
-                    # Markdown temizliği (Bazen AI ```json ... ``` formatında yanıt verir)
-                    response_text = response.text.replace("```json", "").replace("```", "").strip()
-                    
-                    # JSON metnini Python sözlüğüne çevir
-                    data = json.loads(response_text)
-                    
-                    # Toplam kaloriyi hesapla
-                    toplam_kalori = sum(item["Kalori"] for item in data["items"])
-                    data["kcal"] = toplam_kalori
-                    
-                    return data
-                    
-                except json.JSONDecodeError:
-                    st.error("⚠️ Yapay zeka fotoğrafı tam anlayamadı. Lütfen fotoğrafı daha net çekip tekrar dene.")
-                    return None
-                    
-                except Exception as e:
-                    # 503 High Demand (Sunucu Yoğunluğu) hatası gelirse uygulamayı çökertmeden uyarı ver
-                    if "503" in str(e) or "UNAVAILABLE" in str(e):
-                        st.warning("🤖 Gemini yapay zeka sunucuları şu an çok yoğun. Lütfen 1-2 dakika sonra tekrar dene.")
-                    else:
-                        st.error(f"Beklenmeyen bir hata oluştu: {str(e)}")
-                    return None
-                    
-    return None
+    """Öğün tarama ekranını çizer. 'Günlüğe ekle'ye basılırsa toplamları döndürür."""
+    st.subheader("Öğün taraması")
+    st.caption("Fotoğraf analiz için Google Gemini'ye gönderilir.")
+    quota_slot = st.empty()
+    try:
+        return _flow()
+    finally:
+        # Hak sayısı analizden sonra güncellensin diye en sonda çizilir
+        with quota_slot.container():
+            quota_caption("meal")
