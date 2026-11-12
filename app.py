@@ -15,6 +15,7 @@ from supabase import create_client, Client
 
 # --- AI MODÜLLERİ ---
 from meal_scan import meal_scan_page
+from besin_kaynaklari import KaynakHatasi, barkod_gecerli_mi, barkod_oku, off_ara, off_barkod, onbellekte_ara, onbellekten_barkod, onbellege_yaz
 from nova_pages import coach_page, ask_page
 
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="🦢", layout="wide", initial_sidebar_state="collapsed")
@@ -199,13 +200,14 @@ def verileri_yukle(username):
         "aktivite_loglari": d.get("aktivite_loglari") or {},
         "kilo_gecmisi": d.get("kilo_gecmisi") or [],
         "ozel_yemekler": d.get("ozel_yemekler") or [],
+        "tarifler": d.get("tarifler") or [],
         "profil": {**VARSAYILAN_PROFIL, **(d.get("profil") or {})},
     }
 
 
 def verileri_kaydet(username):
     data = {"gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari, "kilo_gecmisi": st.session_state.kilo_gecmisi,
-            "ozel_yemekler": st.session_state.get("ozel_yemekler", []), "profil": st.session_state.profil}
+            "ozel_yemekler": st.session_state.get("ozel_yemekler", []), "tarifler": st.session_state.get("tarifler", []), "profil": st.session_state.profil}
     try:
         supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
         return True
@@ -357,6 +359,8 @@ span[data-baseweb="tag"], span[data-baseweb="tag"] * { color: var(--nv-on-accent
 [data-testid="stFileUploaderDropzone"] { background-color: #ffffff !important; border-radius: 14px !important; border: 2px dashed rgba(0,0,0,0.2) !important; }
 [data-testid="stFileUploaderDropzone"] :is(span, small, p, div), [data-testid="stFileUploaderDropzoneInstructions"] * { color: #1a1a1a !important; }
 [data-testid="stFileUploaderDropzone"] svg { color: #1a1a1a !important; fill: #1a1a1a !important; }
+[data-testid="stFileUploaderDropzone"] button { background: #eef1f5 !important; border: 1px solid rgba(0,0,0,0.18) !important; border-radius: 12px !important; }
+[data-testid="stFileUploaderDropzone"] button, [data-testid="stFileUploaderDropzone"] button * { color: #1a1a1a !important; }
 [data-testid="stForm"], [data-testid="stVerticalBlockBorderWrapper"] { border-color: var(--nv-line) !important; border-radius: 18px !important; }
 [data-testid="stCameraInput"] button { color: #1a1a1a !important; }
 
@@ -436,10 +440,10 @@ table.nova-tablo tr.toplam-satir td { font-size: 1.2rem; font-weight: 800; borde
 div[class*="st-key-metrik_satiri"] [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.5rem !important; }
 div[class*="st-key-metrik_satiri"] [data-testid="stColumn"] { min-width: 0 !important; background: var(--nv-track); border-radius: 14px; padding: 10px 12px; }
 div[class*="st-key-metrik_satiri"] [data-testid="stMetricValue"] { font-size: 1.6rem; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-gezinme) [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.6rem !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-gezinme) [data-testid="stColumn"] { min-width: 0 !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste) [data-testid="stColumn"]:last-child { flex: 0 0 52px !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste) .stButton button { min-height: 36px !important; padding: 4px 8px !important; box-shadow: none !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-tarif_liste, .st-key-tarif_taslak_liste, .st-key-gezinme) [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.6rem !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-tarif_liste, .st-key-tarif_taslak_liste, .st-key-gezinme) [data-testid="stColumn"] { min-width: 0 !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-tarif_liste, .st-key-tarif_taslak_liste) [data-testid="stColumn"]:last-child { flex: 0 0 52px !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-tarif_liste, .st-key-tarif_taslak_liste) .stButton button { min-height: 36px !important; padding: 4px 8px !important; box-shadow: none !important; }
 
 /* ---------- AI SOHBET ---------- */
 .nova-sohbet-baslik { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
@@ -805,9 +809,14 @@ def render_makro(isim, mevcut, hedef, renk):
     """
 
 
-def gunluge_ekle(aktif_user, tarih, ogun, ad, kcal, protein, karb, yag, gram=None):
+def gunluge_ekle(aktif_user, tarih, ogun, ad, kcal, protein, karb, yag, gram=None, ek=None):
     kayit = {"Tarih": tarih, "Öğün": ogun, "Tarif": ad, "Kalori": round(kcal), "Protein": round(protein, 1), "Karbonhidrat": round(karb, 1), "Yağ": round(yag, 1)}
     if gram: kayit["Gram"] = int(gram)
+    # Open Food Facts ürünlerinde varsa lif, şeker ve tuz da saklanır (ileride mikro besin takibi için)
+    if ek and gram:
+        for kaynak_alan, hedef_alan in (("lif", "Lif"), ("seker", "Şeker"), ("tuz", "Tuz"), ("doymus_yag", "Doymuş Yağ")):
+            if ek.get(kaynak_alan) is not None:
+                kayit[hedef_alan] = round(float(ek[kaynak_alan]) * gram / 100, 2)
     st.session_state.gunluk_kayitlar.append(kayit)
     return verileri_kaydet(aktif_user)
 
@@ -899,80 +908,228 @@ def kart_yemek_gunlugu(aktif_user, secilen_tarih):
                         st.rerun()
 
 
-def kart_yemek_ekle(aktif_user, secilen_tarih, df_yemek):
-    with kart("kart_yemek"):
-        st.markdown("<h2 class='kart-baslik'>➕ Yemek Ekle</h2>", unsafe_allow_html=True)
-        secilen_ogun = st.selectbox("Hangi öğüne eklensin?", OGUNLER, key="db_ogun")
-
-        # Son eklenenlerden tek dokunuşla tekrar ekleme
-        sonlar = son_eklenenler()
-        if sonlar:
-            with st.expander("⏱️ Son eklediklerinden hızlıca ekle"):
-                secim = st.selectbox("Yemek", range(len(sonlar)), key="son_yemek",
-                                     format_func=lambda i: f"{sonlar[i].get('Tarif', '?')} — {round(sonlar[i].get('Kalori', 0))} kcal")
-                if st.button("➕ Tekrar Ekle", width="stretch", key="btn_tekrar_ekle"):
-                    k = sonlar[secim]
-                    if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, k.get("Tarif", "?"), k.get("Kalori", 0), k.get("Protein", 0), k.get("Karbonhidrat", 0), k.get("Yağ", 0), k.get("Gram")):
-                        bildir(f"✅ {k.get('Tarif', 'Yemek')} {secilen_ogun.lower()} öğününe eklendi.")
-                    st.rerun()
-
-        kart_ozel_yemek_olustur(aktif_user)
-
-        ozel = ozel_yemek_tablosu()
-        if df_yemek is None:
-            st.warning("Yemek veritabanı şu anda yüklenemedi. Biraz sonra sayfayı yenileyip tekrar dene.")
-            if ozel.empty:
-                return
-            tablo = ozel
-        else:
-            tablo = df_yemek if ozel.empty else pd.concat([ozel, df_yemek], ignore_index=True)
-
-        arama_metni = st.text_input("🔍 Yemek ara", placeholder="Örn: Tavuk, Yumurta, Pilav...").strip()
-        isimler = tablo["Yemek Adı"].dropna().astype(str)
-        if arama_metni:
-            isimler = isimler[isimler.map(tr_kucuk).str.contains(tr_kucuk(arama_metni), regex=False)]
-        yemek_isimleri = isimler.tolist()
-
-        if not yemek_isimleri:
-            st.warning("Bu kelimeyle eşleşen yemek bulunamadı.")
-            return
-
-        secilen_yemek = st.selectbox(f"Sonuçlar ({len(yemek_isimleri)})", yemek_isimleri, key="db_yemek")
-        detay = tablo[tablo["Yemek Adı"] == secilen_yemek].iloc[0]
-        ozel_mi = secilen_yemek.startswith(OZEL_ON_EK)
-        varsayilan_porsiyon = int(detay["Porsiyon_g"]) if ozel_mi and pd.notna(detay.get("Porsiyon_g")) else 100
-        sayilar = pd.to_numeric(detay[["Protein (g)", "Karbonhidrat (g)", "Yağ (g)"]], errors="coerce").fillna(0.0)
-        base_p, base_c, base_f = (float(v) for v in sayilar)
-
-        st.caption(f"100 g için: Protein {base_p} g · Karbonhidrat {base_c} g · Yağ {base_f} g")
-        porsiyon_g = st.number_input("Porsiyon (gram)", min_value=10, max_value=2000, value=sinirla(varsayilan_porsiyon, 10, 2000), step=10)
-        carp = porsiyon_g / 100.0
-        deger_p, deger_c, deger_f = round(base_p * carp, 1), round(base_c * carp, 1), round(base_f * carp, 1)
-
-        with st.expander("🛠️ İçeriği kendine göre ayarla (isteğe bağlı)"):
-            # Üst sınır porsiyonla birlikte büyür; büyük porsiyonlarda slider taşmaz
-            new_p = st.slider("Protein (g)", 0.0, max(150.0, float(round(deger_p * 1.5))), deger_p, 0.1)
-            new_c = st.slider("Karbonhidrat (g)", 0.0, max(300.0, float(round(deger_c * 1.5))), deger_c, 0.1)
-            new_f = st.slider("Yağ (g)", 0.0, max(150.0, float(round(deger_f * 1.5))), deger_f, 0.1)
-
-        new_kcal = round((new_p * 4) + (new_c * 4) + (new_f * 9))
-        st.info(f"🔥 Hesaplanan kalori: **{new_kcal} kcal**")
-
-        if st.button("➕ Günlüğe Ekle", width="stretch", type="primary", key="btn_gunluge_ekle"):
-            ad = secilen_yemek[len(OZEL_ON_EK):] if ozel_mi else secilen_yemek
-            if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, ad, new_kcal, new_p, new_c, new_f, porsiyon_g):
-                bildir(f"✅ {ad} günlüğüne eklendi.")
-            st.rerun()
-
-
 OZEL_ON_EK = "⭐ "
+TARIF_ON_EK = "🍲 "
+URUN_ON_EK = "🌍 "
+TABLO_SUTUNLARI = ["Yemek Adı", "Protein (g)", "Karbonhidrat (g)", "Yağ (g)", "Porsiyon_g", "Ek"]
+
+
+def on_eki_kaldir(ad):
+    for on_ek in (OZEL_ON_EK, TARIF_ON_EK, URUN_ON_EK):
+        if ad.startswith(on_ek):
+            return ad[len(on_ek):]
+    return ad
 
 
 def ozel_yemek_tablosu():
     """Kullanıcının kendi eklediği yemekler; aramada en üstte ⭐ ile görünür."""
     satirlar = [{"Yemek Adı": OZEL_ON_EK + y["ad"], "Protein (g)": y.get("protein", 0), "Karbonhidrat (g)": y.get("karb", 0),
-                 "Yağ (g)": y.get("yag", 0), "Porsiyon_g": y.get("porsiyon", 100)} for y in st.session_state.get("ozel_yemekler", [])]
-    return pd.DataFrame(satirlar, columns=["Yemek Adı", "Protein (g)", "Karbonhidrat (g)", "Yağ (g)", "Porsiyon_g"])
+                 "Yağ (g)": y.get("yag", 0), "Porsiyon_g": y.get("porsiyon", 100), "Ek": None} for y in st.session_state.get("ozel_yemekler", [])]
+    return pd.DataFrame(satirlar, columns=TABLO_SUTUNLARI)
+
+
+def tarif_besinleri(malzemeler, porsiyon_sayisi):
+    """Malzemelerin toplamından 100 g değerlerini ve porsiyon başı gramı hesaplar."""
+    toplam_gram = sum(m["gram"] for m in malzemeler) or 1
+    p = sum(m["protein"] * m["gram"] / 100 for m in malzemeler)
+    k = sum(m["karb"] * m["gram"] / 100 for m in malzemeler)
+    y = sum(m["yag"] * m["gram"] / 100 for m in malzemeler)
+    porsiyon_sayisi = max(1, int(porsiyon_sayisi))
+    return {
+        "toplam_gram": round(toplam_gram), "porsiyon_g": round(toplam_gram / porsiyon_sayisi),
+        "p100": p / toplam_gram * 100, "k100": k / toplam_gram * 100, "y100": y / toplam_gram * 100,
+        "kcal_porsiyon": round((p * 4 + k * 4 + y * 9) / porsiyon_sayisi),
+        "p_porsiyon": p / porsiyon_sayisi, "k_porsiyon": k / porsiyon_sayisi, "y_porsiyon": y / porsiyon_sayisi,
+    }
+
+
+def tarif_tablosu():
+    satirlar = []
+    for t in st.session_state.get("tarifler", []):
+        b = tarif_besinleri(t["malzemeler"], t.get("porsiyon_sayisi", 1))
+        satirlar.append({"Yemek Adı": TARIF_ON_EK + t["ad"], "Protein (g)": round(b["p100"], 1), "Karbonhidrat (g)": round(b["k100"], 1),
+                         "Yağ (g)": round(b["y100"], 1), "Porsiyon_g": b["porsiyon_g"], "Ek": None})
+    return pd.DataFrame(satirlar, columns=TABLO_SUTUNLARI)
+
+
+def urun_tablosu(urunler, mevcut_adlar):
+    """Open Food Facts ürünleri; aynı ad tekrar ederse barkodun son hanesiyle ayrılır."""
+    satirlar, adlar = [], set(mevcut_adlar)
+    for u in urunler:
+        ad = URUN_ON_EK + u["ad"] + (f" · {u['marka']}" if u.get("marka") else "")
+        if ad in adlar:
+            ad += f" ({u.get('kod', '')[-4:]})"
+        if ad in adlar:
+            continue
+        adlar.add(ad)
+        satirlar.append({"Yemek Adı": ad, "Protein (g)": u["protein"], "Karbonhidrat (g)": u["karb"], "Yağ (g)": u["yag"],
+                         "Porsiyon_g": u.get("porsiyon"), "Ek": u})
+    return pd.DataFrame(satirlar, columns=TABLO_SUTUNLARI)
+
+
+def yerel_tablo(df_yemek, tarifler_dahil=True):
+    parcalar = [ozel_yemek_tablosu()]
+    if tarifler_dahil:
+        parcalar.append(tarif_tablosu())
+    if df_yemek is not None:
+        csv = df_yemek[["Yemek Adı", "Protein (g)", "Karbonhidrat (g)", "Yağ (g)"]].copy()
+        csv["Porsiyon_g"], csv["Ek"] = None, None
+        parcalar.append(csv)
+    parcalar = [d for d in parcalar if not d.empty]
+    return pd.concat(parcalar, ignore_index=True) if parcalar else pd.DataFrame(columns=TABLO_SUTUNLARI)
+
+
+def satirin_makrolari(satir):
+    sayilar = pd.to_numeric(pd.Series([satir["Protein (g)"], satir["Karbonhidrat (g)"], satir["Yağ (g)"]]), errors="coerce").fillna(0.0)
+    return tuple(float(v) for v in sayilar)
+
+
+def barkod_urunu(kod):
+    """Önce oturum, sonra Supabase önbelleği, en son Open Food Facts. Bağlantı sorununda "hata" döner."""
+    onbellek = st.session_state.setdefault("_barkod_onbellek", {})
+    if kod in onbellek:
+        return onbellek[kod]
+    urun = onbellekten_barkod(supabase, kod)
+    if urun is None:
+        try:
+            urun = off_barkod(kod)
+        except KaynakHatasi:
+            return "hata"
+        if urun:
+            onbellege_yaz(supabase, [urun])
+    onbellek[kod] = urun
+    return urun
+
+
+def kart_barkod(aktif_user, secilen_tarih, secilen_ogun):
+    sayac = st.session_state.setdefault("_barkod_sayac", 0)  # ekleme sonrası alanları temizlemek için
+    with st.expander("📷 Barkodla ekle"):
+        st.caption("Paketin barkodunu yakından ve net çek (telefonda 'Browse files' → 'Fotoğraf Çek') ya da altındaki numarayı yaz.")
+        foto = st.file_uploader("Barkod fotoğrafı", type=["jpg", "jpeg", "png", "webp"], key=f"barkod_foto_{sayac}")
+        elle = st.text_input("ya da barkod numarası", max_chars=14, key=f"barkod_elle_{sayac}", placeholder="Örn: 8690767160127").strip()
+
+        kod = None
+        if elle:
+            if barkod_gecerli_mi(elle):
+                kod = elle
+            else:
+                st.error("Barkod numarası geçersiz. 8-14 haneli olmalı; rakamları kontrol et.")
+        elif foto is not None:
+            okumalar = st.session_state.setdefault("_barkod_okuma", {})
+            anahtar = hashlib.md5(foto.getvalue()).hexdigest()
+            if anahtar not in okumalar:
+                try:
+                    with st.spinner("Barkod okunuyor..."):
+                        okumalar[anahtar] = barkod_oku(foto.getvalue())
+                except ImportError:
+                    okumalar[anahtar] = None
+                except Exception:
+                    okumalar[anahtar] = []
+            kodlar = okumalar[anahtar]
+            if kodlar is None:
+                st.error("Barkod okuyucu şu an kullanılamıyor; numarayı elle yazabilirsin.")
+            elif not kodlar:
+                st.warning("Fotoğrafta barkod bulunamadı. Daha yakından, ışıkta ve barkod düz duracak şekilde tekrar çek ya da numarayı yaz.")
+            else:
+                kod = kodlar[0]
+                st.caption(f"Okunan barkod: {kod}")
+        if not kod:
+            return
+
+        with st.spinner("Ürün aranıyor..."):
+            urun = barkod_urunu(kod)
+        if urun == "hata":
+            st.error("Ürün veritabanına şu an ulaşılamadı. Biraz sonra tekrar dene.")
+            return
+        if not urun:
+            st.info("Bu barkod Open Food Facts'te yok ya da besin değerleri eksik. Paketin üzerindeki 100 g değerleriyle aşağıdaki ⭐ Kendi yemeğini oluştur bölümünden ekleyebilirsin.")
+            return
+
+        marka = f" · {guvenli(urun['marka'])}" if urun.get("marka") else ""
+        st.markdown(f"<div class='ogun-satir'><b>{guvenli(urun['ad'])}</b>{marka}<br><small>100 g: {urun['kcal']} kcal · P {urun['protein']:g} g · K {urun['karb']:g} g · Y {urun['yag']:g} g</small></div>", unsafe_allow_html=True)
+        gram = st.number_input("Porsiyon (gram)", min_value=5, max_value=2000, value=int(urun.get("porsiyon") or 100), step=5, key=f"barkod_gram_{kod}")
+        c = gram / 100
+        kcal = round((urun["protein"] * 4 + urun["karb"] * 4 + urun["yag"] * 9) * c)
+        st.info(f"🔥 {gram} g: **{kcal} kcal**")
+        if st.button("➕ Günlüğe Ekle", key="btn_barkod_ekle", type="primary", width="stretch"):
+            ad = urun["ad"] + (f" · {urun['marka']}" if urun.get("marka") else "")
+            if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, ad, kcal, urun["protein"] * c, urun["karb"] * c, urun["yag"] * c, gram, ek=urun):
+                bildir(f"✅ {urun['ad']} günlüğüne eklendi.")
+            st.session_state["_barkod_sayac"] = sayac + 1
+            st.rerun()
+
+
+def kart_tarif_olustur(aktif_user, df_yemek):
+    tarifler = st.session_state.setdefault("tarifler", [])
+    taslak = st.session_state.setdefault("tarif_taslak", [])
+    if st.session_state.pop("_tarif_sifirla", False):
+        for anahtar in ("tarif_ad", "tarif_porsiyon"):
+            st.session_state.pop(anahtar, None)
+
+    with st.expander(f"🍲 Tarif oluştur ({len(tarifler)} kayıtlı)"):
+        st.caption("Malzemeleri gramajlarıyla ekle; Nova porsiyon başına değerleri hesaplar. Kaydettiğin tarif aramada 🍲 ile çıkar.")
+        kaynak = yerel_tablo(df_yemek, tarifler_dahil=False)
+        if kaynak.empty:
+            st.warning("Malzeme seçmek için yemek veritabanı gerekiyor; şu an yüklenemedi.")
+            return
+        m1, m2 = st.columns([3, 1], vertical_alignment="bottom")
+        malzeme = m1.selectbox("Malzeme", kaynak["Yemek Adı"].tolist(), index=None, placeholder="Yazarak ara ve seç", key="tarif_malzeme")
+        gram = m2.number_input("Gram", min_value=1, max_value=5000, value=100, step=10, key="tarif_gram")
+        if st.button("➕ Malzemeyi Ekle", key="btn_malzeme_ekle", width="stretch"):
+            if malzeme is None:
+                st.error("Önce bir malzeme seç.")
+            else:
+                pr, kr, yg = satirin_makrolari(kaynak[kaynak["Yemek Adı"] == malzeme].iloc[0])
+                taslak.append({"ad": on_eki_kaldir(malzeme), "gram": int(gram), "protein": pr, "karb": kr, "yag": yg})
+                st.rerun()
+
+        if taslak:
+            st.markdown("<hr class='nova-cizgi'>", unsafe_allow_html=True)
+            with st.container(key="tarif_taslak_liste"):
+                for i, m in enumerate(taslak):
+                    c1, c2 = st.columns([10, 1], vertical_alignment="center")
+                    kcal = round((m["protein"] * 4 + m["karb"] * 4 + m["yag"] * 9) * m["gram"] / 100)
+                    c1.markdown(f"<div class='ogun-satir'><b>{guvenli(m['ad'])}</b> · {m['gram']} g — {kcal} kcal</div>", unsafe_allow_html=True)
+                    if c2.button("🗑️", key=f"taslak_sil_{i}", help="Çıkar"):
+                        taslak.pop(i)
+                        st.rerun()
+            tarif_ad = st.text_input("Tarifin adı", key="tarif_ad", max_chars=60, placeholder="Örn: Fırında sebzeli tavuk").strip()
+            porsiyon_sayisi = st.number_input("Kaç porsiyon çıkıyor?", min_value=1, max_value=50, value=1, step=1, key="tarif_porsiyon")
+            b = tarif_besinleri(taslak, porsiyon_sayisi)
+            st.info(f"Toplam {b['toplam_gram']} g. Porsiyon başı **{b['porsiyon_g']} g · {b['kcal_porsiyon']} kcal** "
+                    f"(P {sayi(b['p_porsiyon'])} g · K {sayi(b['k_porsiyon'])} g · Y {sayi(b['y_porsiyon'])} g)")
+            k1, k2 = st.columns(2)
+            if k1.button("💾 Tarifi Kaydet", key="btn_tarif_kaydet", type="primary", width="stretch"):
+                mevcut = {tr_kucuk(t["ad"]) for t in tarifler} | {tr_kucuk(y["ad"]) for y in st.session_state.get("ozel_yemekler", [])}
+                if not tarif_ad:
+                    st.error("Tarife bir ad ver.")
+                elif tr_kucuk(tarif_ad) in mevcut:
+                    st.error("Bu adla kayıtlı bir tarifin ya da yemeğin zaten var.")
+                else:
+                    tarifler.append({"ad": tarif_ad, "porsiyon_sayisi": int(porsiyon_sayisi), "malzemeler": list(taslak)})
+                    if verileri_kaydet(aktif_user):
+                        bildir(f"🍲 {tarif_ad} kaydedildi: porsiyonu {b['kcal_porsiyon']} kcal. Aramada 🍲 ile çıkacak.")
+                    taslak.clear()
+                    st.session_state["_tarif_sifirla"] = True
+                    st.rerun()
+            if k2.button("🧹 Taslağı Temizle", key="btn_taslak_temizle", width="stretch"):
+                taslak.clear()
+                st.session_state["_tarif_sifirla"] = True
+                st.rerun()
+
+        if tarifler:
+            st.markdown("<hr class='nova-cizgi'>", unsafe_allow_html=True)
+            st.markdown("**Kayıtlı tariflerin**")
+            with st.container(key="tarif_liste"):
+                for i, t in enumerate(tarifler):
+                    b = tarif_besinleri(t["malzemeler"], t.get("porsiyon_sayisi", 1))
+                    c1, c2 = st.columns([10, 1], vertical_alignment="center")
+                    c1.markdown(f"<div class='ogun-satir'><b>{guvenli(t['ad'])}</b> — porsiyon {b['porsiyon_g']} g · {b['kcal_porsiyon']} kcal<br>"
+                                f"<small>{len(t['malzemeler'])} malzeme · {t.get('porsiyon_sayisi', 1)} porsiyon</small></div>", unsafe_allow_html=True)
+                    if c2.button("🗑️", key=f"tarif_sil_{i}", help="Sil"):
+                        tarifler.pop(i)
+                        verileri_kaydet(aktif_user)
+                        st.rerun()
 
 
 def kart_ozel_yemek_olustur(aktif_user):
@@ -989,9 +1146,10 @@ def kart_ozel_yemek_olustur(aktif_user):
             kaydet = st.form_submit_button("⭐ Yemeği Kaydet", width="stretch")
         if kaydet:
             ad = ad.strip()
+            mevcut = {tr_kucuk(y["ad"]) for y in ozeller} | {tr_kucuk(t["ad"]) for t in st.session_state.get("tarifler", [])}
             if not ad:
                 st.error("Yemeğe bir ad ver.")
-            elif any(tr_kucuk(y["ad"]) == tr_kucuk(ad) for y in ozeller):
+            elif tr_kucuk(ad) in mevcut:
                 st.error("Bu adla kayıtlı bir yemeğin zaten var.")
             elif protein + karb + yag > 100:
                 st.error("100 g'daki protein, karbonhidrat ve yağın toplamı 100 g'ı geçemez.")
@@ -1017,6 +1175,95 @@ def kart_ozel_yemek_olustur(aktif_user):
                         ozeller.pop(i)
                         verileri_kaydet(aktif_user)
                         st.rerun()
+
+
+def kart_yemek_ekle(aktif_user, secilen_tarih, df_yemek):
+    with kart("kart_yemek"):
+        st.markdown("<h2 class='kart-baslik'>➕ Yemek Ekle</h2>", unsafe_allow_html=True)
+        secilen_ogun = st.selectbox("Hangi öğüne eklensin?", OGUNLER, key="db_ogun")
+
+        # Son eklenenlerden tek dokunuşla tekrar ekleme
+        sonlar = son_eklenenler()
+        if sonlar:
+            with st.expander("⏱️ Son eklediklerinden hızlıca ekle"):
+                secim = st.selectbox("Yemek", range(len(sonlar)), key="son_yemek",
+                                     format_func=lambda i: f"{sonlar[i].get('Tarif', '?')} — {round(sonlar[i].get('Kalori', 0))} kcal")
+                if st.button("➕ Tekrar Ekle", width="stretch", key="btn_tekrar_ekle"):
+                    k = sonlar[secim]
+                    if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, k.get("Tarif", "?"), k.get("Kalori", 0), k.get("Protein", 0), k.get("Karbonhidrat", 0), k.get("Yağ", 0), k.get("Gram")):
+                        bildir(f"✅ {k.get('Tarif', 'Yemek')} {secilen_ogun.lower()} öğününe eklendi.")
+                    st.rerun()
+
+        kart_barkod(aktif_user, secilen_tarih, secilen_ogun)
+        kart_ozel_yemek_olustur(aktif_user)
+        kart_tarif_olustur(aktif_user, df_yemek)
+
+        tablo = yerel_tablo(df_yemek)
+        if df_yemek is None:
+            st.warning("Yemek veritabanı şu anda yüklenemedi. Marka ürünlerinde arama ve barkod yine çalışır.")
+
+        arama_metni = st.text_input("🔍 Yemek veya ürün ara", placeholder="Örn: Tavuk, Pilav, Sütaş yoğurt, Ülker...").strip()
+        eslesen = tablo
+        if arama_metni:
+            adlar = tablo["Yemek Adı"].astype(str)
+            eslesen = tablo[adlar.map(tr_kucuk).str.contains(tr_kucuk(arama_metni), regex=False)]
+
+        if len(arama_metni) >= 2:
+            # Marka ürünleri: daha önce bulunanlar (önbellek) + istenirse Open Food Facts'te canlı arama
+            canli = st.session_state.get("off_sonuc")
+            canli = canli["liste"] if canli and canli.get("sorgu") == tr_kucuk(arama_metni) else None
+            dis, kodlar = [], set()
+            for u in (canli or []) + onbellekte_ara(supabase, arama_metni):
+                if u.get("kod") not in kodlar:
+                    kodlar.add(u.get("kod"))
+                    dis.append(u)
+            if canli is None:
+                if st.button(f"🌍 Marka ürünlerinde de ara: “{arama_metni}”", key="btn_off_ara", width="stretch"):
+                    try:
+                        with st.spinner("Open Food Facts'te aranıyor..."):
+                            liste = off_ara(arama_metni)
+                    except KaynakHatasi:
+                        st.error("Ürün veritabanına şu an ulaşılamadı. Biraz sonra tekrar dene.")
+                    else:
+                        st.session_state["off_sonuc"] = {"sorgu": tr_kucuk(arama_metni), "liste": liste}
+                        onbellege_yaz(supabase, liste)
+                        st.rerun()
+            elif not canli:
+                st.caption("Open Food Facts'te bu aramayla besin değerleri olan ürün bulunamadı.")
+            if dis:
+                urunler = urun_tablosu(dis, eslesen["Yemek Adı"].astype(str))
+                eslesen = pd.concat([d for d in (eslesen, urunler) if not d.empty], ignore_index=True)
+
+        if eslesen.empty:
+            st.warning("Bu kelimeyle eşleşen yemek bulunamadı. Marka ürünlerinde aramayı ya da barkodla eklemeyi deneyebilirsin.")
+            return
+
+        secilen_yemek = st.selectbox(f"Sonuçlar ({len(eslesen)})", eslesen["Yemek Adı"].astype(str).tolist(), key="db_yemek")
+        satir = eslesen[eslesen["Yemek Adı"] == secilen_yemek].iloc[0]
+        base_p, base_c, base_f = satirin_makrolari(satir)
+        ek = satir["Ek"] if isinstance(satir["Ek"], dict) else None
+        varsayilan_porsiyon = int(satir["Porsiyon_g"]) if pd.notna(satir["Porsiyon_g"]) and satir["Porsiyon_g"] else 100
+
+        kaynak = " · Kaynak: Open Food Facts" if secilen_yemek.startswith(URUN_ON_EK) else ""
+        st.caption(f"100 g için: Protein {base_p:g} g · Karbonhidrat {base_c:g} g · Yağ {base_f:g} g{kaynak}")
+        porsiyon_g = st.number_input("Porsiyon (gram)", min_value=10, max_value=2000, value=sinirla(varsayilan_porsiyon, 10, 2000), step=10)
+        carp = porsiyon_g / 100.0
+        deger_p, deger_c, deger_f = round(base_p * carp, 1), round(base_c * carp, 1), round(base_f * carp, 1)
+
+        with st.expander("🛠️ İçeriği kendine göre ayarla (isteğe bağlı)"):
+            # Üst sınır porsiyonla birlikte büyür; büyük porsiyonlarda slider taşmaz
+            new_p = st.slider("Protein (g)", 0.0, max(150.0, float(round(deger_p * 1.5))), deger_p, 0.1)
+            new_c = st.slider("Karbonhidrat (g)", 0.0, max(300.0, float(round(deger_c * 1.5))), deger_c, 0.1)
+            new_f = st.slider("Yağ (g)", 0.0, max(150.0, float(round(deger_f * 1.5))), deger_f, 0.1)
+
+        new_kcal = round((new_p * 4) + (new_c * 4) + (new_f * 9))
+        st.info(f"🔥 Hesaplanan kalori: **{new_kcal} kcal**")
+
+        if st.button("➕ Günlüğe Ekle", width="stretch", type="primary", key="btn_gunluge_ekle"):
+            ad = on_eki_kaldir(secilen_yemek)
+            if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, ad, new_kcal, new_p, new_c, new_f, porsiyon_g, ek=ek):
+                bildir(f"✅ {ad} günlüğüne eklendi.")
+            st.rerun()
 
 
 def kart_hareket(aktif_user, p, tema, secilen_tarih):
@@ -1308,7 +1555,7 @@ def kart_hesap(aktif_user):
         tum_veri = {
             "kullanici": aktif_user, "indirme_tarihi": str(bugun()), "profil": st.session_state.profil,
             "gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari,
-            "kilo_gecmisi": st.session_state.kilo_gecmisi, "ozel_yemekler": st.session_state.get("ozel_yemekler", []),
+            "kilo_gecmisi": st.session_state.kilo_gecmisi, "ozel_yemekler": st.session_state.get("ozel_yemekler", []), "tarifler": st.session_state.get("tarifler", []),
         }
         st.download_button(label="🗂️ Tüm Verilerimi İndir (.JSON)", data=json.dumps(tum_veri, ensure_ascii=False, indent=2).encode("utf-8"),
                            file_name=f"nova_verilerim_{aktif_user}.json", mime="application/json", width="stretch")
