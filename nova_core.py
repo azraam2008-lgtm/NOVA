@@ -14,7 +14,9 @@ Streamlit Secrets:
 """
 
 import io
+import re
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Type
@@ -29,6 +31,8 @@ from pydantic import BaseModel
 
 # ------------------------------------------------------------------ Ayarlar
 DEFAULT_MODEL = "gemini-2.5-flash-lite"
+# Seçili model yoğunluk (503) nedeniyle cevap veremezse sırayla denenecek yedekler
+YEDEK_MODELLER = ["gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
 MAX_SIDE = 1024                                   # fotoğraf bu boyuta küçültülür
 DAILY_LIMITS = {"meal": 5, "coach": 3, "ask": 15}  # kullanıcı başına günlük hak
 GLOBAL_DAILY_LIMIT = 800                          # tüm kullanıcılar, tüm modlar (API çağrısı)
@@ -233,19 +237,44 @@ def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = 
     if mode.needs_image and not image_bytes:
         raise ValueError("Bu mod için fotoğraf gerekli.")
     _check_quota(mode_key)
-    result = _call(mode_key, user_text.strip(), context, image_bytes, cfg("GEMINI_MODEL", DEFAULT_MODEL))
-    _charge(mode_key)
-    return result
+
+    # Seçili model geçici olarak yoğunsa (503) önce kısa bir bekleyişle tekrar dener, sonra yedek modellere geçer
+    ana_model = cfg("GEMINI_MODEL", DEFAULT_MODEL)
+    modeller = [ana_model] + [m for m in YEDEK_MODELLER if m != ana_model]
+    ilk_hata = None
+    for sira, model in enumerate(modeller):
+        for deneme in range(2 if sira == 0 else 1):
+            try:
+                result = _call(mode_key, user_text.strip(), context, image_bytes, model)
+            except Exception as e:  # noqa: BLE001
+                if sira == 0 and not _gecici_hata(e):
+                    raise  # anahtar ya da istek hatası: tekrar denemek işe yaramaz
+                ilk_hata = ilk_hata or e
+                if sira == 0 and deneme == 0:
+                    time.sleep(2)
+                continue
+            _charge(mode_key)
+            return result
+    raise ilk_hata
+
+
+def _gecici_hata(e: Exception) -> bool:
+    text = str(e)
+    return "503" in text or "UNAVAILABLE" in text or "500" in text or "INTERNAL" in text or "overloaded" in text.lower()
 
 
 def friendly_error(e: Exception) -> str:
     text = str(e)
     if isinstance(e, QuotaError):
         return text
+    if _gecici_hata(e):
+        return "Yapay zeka şu an çok yoğun. Birkaç dakika sonra tekrar dene."
     if "429" in text or "RESOURCE_EXHAUSTED" in text:
         return "API kotası doldu. Biraz sonra tekrar dene."
     if "GEMINI_API_KEY" in text or "API key" in text or "401" in text or "403" in text:
-        return "API anahtarı sorunu var. Anahtarı ve Secrets ayarını kontrol et."
+        # Google'ın hata kodu (ör. SERVICE_DISABLED, API_KEY_INVALID) sorunun kaynağını gösterir; anahtarın kendisi bu metinde yer almaz
+        neden = ", ".join(dict.fromkeys(re.findall(r"\b[A-Z][A-Z_]{5,}\b", text))) or text[:200]
+        return f"API anahtarı sorunu var. Anahtarı ve Secrets ayarını kontrol et. (Google'ın yanıtı: {neden})"
     return f"İşlem yapılamadı: {text}"
 
 
