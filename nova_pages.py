@@ -17,6 +17,7 @@ ya da repodaki göreli dosya yolu (örn. "videos/squat.mp4") yaz.
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -120,7 +121,9 @@ def _plan_form(library: List[dict]):
 def _render_plan(plan: dict, by_id: dict, plan_id: str):
     st.info(plan["summary"])
     for di, day in enumerate(plan["days"]):
-        with st.expander(f'{day["title"]} - {day["focus"]}', expanded=(di == 0)):
+        # "1. Gün" gibi başlıklar markdown'da listeye dönüşmesin diye nokta kaçışlanır
+        baslik = re.sub(r"^(\d+)\.", r"\1\\.", str(day["title"]))
+        with st.expander(f'{baslik} · {day["focus"]}', expanded=(di == 0)):
             for ei, item in enumerate(day["exercises"]):
                 ex = by_id[item["exercise_id"]]
                 st.markdown(f'**{ex["name"]}**  \n{item["sets"]} set x {item["reps"]}, dinlenme {item["rest_sec"]} sn')
@@ -204,38 +207,71 @@ def coach_page():
 
 
 # ------------------------------------------------------------ Beslenme / spor asistanı
+ONERILER = [
+    "🥗 Antrenmandan sonra ne yemeliyim?",
+    "🥩 Günde ne kadar protein almalıyım?",
+    "🌙 Akşam acıkınca ne atıştırabilirim?",
+    "💧 Daha çok su içmeyi nasıl alışkanlık yaparım?",
+]
+ASISTAN_AVATAR = "🦢"
+
+
+def _oneri_sec(metin: str):
+    st.session_state["ask_pending"] = metin.split(" ", 1)[1] if " " in metin else metin
+
+
 def ask_page():
-    """Kısa soru-cevap. Son birkaç mesajı bağlam olarak gönderir."""
-    st.subheader("Beslenme ve spor asistanı")
-    st.caption("Genel bilgi verir, tıbbi tavsiye değildir.")
+    """Sohbet görünümlü soru-cevap. Son birkaç mesajı bağlam olarak gönderir."""
+    st.markdown(
+        """<div class="nova-sohbet-baslik"><div class="nova-sohbet-logo">🦢</div>
+        <div><b>Nova Asistan</b><small>Beslenme ve spor sorularını yanıtlar · tıbbi tavsiye değildir</small></div></div>""",
+        unsafe_allow_html=True,
+    )
     quota_slot = st.empty()
     history = st.session_state.setdefault("ask_history", [])
 
     try:
-        for question, answer in history[-10:]:
-            with st.chat_message("user"):
-                st.write(question)
-            with st.chat_message("assistant"):
-                st.write(answer)
+        sohbet = st.container(key="nova_sohbet", height=440) if history else st.container(key="nova_sohbet")
+        with sohbet:
+            if not history:
+                with st.chat_message("assistant", avatar=ASISTAN_AVATAR):
+                    st.markdown("Merhaba! 👋 Beslenme, antrenman ya da günlük alışkanlıklar hakkında merak ettiğin her şeyi sorabilirsin. Aşağıdaki örneklerden birine dokunarak da başlayabilirsin.")
+            for question, answer in history[-10:]:
+                with st.chat_message("user"):
+                    st.markdown(question)
+                with st.chat_message("assistant", avatar=ASISTAN_AVATAR):
+                    st.markdown(answer)
 
-        with st.form("ask_form", clear_on_submit=True):
-            question = st.text_area("Sorun", max_chars=500, placeholder="Örn: Antrenmandan sonra ne yemeliyim?")
-            sent = st.form_submit_button("Sor", type="primary")
+        if not history:
+            with st.container(key="nova_oneriler"):
+                cols = st.columns(2)
+                for i, oneri in enumerate(ONERILER):
+                    cols[i % 2].button(oneri, key=f"oneri_{i}", width="stretch", on_click=_oneri_sec, args=(oneri,))
 
-        if sent and question.strip():
+        yazilan = st.chat_input("Nova'ya bir soru sor...", max_chars=500, key="ask_input")
+        question = (yazilan or st.session_state.pop("ask_pending", None) or "").strip()
+
+        if question:
             recent = "\n".join(f"Kullanıcı: {q}\nNova: {a}" for q, a in history[-3:])
-            text = (f"Önceki konuşma:\n{recent}\n\n" if recent else "") + f"Yeni soru: {question.strip()}"
-            try:
-                with st.spinner("Cevap hazırlanıyor..."):
-                    answer = run_mode("ask", text)["text"]
-                history.append((question.strip(), answer or "Cevap üretilemedi, tekrar dene."))
+            text = (f"Önceki konuşma:\n{recent}\n\n" if recent else "") + f"Yeni soru: {question}"
+            with sohbet:
+                with st.chat_message("user"):
+                    st.markdown(question)
+                with st.chat_message("assistant", avatar=ASISTAN_AVATAR):
+                    try:
+                        with st.spinner("Nova yazıyor..."):
+                            answer = run_mode("ask", text)["text"]
+                    except QuotaError as e:
+                        show_limit_reached(str(e))
+                        answer = None
+                    except Exception as e:  # noqa: BLE001
+                        st.error(friendly_error(e))
+                        answer = None
+            if answer is not None:
+                history.append((question, answer or "Cevap üretilemedi, tekrar dene."))
                 st.rerun()
-            except QuotaError as e:
-                show_limit_reached(str(e))
-            except Exception as e:  # noqa: BLE001
-                st.error(friendly_error(e))
 
-        if history and st.button("Sohbeti temizle"):
+        if history and st.button("🧹 Sohbeti temizle", key="sohbet_temizle"):
             history.clear()
             st.rerun()
     finally:
