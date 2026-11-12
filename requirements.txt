@@ -3,3 +3,4 @@ supabase
 pandas
 google-genai
 Pillow
+opencv-python-headless
