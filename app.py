@@ -38,7 +38,6 @@ def yemek_veritabanini_yukle():
         df = pd.read_csv("cok_daha_kapsamli_yemek_veritabani.csv")
         return df
     except Exception:
-        # Sarı uyarıyı kaldırdık, tasarımı bozmaması için sessizce varsayılan değeri döndürüyoruz.
         return pd.DataFrame({"Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]})
 
 df_yemek = yemek_veritabanini_yukle()
@@ -114,7 +113,6 @@ if not st.session_state.giris_yapildi:
         .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a !important;}
         p, label, span { color: #333333 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        /* GİRİŞ KARTI (BEYAZ BLOK VE KAYMA HATASI DÜZELTİLDİ) */
         div[data-testid="stTabs"] {
             background: rgba(255, 255, 255, 0.95) !important; 
             padding: 40px !important; 
@@ -186,11 +184,44 @@ else:
         .calai-card {{ background: {tema['card_bg']} !important; padding: 35px; border-radius: 28px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 50px rgba(0,0,0,0.4); }}
         .info-box {{ background: rgba(255,255,255,0.1) !important; border-left: 4px solid {tema['text_color']} !important; padding: 15px; border-radius: 8px; margin-bottom: 25px; color: {tema['text_color']} !important; font-weight: 600; }}
         
+        /* KOYU VE AÇIK TÜM TEMALARDA YAZI KONTRASTINI GARANTİLEME */
         .calai-card p, .calai-card h1, .calai-card h2, .calai-card h3, .calai-card h4, 
         .calai-card td, .calai-card th, .calai-card span, .calai-card label,
-        div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] h2, 
+        div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] span,
+        div[data-testid="stMarkdownContainer"] li, div[data-testid="stMarkdownContainer"] label,
+        div[data-testid="stMarkdownContainer"] h1, div[data-testid="stMarkdownContainer"] h2, 
         div[data-testid="stMarkdownContainer"] h3, div[data-testid="stMarkdownContainer"] h4,
-        div[data-testid="stWidgetLabel"] p, label[data-baseweb="radio"] div {{ color: {tema['text_color']} !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }}
+        div[data-testid="stCaptionContainer"], div[data-testid="stCaptionContainer"] p,
+        div[data-testid="stWidgetLabel"] p, div[data-testid="stWidgetLabel"] label,
+        label[data-baseweb="radio"] div, label[data-baseweb="radio"] p, label[data-baseweb="radio"] span {{
+            color: {tema['text_color']} !important; 
+            font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        }}
+        
+        /* UYARI KUTULARI (st.success, st.info, st.warning, st.error) AÇIK ZEMİN ÜZERİNDE KOYU YAZI */
+        div[data-testid="stAlert"] p, div[data-testid="stAlert"] span, div[data-testid="stAlert"] div,
+        div[data-baseweb="notification"] p, div[data-baseweb="notification"] span, div[data-baseweb="notification"] div {{
+            color: #1a1a1a !important;
+            font-weight: 600 !important;
+        }}
+        
+        /* AÇILIR PANEL (EXPANDER) VE DOSYA YÜKLEME ALANI KONTRASTI */
+        div[data-testid="stExpander"] {{
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 14px !important;
+        }}
+        div[data-testid="stExpander"] summary, div[data-testid="stExpander"] summary span, div[data-testid="stExpander"] summary p {{
+            color: {tema['text_color']} !important;
+            font-weight: 600 !important;
+        }}
+        [data-testid="stFileUploader"] section {{
+            background-color: #ffffff !important;
+            border-radius: 14px !important;
+        }}
+        [data-testid="stFileUploader"] section span, [data-testid="stFileUploader"] section small, [data-testid="stFileUploader"] section p {{
+            color: #1a1a1a !important;
+        }}
         
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, input[type="text"], input[type="number"], textarea {{ background-color: #ffffff !important; color: #000000 !important; border-radius: 12px !important; border: 2px solid rgba(0,0,0,0.15) !important; }}
         div[data-baseweb="select"] span, input, input::placeholder {{ color: #000000 !important; font-weight: bold; }}
@@ -246,8 +277,8 @@ else:
         div[data-baseweb="tab-highlight"] {{ display: none !important; }}
         /* ------------------------------------------------------------------ */
         
-        div.stButton > button:first-child {{ background: {tema['card_bg']} !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.3) !important; font-weight: 700 !important; border-radius: 16px !important; padding: 10px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }}
-        div.stButton > button:first-child:hover {{ transform: translateY(-2px); background: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['text_color']} !important; box-shadow: 0 12px 30px rgba(0,0,0,0.3); }}
+        div.stButton > button:first-child, div.stDownloadButton > button:first-child {{ background: {tema['card_bg']} !important; color: {tema['text_color']} !important; border: 1px solid rgba(255,255,255,0.3) !important; font-weight: 700 !important; border-radius: 16px !important; padding: 10px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }}
+        div.stButton > button:first-child:hover, div.stDownloadButton > button:first-child:hover {{ transform: translateY(-2px); background: {tema['text_color']} !important; color: {tema['fallback_bg']} !important; border-color: {tema['text_color']} !important; box-shadow: 0 12px 30px rgba(0,0,0,0.3); }}
         
         .ring-container {{ width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }}
         .ring-inner {{ width: 140px; height: 140px; border-radius: 50%; background: {tema['card_bg']} !important; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
@@ -495,8 +526,9 @@ else:
                 yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
                 return f"""
                 <div style="margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 5px;">
-                        <span>{isim}</span><span>{round(mevcut)}g / {round(hedef)}g</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 5px; color: {tema['text_color']} !important; font-weight: 600;">
+                        <span style="color: {tema['text_color']} !important;">{isim}</span>
+                        <span style="color: {tema['text_color']} !important;">{round(mevcut)}g / {round(hedef)}g</span>
                     </div>
                     <div style="width: 100%; background-color: rgba(255,255,255,0.15); border-radius: 4px; height: 6px;">
                         <div style="width: {yuzde}%; background-color: {renk}; height: 100%; border-radius: 4px;"></div>
