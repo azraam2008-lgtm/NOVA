@@ -172,16 +172,63 @@ def user_key() -> str:
     return "sess:" + st.session_state.setdefault("_nova_sid", uuid4().hex)
 
 
+# Giriş yapmış kullanıcıların hakları Supabase'deki "ai_kullanim" tablosunda tutulur; böylece sunucu
+# yeniden başlasa da sıfırlanmaz. Tablo yoksa ya da bağlantı kurulamazsa bellekteki sayaç kullanılır.
+@st.cache_resource
+def _db():
+    try:
+        from supabase import create_client
+        url, key = cfg("SUPABASE_URL"), cfg("SUPABASE_KEY")
+        return create_client(url, key) if url and key else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _gun() -> str:
+    return _fresh()["day"]
+
+
+def _kalici_mi(k: str) -> bool:
+    # Tablo yoksa bu oturumda tekrar tekrar denenmez
+    return k.startswith("user:") and not st.session_state.get("_ai_db_hata") and _db() is not None
+
+
+def _kullanilan(mode_key: str) -> int:
+    k = user_key()
+    if _kalici_mi(k):
+        # Her sayfa çiziminde veritabanına gitmemek için oturum içinde saklanır
+        onbellek = st.session_state.setdefault("_ai_kullanim", {})
+        anahtar = (_gun(), k, mode_key)
+        if anahtar not in onbellek:
+            try:
+                res = _db().table("ai_kullanim").select("adet").eq("gun", _gun()).eq("kullanici", k).eq("ozellik", mode_key).execute()
+                onbellek[anahtar] = int(res.data[0]["adet"]) if res.data else 0
+            except Exception:  # noqa: BLE001
+                st.session_state["_ai_db_hata"] = True
+                return _fresh()["users"].get((k, mode_key), 0)
+        return onbellek[anahtar]
+    return _fresh()["users"].get((k, mode_key), 0)
+
+
 def remaining(mode_key: str) -> int:
-    used = _fresh()["users"].get((user_key(), mode_key), 0)
-    return max(0, DAILY_LIMITS[mode_key] - used)
+    return max(0, DAILY_LIMITS[mode_key] - _kullanilan(mode_key))
 
 
 def _charge(mode_key: str):
+    k = user_key()
+    if _kalici_mi(k):
+        try:
+            res = _db().rpc("ai_hak_kullan", {"p_gun": _gun(), "p_kullanici": k, "p_ozellik": mode_key}).execute()
+            yeni = res.data if isinstance(res.data, int) else None
+            onbellek = st.session_state.setdefault("_ai_kullanim", {})
+            anahtar = (_gun(), k, mode_key)
+            onbellek[anahtar] = yeni if yeni is not None else onbellek.get(anahtar, 0) + 1
+            return
+        except Exception:  # noqa: BLE001
+            st.session_state["_ai_db_hata"] = True  # tablo henüz oluşturulmadıysa bellekteki sayaca düş
     store = _fresh()
     with store["lock"]:
-        k = (user_key(), mode_key)
-        store["users"][k] = store["users"].get(k, 0) + 1
+        store["users"][(k, mode_key)] = store["users"].get((k, mode_key), 0) + 1
 
 
 def _check_quota(mode_key: str):
