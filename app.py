@@ -30,17 +30,16 @@ TEMA_AYARLARI = {
 }
 
 # ----------------------------------------------------
-# KAPSAMLI YEMEK VERİTABANINI LOKALDEN YÜKLEME (HATA ÇÖZÜMÜ)
+# KAPSAMLI YEMEK VERİTABANINI LOKALDEN YÜKLEME 
 # ----------------------------------------------------
 @st.cache_data
 def yemek_veritabanini_yukle():
     try:
-        # İnternetten değil, doğrudan app.py ile aynı klasördeki dosyadan okur
         df = pd.read_csv("cok_daha_kapsamli_yemek_veritabani.csv")
         return df
-    except Exception as e:
-        st.warning(f"Yemek veritabanı yüklenemedi. Lütfen 'cok_daha_kapsamli_yemek_veritabani.csv' dosyasının app.py ile aynı klasörde olduğundan emin ol.")
-        return pd.DataFrame({"Yemek Adı": [], "Kalori (kcal)": [], "Protein (g)": [], "Karbonhidrat (g)": [], "Yağ (g)": []})
+    except Exception:
+        # Sarı uyarıyı kaldırdık, tasarımı bozmaması için sessizce varsayılan değeri döndürüyoruz.
+        return pd.DataFrame({"Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]})
 
 df_yemek = yemek_veritabanini_yukle()
 
@@ -114,7 +113,18 @@ if not st.session_state.giris_yapildi:
         [data-testid="stAppViewContainer"] { background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%) !important; color-scheme: light !important; }
         .nova-logo-giris { font-family: 'Playfair Display', serif; font-size: 5rem; letter-spacing: 25px; text-align: center; font-weight: 700; margin-top: 5vh; color: #1a1a1a !important;}
         p, label, span { color: #333333 !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .login-card { background: rgba(255, 255, 255, 0.95) !important; padding: 40px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        
+        /* GİRİŞ KARTI (BEYAZ BLOK VE KAYMA HATASI DÜZELTİLDİ) */
+        div[data-testid="stTabs"] {
+            background: rgba(255, 255, 255, 0.95) !important; 
+            padding: 40px !important; 
+            border-radius: 28px !important; 
+            border: 1px solid rgba(0,0,0,0.08) !important; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; 
+            backdrop-filter: blur(20px) !important;
+        }
+        div[data-testid="stTabs"] button { font-size: 1.1rem; font-weight: 600; }
+        
         div.stButton > button:first-child { background: linear-gradient(180deg, #ffffff 0%, #f0f2f5) !important; color: #1a1a1a !important; font-weight: 700 !important; border-radius: 14px !important; width: 100%; padding: 12px; border: 1px solid rgba(0,0,0,0.12) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         div.stButton > button:first-child:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); background: linear-gradient(180deg, #ffffff 0%, #e2e6eb) !important; border-color: rgba(0,0,0,0.2) !important; }
         .stTextInput > div > div > div, div[data-baseweb="input"] > div, div[data-baseweb="input"] > div:focus-within { background-color: #ffffff !important; border-radius: 12px !important; border: 1px solid rgba(0,0,0,0.15) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important; }
@@ -128,7 +138,6 @@ if not st.session_state.giris_yapildi:
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
         tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
         users = kullanicilari_yukle()
         
@@ -154,7 +163,6 @@ if not st.session_state.giris_yapildi:
                     st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
                 else:
                     st.error("Kullanıcı adı boş olamaz veya zaten kullanımda.")
-        st.markdown('</div>', unsafe_allow_html=True)
 
 else:
     aktif_user = st.session_state.aktif_kullanici
