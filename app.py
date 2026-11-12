@@ -2,11 +2,13 @@ import datetime
 import hashlib
 import hmac
 import html
+import json
 import os
 import re
 from pathlib import Path
 
 import altair as alt
+import numpy as np
 import pandas as pd
 import streamlit as st
 from supabase import create_client, Client
@@ -196,12 +198,14 @@ def verileri_yukle(username):
         "gunluk_kayitlar": d.get("gunluk_kayitlar") or [],
         "aktivite_loglari": d.get("aktivite_loglari") or {},
         "kilo_gecmisi": d.get("kilo_gecmisi") or [],
+        "ozel_yemekler": d.get("ozel_yemekler") or [],
         "profil": {**VARSAYILAN_PROFIL, **(d.get("profil") or {})},
     }
 
 
 def verileri_kaydet(username):
-    data = {"gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari, "kilo_gecmisi": st.session_state.kilo_gecmisi, "profil": st.session_state.profil}
+    data = {"gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari, "kilo_gecmisi": st.session_state.kilo_gecmisi,
+            "ozel_yemekler": st.session_state.get("ozel_yemekler", []), "profil": st.session_state.profil}
     try:
         supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
         return True
@@ -386,10 +390,19 @@ div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] { display: non
     transform: translateY(-2px); background: var(--nv-text) !important; border-color: var(--nv-text) !important; box-shadow: 0 12px 28px rgba(0,0,0,0.28);
 }
 [data-testid="stMain"] :is(.stButton, .stDownloadButton, .stFormSubmitButton, .stLinkButton) :is(button, a):hover * { color: var(--nv-on-accent) !important; }
+[data-testid="stMain"] :is(.stButton, .stFormSubmitButton) button:disabled { opacity: 0.4 !important; transform: none !important; cursor: not-allowed; }
 /* Birincil düğmeler (Analiz et, Günlüğe ekle, Sor...) dolu renkte */
 [data-testid="stMain"] button[kind="primary"], [data-testid="stMain"] button[kind="primaryFormSubmit"] { background: var(--nv-text) !important; border-color: var(--nv-text) !important; }
 [data-testid="stMain"] button[kind="primary"] *, [data-testid="stMain"] button[kind="primaryFormSubmit"] * { color: var(--nv-on-accent) !important; }
 
+/* Dönem seçici (7 gün / 30 gün / ...): yatay radyo düğmeleri bölmeli düğme gibi görünür */
+.st-key-donem_secici { background: var(--nv-card); border: 1px solid var(--nv-line); border-radius: 18px; padding: 6px; margin-bottom: 18px; }
+.st-key-donem_secici [role="radiogroup"] { display: flex; flex-wrap: nowrap; gap: 6px; width: 100%; }
+.st-key-donem_secici [role="radiogroup"] label { flex: 1 1 0; justify-content: center; margin: 0 !important; padding: 9px 4px !important; border-radius: 12px !important; border: none !important; background: transparent !important; cursor: pointer; }
+.st-key-donem_secici [role="radiogroup"] label > div:first-child { display: none !important; }
+.st-key-donem_secici [role="radiogroup"] label p { font-weight: 700 !important; white-space: nowrap; }
+.st-key-donem_secici [role="radiogroup"] label:has(input:checked) { background: var(--nv-text) !important; }
+.st-key-donem_secici [role="radiogroup"] label:has(input:checked) p { color: var(--nv-on-accent) !important; }
 /* Toggle, radyo ve kaydırıcı vurgu rengi */
 [data-testid="stMain"] [role="radiogroup"] label { background: var(--nv-track); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--nv-line); }
 
@@ -423,10 +436,10 @@ table.nova-tablo tr.toplam-satir td { font-size: 1.2rem; font-weight: 800; borde
 div[class*="st-key-metrik_satiri"] [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.5rem !important; }
 div[class*="st-key-metrik_satiri"] [data-testid="stColumn"] { min-width: 0 !important; background: var(--nv-track); border-radius: 14px; padding: 10px 12px; }
 div[class*="st-key-metrik_satiri"] [data-testid="stMetricValue"] { font-size: 1.6rem; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-gezinme) [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.6rem !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-gezinme) [data-testid="stColumn"] { min-width: 0 !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi) [data-testid="stColumn"]:last-child { flex: 0 0 52px !important; }
-:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi) .stButton button { min-height: 36px !important; padding: 4px 8px !important; box-shadow: none !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-gezinme) [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 0.6rem !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste, .st-key-gezinme) [data-testid="stColumn"] { min-width: 0 !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste) [data-testid="stColumn"]:last-child { flex: 0 0 52px !important; }
+:is(.st-key-ogun_listesi, .st-key-egzersiz_listesi, .st-key-ozel_liste) .stButton button { min-height: 36px !important; padding: 4px 8px !important; box-shadow: none !important; }
 
 /* ---------- AI SOHBET ---------- */
 .nova-sohbet-baslik { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
@@ -550,6 +563,9 @@ def giris_ekrani():
     st.markdown(f"<style>{FONT_IMPORT}{GIRIS_CSS}</style>", unsafe_allow_html=True)
     st.markdown('<div class="nova-logo-giris">N O V A</div>', unsafe_allow_html=True)
     st.markdown("<p class='nova-slogan'>ZARAFET VE DENGE</p>", unsafe_allow_html=True)
+    veda = st.session_state.pop("_veda", None)
+    if veda:
+        st.success(veda)
 
     with kart("kart_giris"):
         tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
@@ -900,12 +916,19 @@ def kart_yemek_ekle(aktif_user, secilen_tarih, df_yemek):
                         bildir(f"✅ {k.get('Tarif', 'Yemek')} {secilen_ogun.lower()} öğününe eklendi.")
                     st.rerun()
 
+        kart_ozel_yemek_olustur(aktif_user)
+
+        ozel = ozel_yemek_tablosu()
         if df_yemek is None:
             st.warning("Yemek veritabanı şu anda yüklenemedi. Biraz sonra sayfayı yenileyip tekrar dene.")
-            return
+            if ozel.empty:
+                return
+            tablo = ozel
+        else:
+            tablo = df_yemek if ozel.empty else pd.concat([ozel, df_yemek], ignore_index=True)
 
         arama_metni = st.text_input("🔍 Yemek ara", placeholder="Örn: Tavuk, Yumurta, Pilav...").strip()
-        isimler = df_yemek["Yemek Adı"].dropna().astype(str)
+        isimler = tablo["Yemek Adı"].dropna().astype(str)
         if arama_metni:
             isimler = isimler[isimler.map(tr_kucuk).str.contains(tr_kucuk(arama_metni), regex=False)]
         yemek_isimleri = isimler.tolist()
@@ -915,12 +938,14 @@ def kart_yemek_ekle(aktif_user, secilen_tarih, df_yemek):
             return
 
         secilen_yemek = st.selectbox(f"Sonuçlar ({len(yemek_isimleri)})", yemek_isimleri, key="db_yemek")
-        detay = df_yemek[df_yemek["Yemek Adı"] == secilen_yemek].iloc[0]
+        detay = tablo[tablo["Yemek Adı"] == secilen_yemek].iloc[0]
+        ozel_mi = secilen_yemek.startswith(OZEL_ON_EK)
+        varsayilan_porsiyon = int(detay["Porsiyon_g"]) if ozel_mi and pd.notna(detay.get("Porsiyon_g")) else 100
         sayilar = pd.to_numeric(detay[["Protein (g)", "Karbonhidrat (g)", "Yağ (g)"]], errors="coerce").fillna(0.0)
         base_p, base_c, base_f = (float(v) for v in sayilar)
 
         st.caption(f"100 g için: Protein {base_p} g · Karbonhidrat {base_c} g · Yağ {base_f} g")
-        porsiyon_g = st.number_input("Porsiyon (gram)", min_value=10, max_value=2000, value=100, step=10)
+        porsiyon_g = st.number_input("Porsiyon (gram)", min_value=10, max_value=2000, value=sinirla(varsayilan_porsiyon, 10, 2000), step=10)
         carp = porsiyon_g / 100.0
         deger_p, deger_c, deger_f = round(base_p * carp, 1), round(base_c * carp, 1), round(base_f * carp, 1)
 
@@ -934,9 +959,64 @@ def kart_yemek_ekle(aktif_user, secilen_tarih, df_yemek):
         st.info(f"🔥 Hesaplanan kalori: **{new_kcal} kcal**")
 
         if st.button("➕ Günlüğe Ekle", width="stretch", type="primary", key="btn_gunluge_ekle"):
-            if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, secilen_yemek, new_kcal, new_p, new_c, new_f, porsiyon_g):
-                bildir(f"✅ {secilen_yemek} günlüğüne eklendi.")
+            ad = secilen_yemek[len(OZEL_ON_EK):] if ozel_mi else secilen_yemek
+            if gunluge_ekle(aktif_user, secilen_tarih, secilen_ogun, ad, new_kcal, new_p, new_c, new_f, porsiyon_g):
+                bildir(f"✅ {ad} günlüğüne eklendi.")
             st.rerun()
+
+
+OZEL_ON_EK = "⭐ "
+
+
+def ozel_yemek_tablosu():
+    """Kullanıcının kendi eklediği yemekler; aramada en üstte ⭐ ile görünür."""
+    satirlar = [{"Yemek Adı": OZEL_ON_EK + y["ad"], "Protein (g)": y.get("protein", 0), "Karbonhidrat (g)": y.get("karb", 0),
+                 "Yağ (g)": y.get("yag", 0), "Porsiyon_g": y.get("porsiyon", 100)} for y in st.session_state.get("ozel_yemekler", [])]
+    return pd.DataFrame(satirlar, columns=["Yemek Adı", "Protein (g)", "Karbonhidrat (g)", "Yağ (g)", "Porsiyon_g"])
+
+
+def kart_ozel_yemek_olustur(aktif_user):
+    ozeller = st.session_state.setdefault("ozel_yemekler", [])
+    with st.expander(f"⭐ Kendi yemeğini oluştur ({len(ozeller)} kayıtlı)"):
+        st.caption("Veritabanında bulamadığın bir yemeği ya da ürünü paketindeki 100 g değerleriyle kaydet. Aramada ⭐ ile en üstte çıkar.")
+        with st.form("ozel_yemek_formu", clear_on_submit=True, border=False):
+            ad = st.text_input("Yemek adı", max_chars=60, placeholder="Örn: Annemin kısırı")
+            o1, o2, o3 = st.columns(3)
+            protein = o1.number_input("Protein (g)", min_value=0.0, max_value=100.0, value=0.0, step=0.5, help="100 g'daki miktar")
+            karb = o2.number_input("Karb. (g)", min_value=0.0, max_value=100.0, value=0.0, step=0.5, help="100 g'daki miktar")
+            yag = o3.number_input("Yağ (g)", min_value=0.0, max_value=100.0, value=0.0, step=0.5, help="100 g'daki miktar")
+            porsiyon = st.number_input("Her zamanki porsiyonun (gram)", min_value=10, max_value=2000, value=100, step=10)
+            kaydet = st.form_submit_button("⭐ Yemeği Kaydet", width="stretch")
+        if kaydet:
+            ad = ad.strip()
+            if not ad:
+                st.error("Yemeğe bir ad ver.")
+            elif any(tr_kucuk(y["ad"]) == tr_kucuk(ad) for y in ozeller):
+                st.error("Bu adla kayıtlı bir yemeğin zaten var.")
+            elif protein + karb + yag > 100:
+                st.error("100 g'daki protein, karbonhidrat ve yağın toplamı 100 g'ı geçemez.")
+            elif protein + karb + yag == 0:
+                st.error("En az bir besin değeri gir.")
+            else:
+                ozeller.append({"ad": ad, "protein": round(protein, 1), "karb": round(karb, 1), "yag": round(yag, 1), "porsiyon": int(porsiyon)})
+                if verileri_kaydet(aktif_user):
+                    kcal100 = round(protein * 4 + karb * 4 + yag * 9)
+                    bildir(f"⭐ {ad} kaydedildi ({kcal100} kcal / 100 g). Artık aramada en üstte çıkacak.")
+                st.rerun()
+
+        if ozeller:
+            st.markdown("<hr class='nova-cizgi'>", unsafe_allow_html=True)
+            with st.container(key="ozel_liste"):
+                for i, y in enumerate(ozeller):
+                    c1, c2 = st.columns([10, 1], vertical_alignment="center")
+                    kcal100 = round(y.get("protein", 0) * 4 + y.get("karb", 0) * 4 + y.get("yag", 0) * 9)
+                    c1.markdown(f"<div class='ogun-satir'><b>{guvenli(y['ad'])}</b> — {kcal100} kcal / 100 g<br>"
+                                f"<small>P {y.get('protein', 0):g} g · K {y.get('karb', 0):g} g · Y {y.get('yag', 0):g} g · porsiyon {y.get('porsiyon', 100)} g</small></div>",
+                                unsafe_allow_html=True)
+                    if c2.button("🗑️", key=f"ozel_sil_{i}", help="Sil"):
+                        ozeller.pop(i)
+                        verileri_kaydet(aktif_user)
+                        st.rerun()
 
 
 def kart_hareket(aktif_user, p, tema, secilen_tarih):
@@ -1019,41 +1099,84 @@ def sekme_gunluk(aktif_user, p, tema, secilen_tarih, df_yemek):
 
 
 # ----------------------------------------------------
-# 2. SEKME: GELİŞİM (KİLO + HAFTALIK RAPOR)
+# 2. SEKME: GELİŞİM (KİLO, EĞİLİM, RAPOR, HESAP)
 # ----------------------------------------------------
-def kart_haftalik_rapor(p, tema):
-    """FatSecret'taki rapor ekranı gibi: son 7 günün kalorisi hedefle birlikte."""
-    _, _, _, hedef = hesapla_bmr_ve_hedef(p)
-    gun_adlari = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-    satirlar = []
-    for geri in range(6, -1, -1):
-        gun = bugun() - datetime.timedelta(days=geri)
-        t = toplamlar(gunun_kayitlari(str(gun)))
-        akt = st.session_state.aktivite_loglari.get(str(gun), {})
-        satirlar.append({"Gün": f"{gun_adlari[gun.weekday()]} {gun.day}", "sira": 6 - geri, "Kalori": round(t["kcal"]),
-                         "Durum": "Hedefi aştı" if t["kcal"] > hedef else "Hedef içinde", "Su": akt.get("su", 0.0)})
-    df = pd.DataFrame(satirlar)
-    girilen = df[df["Kalori"] > 0]
-
-    with kart("kart_rapor"):
-        st.markdown("<h2 class='kart-baslik'>📊 Haftalık Rapor</h2>", unsafe_allow_html=True)
-        m1, m2, m3 = st.container(key="metrik_satiri_rapor").columns(3)
-        m1.metric("Ort. kalori", f"{round(girilen['Kalori'].mean()) if len(girilen) else 0} kcal")
-        m2.metric("Hedefte gün", f"{int((girilen['Kalori'] <= hedef).sum())} / {len(girilen)}")
-        m3.metric("Ort. su", f"{df['Su'].mean():.1f} L")
-
-        cubuklar = alt.Chart(df).mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6).encode(
-            x=alt.X("Gün:N", sort=alt.SortField("sira"), title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Kalori:Q", title="kcal"),
-            color=alt.Color("Durum:N", scale=alt.Scale(domain=["Hedef içinde", "Hedefi aştı"], range=["#34c759", "#ff5a4f"]), legend=alt.Legend(orient="bottom", title=None)),
-            tooltip=["Gün", "Kalori"],
-        )
-        hedef_cizgisi = alt.Chart(pd.DataFrame({"hedef": [hedef]})).mark_rule(strokeDash=[6, 4], color=tema["text_color"], strokeWidth=2).encode(y="hedef:Q")
-        st.altair_chart(grafik_temasi((cubuklar + hedef_cizgisi).properties(height=260), tema), use_container_width=True)
-        st.caption(f"Kesikli çizgi günlük hedefin: {round(hedef)} kcal. Kayıt girilmeyen günler ortalamaya katılmaz.")
+DONEMLER = {"7 gün": 7, "30 gün": 30, "90 gün": 90, "Tümü": None}
+AYLAR_KISA = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
+AYLAR_UZUN = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
 
 
-def sekme_gelisim(aktif_user, p, tema):
+def sayi(x, basamak=1, isaret=False):
+    """Türkçe ondalık gösterim: 0.4 -> 0,4"""
+    metin = f"{x:+.{basamak}f}" if isaret else f"{x:.{basamak}f}"
+    return metin.replace(".", ",").replace("-", "−")
+
+
+def kilo_egilimi(gecmis, hedef_kilo, gun_sayisi=28):
+    """Son ~4 haftadaki tartılara doğru bir çizgi oturtur; haftalık değişimi ve hedefe ulaşma tarihini tahmin eder."""
+    if len(gecmis) < 3:
+        return {"durum": "az_veri"}
+    df = pd.DataFrame(gecmis)
+    df["Tarih"] = pd.to_datetime(df["Tarih"])
+    df = df.sort_values("Tarih")
+    son_tarih = df["Tarih"].max()
+    pencere = df[df["Tarih"] >= son_tarih - pd.Timedelta(days=gun_sayisi)]
+    if len(pencere) < 3 or (pencere["Tarih"].max() - pencere["Tarih"].min()).days < 7:
+        return {"durum": "az_veri"}
+
+    x = (pencere["Tarih"] - pencere["Tarih"].min()).dt.days.to_numpy(dtype=float)
+    egim, kesisim = np.polyfit(x, pencere["Kilo"].to_numpy(dtype=float), 1)  # kg / gün
+    simdi = kesisim + egim * x.max()
+    sonuc = {"haftalik": egim * 7, "simdi": simdi,
+             "hizli": abs(egim * 7) > 0.01 * simdi}  # haftada vücut ağırlığının %1'inden hızlı
+    fark = hedef_kilo - simdi
+    if abs(fark) <= 0.5:
+        sonuc["durum"] = "hedefte"
+    elif abs(egim) < 0.005:
+        sonuc["durum"] = "sabit"
+    elif (fark > 0) != (egim > 0):
+        sonuc["durum"] = "uzaklasiyor"
+    else:
+        gun = fark / egim
+        if gun > 730:
+            sonuc["durum"] = "cok_uzun"
+        else:
+            sonuc["durum"] = "tahmin"
+            sonuc["tarih"] = son_tarih.date() + datetime.timedelta(days=int(np.ceil(gun)))
+    return sonuc
+
+
+def egilim_mesaji(e):
+    durum = e["durum"]
+    if durum == "az_veri":
+        st.caption("📅 Hedef tarihi tahmini için son 4 hafta içinde, aralarında en az 1 hafta olan en az 3 tartı gerekiyor.")
+        return
+    haftalik = f"haftada {sayi(e['haftalik'], isaret=True)} kg"
+    if durum == "hedefte":
+        st.success("🎉 Hedef kilona ulaştın! İstersen Ayarlar'dan yeni bir hedef belirleyebilirsin.")
+    elif durum == "sabit":
+        st.info(f"⚖️ Kilon son haftalarda sabit ({haftalik}). Bu hızla hedefe ulaşma tarihi hesaplanamıyor.")
+    elif durum == "uzaklasiyor":
+        st.warning(f"↩️ Son haftalarda hedefinden uzaklaşıyorsun ({haftalik}).")
+    elif durum == "cok_uzun":
+        st.info(f"🐢 Bu hızla ({haftalik}) hedefe ulaşman 2 yıldan uzun sürer.")
+    else:
+        t = e["tarih"]
+        st.success(f"📅 Bu hızla ({haftalik}) hedefine yaklaşık **{t.day} {AYLAR_UZUN[t.month - 1]} {t.year}** tarihinde ulaşırsın.")
+    if e.get("hizli"):
+        st.warning("⚠️ Kilon haftada vücut ağırlığının %1'inden hızlı değişiyor. Sağlıklı bir hız için bir uzmana danışmanı öneririz.")
+
+
+def donem_baslangici(gun_sayisi):
+    if gun_sayisi:
+        return bugun() - datetime.timedelta(days=gun_sayisi - 1)
+    tarihler = [k.get("Tarih") for k in st.session_state.gunluk_kayitlar] + [k.get("Tarih") for k in st.session_state.kilo_gecmisi]
+    tarihler = [t for t in tarihler if t]
+    ilk = datetime.date.fromisoformat(min(tarihler)) if tarihler else bugun()
+    return max(ilk, bugun() - datetime.timedelta(days=364))  # en fazla 1 yıl
+
+
+def kart_kilo(aktif_user, p, tema, baslangic):
     bugun_dt = bugun()
     with kart("kart_kilo"):
         st.markdown("<h2 class='kart-baslik'>⚖️ Kilo Takibi</h2>", unsafe_allow_html=True)
@@ -1078,36 +1201,142 @@ def sekme_gelisim(aktif_user, p, tema):
                 bildir("🎉 Kilon kaydedildi! Kalori hedefin en güncel tartına göre hesaplanıyor.")
             st.rerun()
 
-        if st.session_state.kilo_gecmisi:
-            gecmis = st.session_state.kilo_gecmisi
-            ilk, son = gecmis[0]["Kilo"], gecmis[-1]["Kilo"]
-            hedef_kilo = float(p.get("hedef_kilo", son))
-            g1, g2, g3 = st.container(key="metrik_satiri_kilo").columns(3)
-            g1.metric("Güncel", f"{son:g} kg", f"{son - ilk:+.1f} kg", delta_color="off")
-            g2.metric("Hedef", f"{hedef_kilo:g} kg")
-            g3.metric("Kalan", f"{abs(son - hedef_kilo):.1f} kg")
+        gecmis = st.session_state.kilo_gecmisi
+        if not gecmis:
+            return
+        ilk, son = gecmis[0]["Kilo"], gecmis[-1]["Kilo"]
+        hedef_kilo = float(p.get("hedef_kilo", son))
+        g1, g2, g3 = st.container(key="metrik_satiri_kilo").columns(3)
+        g1.metric("Güncel", f"{son:g} kg", f"{son - ilk:+.1f} kg", delta_color="off")
+        g2.metric("Hedef", f"{hedef_kilo:g} kg")
+        g3.metric("Kalan", f"{abs(son - hedef_kilo):.1f} kg")
 
-            df_kilo = pd.DataFrame(gecmis)
-            df_kilo["Tarih"] = pd.to_datetime(df_kilo["Tarih"])
-            cizgi = alt.Chart(df_kilo).mark_line(point=alt.OverlayMarkDef(size=70, filled=True, color="#3b9cff"), color="#3b9cff", strokeWidth=3).encode(
-                x=alt.X("Tarih:T", title=None, axis=alt.Axis(format="%d.%m")),
-                y=alt.Y("Kilo:Q", title="kg", scale=alt.Scale(zero=False)),
-                tooltip=[alt.Tooltip("Tarih:T", format="%d.%m.%Y"), "Kilo"],
-            )
-            hedef_cizgisi = alt.Chart(pd.DataFrame({"hedef": [hedef_kilo]})).mark_rule(strokeDash=[6, 4], color=tema["text_color"]).encode(y="hedef:Q")
-            st.altair_chart(grafik_temasi((cizgi + hedef_cizgisi).properties(height=260), tema), use_container_width=True)
+        egilim_mesaji(kilo_egilimi(gecmis, hedef_kilo))
 
-    kart_haftalik_rapor(p, tema)
+        # Tartılar ve 7 günlük ortalama (günlük su/tuz dalgalanmaları yanıltmasın diye)
+        df_kilo = pd.DataFrame(gecmis)
+        df_kilo["Tarih"] = pd.to_datetime(df_kilo["Tarih"])
+        df_kilo = df_kilo.sort_values("Tarih").set_index("Tarih")
+        df_kilo["Ortalama"] = df_kilo["Kilo"].rolling("7D").mean().round(1)
+        df_kilo = df_kilo.reset_index()
+        gorunen = df_kilo[df_kilo["Tarih"] >= pd.Timestamp(baslangic)]
+        if gorunen.empty:
+            gorunen = df_kilo.tail(1)
 
-    with kart("kart_disa_aktar"):
-        st.markdown("<h2 class='kart-baslik'>📥 Verilerini İndir</h2>", unsafe_allow_html=True)
-        st.markdown("Tüm yemek geçmişini ve makro dökümlerini Excel uyumlu CSV olarak indirip doktorunla veya diyetisyeninle paylaşabilirsin.")
+        noktalar = alt.Chart(gorunen).mark_circle(size=55, color="#3b9cff", opacity=0.55).encode(
+            x=alt.X("Tarih:T", title=None, axis=alt.Axis(format="%d.%m", labelOverlap=True)),
+            y=alt.Y("Kilo:Q", title="kg", scale=alt.Scale(zero=False)),
+            tooltip=[alt.Tooltip("Tarih:T", format="%d.%m.%Y", title="Tarih"), alt.Tooltip("Kilo:Q", title="Tartı")],
+        )
+        ortalama = alt.Chart(gorunen).mark_line(color="#3b9cff", strokeWidth=3).encode(
+            x="Tarih:T", y="Ortalama:Q", tooltip=[alt.Tooltip("Tarih:T", format="%d.%m.%Y", title="Tarih"), alt.Tooltip("Ortalama:Q", title="7 günlük ort.")])
+        hedef_cizgisi = alt.Chart(pd.DataFrame({"hedef": [hedef_kilo]})).mark_rule(strokeDash=[6, 4], color=tema["text_color"]).encode(y="hedef:Q")
+        st.altair_chart(grafik_temasi((noktalar + ortalama + hedef_cizgisi).properties(height=260), tema), use_container_width=True)
+        st.caption("Noktalar tartıların, çizgi 7 günlük ortalaman, kesikli çizgi hedefin.")
+
+
+def kart_rapor(p, tema, baslangic, donem_adi):
+    """FatSecret'taki rapor ekranı gibi: seçilen dönemde günlük kalori, hedefle birlikte."""
+    _, _, _, hedef = hesapla_bmr_ve_hedef(p)
+    gun_sayisi = (bugun() - baslangic).days + 1
+    satirlar = []
+    for i in range(gun_sayisi):
+        gun = baslangic + datetime.timedelta(days=i)
+        t = toplamlar(gunun_kayitlari(str(gun)))
+        akt = st.session_state.aktivite_loglari.get(str(gun), {})
+        satirlar.append({"Tarih": pd.Timestamp(gun), "Kalori": round(t["kcal"]), "Su": akt.get("su", 0.0), "Adım": akt.get("adim", 0)})
+    df = pd.DataFrame(satirlar)
+    girilen = df[df["Kalori"] > 0]
+
+    with kart("kart_rapor"):
+        st.markdown(f"<h2 class='kart-baslik'>📊 Rapor · {donem_adi}</h2>", unsafe_allow_html=True)
+        m1, m2, m3 = st.container(key="metrik_satiri_rapor").columns(3)
+        m1.metric("Ort. kalori", f"{round(girilen['Kalori'].mean()) if len(girilen) else 0} kcal")
+        m2.metric("Hedefte gün", f"{int((girilen['Kalori'] <= hedef).sum())} / {len(girilen)}")
+        m3.metric("Ort. su", f"{sayi(df['Su'].mean())} L")
+
+        if girilen.empty:
+            st.info("Bu dönemde henüz yemek kaydın yok.")
+            return
+
+        # Uzun dönemlerde günlük çubuklar okunmaz; haftalık ortalamaya geçilir
+        haftalik = gun_sayisi > 45
+        if haftalik:
+            grafik_df = girilen.set_index("Tarih").resample("W-MON", label="left", closed="left")["Kalori"].mean().dropna().round().reset_index()
+            baslik_x = "Hafta"
+        else:
+            grafik_df = df.copy()
+            baslik_x = None
+        grafik_df["Durum"] = np.where(grafik_df["Kalori"] > hedef, "Hedefi aştı", "Hedef içinde")
+
+        etiket = "%d.%m" if gun_sayisi > 7 else "%a %d"
+        cubuklar = alt.Chart(grafik_df).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+            x=alt.X("yearmonthdate(Tarih):O" if not haftalik else "Tarih:T", title=baslik_x,
+                    axis=alt.Axis(format=etiket, labelAngle=0 if gun_sayisi <= 14 else -45, labelOverlap=True)),
+            y=alt.Y("Kalori:Q", title="kcal" + (" (haftalık ort.)" if haftalik else "")),
+            color=alt.Color("Durum:N", scale=alt.Scale(domain=["Hedef içinde", "Hedefi aştı"], range=["#34c759", "#ff5a4f"]), legend=alt.Legend(orient="bottom", title=None)),
+            tooltip=[alt.Tooltip("Tarih:T", format="%d.%m.%Y", title="Hafta başı" if haftalik else "Gün"), alt.Tooltip("Kalori:Q", title="kcal")],
+        )
+        hedef_cizgisi = alt.Chart(pd.DataFrame({"hedef": [hedef]})).mark_rule(strokeDash=[6, 4], color=tema["text_color"], strokeWidth=2).encode(y="hedef:Q")
+        st.altair_chart(grafik_temasi((cubuklar + hedef_cizgisi).properties(height=260), tema), use_container_width=True)
+        st.caption(f"Kesikli çizgi günlük hedefin: {round(hedef)} kcal. Kayıt girilmeyen günler ortalamaya katılmaz."
+                   + (" Uzun dönemde çubuklar haftalık ortalamayı gösterir." if haftalik else ""))
+
+
+def hesabi_sil(username):
+    """Kullanıcının tüm kayıtlarını siler. Önce veriler, en son giriş bilgisi silinir."""
+    try:
+        supabase.table("kullanici_verileri").delete().eq("username", username).execute()
+        try:
+            supabase.table("ai_kullanim").delete().eq("kullanici", f"user:{username}").execute()
+        except Exception:
+            pass  # sayaç tablosu yoksa sorun değil
+        supabase.table("kullanicilar").delete().eq("username", username).execute()
+        return True
+    except Exception:
+        return False
+
+
+def kart_hesap(aktif_user):
+    with kart("kart_hesap"):
+        st.markdown("<h2 class='kart-baslik'>👤 Hesap ve Veriler</h2>", unsafe_allow_html=True)
+        st.markdown("Yemek geçmişini Excel uyumlu CSV olarak indirip doktorunla veya diyetisyeninle paylaşabilirsin. Tüm verilerinin bir kopyasını da JSON olarak alabilirsin.")
         if st.session_state.gunluk_kayitlar:
             # utf-8-sig: Excel'in Türkçe karakterleri doğru göstermesi için
             csv_data = pd.DataFrame(st.session_state.gunluk_kayitlar).to_csv(index=False).encode("utf-8-sig")
             st.download_button(label="🍽️ Yemek Günlüğünü İndir (.CSV)", data=csv_data, file_name=f"nova_yemek_gunlugu_{aktif_user}.csv", mime="text/csv", width="stretch")
-        else:
-            st.info("Henüz dışa aktarılacak bir yemek kaydın bulunmuyor.")
+        tum_veri = {
+            "kullanici": aktif_user, "indirme_tarihi": str(bugun()), "profil": st.session_state.profil,
+            "gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari,
+            "kilo_gecmisi": st.session_state.kilo_gecmisi, "ozel_yemekler": st.session_state.get("ozel_yemekler", []),
+        }
+        st.download_button(label="🗂️ Tüm Verilerimi İndir (.JSON)", data=json.dumps(tum_veri, ensure_ascii=False, indent=2).encode("utf-8"),
+                           file_name=f"nova_verilerim_{aktif_user}.json", mime="application/json", width="stretch")
+
+        with st.expander("🗑️ Hesabımı sil"):
+            st.warning("Bu işlem geri alınamaz. Profilin, tüm günlük kayıtların, kilo geçmişin ve kendi yemeklerin kalıcı olarak silinir. Silmeden önce yukarıdan verilerini indirebilirsin.")
+            sifre = st.text_input("Onaylamak için şifreni gir", type="password", key="sil_sifre")
+            onay = st.checkbox("Hesabımın ve tüm verilerimin kalıcı olarak silineceğini anlıyorum.", key="sil_onay")
+            if st.button("Hesabımı kalıcı olarak sil", key="btn_hesap_sil", disabled=not onay, width="stretch"):
+                baglandi, kayitli_hash = kullanici_hash_getir(aktif_user)
+                dogru, _ = sifre_dogrula(sifre, kayitli_hash)
+                if not baglandi:
+                    st.error("Sunucuya bağlanılamadı. Hesabın silinmedi, lütfen tekrar dene.")
+                elif not dogru:
+                    st.error("Şifre yanlış. Hesabın silinmedi.")
+                elif hesabi_sil(aktif_user):
+                    cikis_yap("Hesabın ve tüm verilerin kalıcı olarak silindi. Nova'yı kullandığın için teşekkürler.")
+                else:
+                    st.error("Silme sırasında bir sorun oluştu. Lütfen tekrar dene.")
+
+
+def sekme_gelisim(aktif_user, p, tema):
+    with st.container(key="donem_secici"):
+        donem_adi = st.radio("Dönem", list(DONEMLER), index=1, key="donem", horizontal=True, label_visibility="collapsed")
+    baslangic = donem_baslangici(DONEMLER[donem_adi])
+    kart_kilo(aktif_user, p, tema, baslangic)
+    kart_rapor(p, tema, baslangic, donem_adi)
+    kart_hesap(aktif_user)
 
 
 # ----------------------------------------------------
@@ -1146,9 +1375,11 @@ def sekme_ai_asistan():
 # ----------------------------------------------------
 # ANA EKRAN
 # ----------------------------------------------------
-def cikis_yap():
+def cikis_yap(mesaj=None):
     for anahtar in list(st.session_state.keys()):
         del st.session_state[anahtar]
+    if mesaj:
+        st.session_state["_veda"] = mesaj
     st.rerun()
 
 
