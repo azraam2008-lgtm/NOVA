@@ -14,6 +14,8 @@ from yemek_arama import yemek_arama_sayfasi
 from gelisim import gelisim_sayfasi
 from hesap import hesap_bolumu
 from sifre_sifirlama import sifre_sifirlama_bolumu
+from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
+                    kullanilabilir_mi, oturum_tazele)
 
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="", layout="wide", initial_sidebar_state="collapsed")
 
@@ -216,6 +218,18 @@ if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = Fal
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
 if "onboarding_step" not in st.session_state: st.session_state.onboarding_step = 1
 
+# --- "BENİ HATIRLA" ÇEREZİNDEN GİRİŞ ---
+# Çerezler her çizimde tam bir kez okunur (aynı anahtar iki kez çizilemez).
+oturum_tazele()
+# Tarayıcıda geçerli bir oturum belirteci varsa sayfa yenilense de içeride kalınır.
+if not st.session_state.giris_yapildi:
+    _cerez_kullanici = cerezden_giris(supabase)
+    if _cerez_kullanici and _cerez_kullanici in kullanicilari_yukle():
+        st.session_state.giris_yapildi = True
+        st.session_state.aktif_kullanici = _cerez_kullanici
+        st.session_state.update(verileri_yukle(_cerez_kullanici))
+        st.rerun()
+
 # --- GOOGLE İLE GİRİŞ DÖNÜŞÜ ---
 # Google'dan dönüldüğünde e-postaya bağlı hesap bulunur, yoksa oluşturulur.
 if not st.session_state.giris_yapildi and google_hazir_mi():
@@ -246,6 +260,7 @@ if not st.session_state.giris_yapildi and google_hazir_mi():
                 st.session_state.giris_yapildi = True
                 st.session_state.aktif_kullanici = kullanici_adi
                 st.session_state.update(verileri_yukle(kullanici_adi))
+                oturum_baslat(supabase, kullanici_adi)
                 st.rerun()
 
 if not st.session_state.giris_yapildi:
@@ -283,6 +298,11 @@ if not st.session_state.giris_yapildi:
             with tab_giris:
                 g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
                 g_pass = st.text_input("Şifre", type="password", key="g_pass")
+                g_hatirla = st.checkbox(
+                    "Beni hatırla", value=True, key="g_hatirla",
+                    disabled=not kullanilabilir_mi(),
+                    help="Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. "
+                         "Ortak bir bilgisayardaysan işaretleme.")
                 if st.button("Giriş Yap", key="btn_giris", use_container_width=True):
                     kayit = users.get(g_user)
                     if kayit and sifre_dogrula(g_pass, kayit.get("password_hash")):
@@ -296,6 +316,8 @@ if not st.session_state.giris_yapildi:
                         st.session_state.giris_yapildi = True
                         st.session_state.aktif_kullanici = g_user
                         st.session_state.update(verileri_yukle(g_user))
+                        if g_hatirla:
+                            oturum_baslat(supabase, g_user)
                         st.rerun()
                     else: st.error("Hatalı kullanıcı adı veya şifre.")
 
@@ -322,6 +344,7 @@ if not st.session_state.giris_yapildi:
                         st.session_state.giris_yapildi = True
                         st.session_state.aktif_kullanici = k_user
                         st.session_state.update(verileri_yukle(k_user))
+                        oturum_baslat(supabase, k_user)
                         st.rerun()
 
             sifre_sifirlama_bolumu(supabase, sifre_olustur, sifre_kontrol)
@@ -883,6 +906,10 @@ else:
                              sifre_ozeti=kullanici_sifre_ozeti(aktif_user),
                              kullanici_eposta=kullanici_epostasi(aktif_user),
                              kaydet=lambda: verileri_kaydet(aktif_user))
+                st.divider()
+                st.markdown("#### Oturum")
+                st.caption("Çıkış yaparsan bu tarayıcıdaki kayıtlı oturum da silinir.")
+                cikis_dugmesi(supabase, aktif_user)
 
 
         with tab_gelisim:
