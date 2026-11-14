@@ -1,0 +1,43 @@
+# Nova günlük hatırlatmaları
+#
+# Her akşam bir kez çalışır, kullanıcılara e-posta (ve açıksa Telegram) gönderir.
+# GitHub Actions ücretsiz hesaplarda da çalışır.
+#
+# KURULUM: GitHub'da depoya git -> Settings -> Secrets and variables -> Actions
+# -> New repository secret ile şunları ekle:
+#     SUPABASE_URL      (Supabase proje adresin)
+#     SUPABASE_KEY      (service_role / sb_secret anahtarın)
+#     RESEND_API_KEY    (e-posta göndermek için)
+#     GONDEREN          ör. Nova <onboarding@resend.dev>
+#     TELEGRAM_BOT_TOKEN  (isteğe bağlı)
+
+name: Günlük hatırlatma
+
+on:
+  schedule:
+    # 17:00 UTC = Türkiye saatiyle 20:00. Saat dilimi UTC'dir, yaz saatine göre kaymaz.
+    - cron: "0 17 * * *"
+  workflow_dispatch:        # Actions sekmesinden elle de çalıştırabilirsin
+
+jobs:
+  hatirlat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Gerekli paketler
+        run: pip install --quiet supabase requests
+
+      - name: Hatırlatmaları gönder
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GONDEREN: ${{ secrets.GONDEREN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python hatirlatma.py
