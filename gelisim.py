@@ -17,6 +17,9 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from diller import t, h
+import mikro
+
 DONEMLER = {"Son 7 gün": 7, "Son 30 gün": 30, "Son 90 gün": 90}
 OGUNLER = ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]
 
@@ -85,10 +88,10 @@ def _tarih_ekseni(satir_sayisi):
 
 # --------------------------------------------------------------- Kalori raporu
 def _kalori_bolumu(df, hedef_kalori, gun_sayisi, renk):
-    st.markdown("#### Kalori")
+    st.markdown(h("#### Kalori"))
     kayitli = df[df["kayit_var"]]
     if kayitli.empty:
-        st.caption("Bu dönemde öğün kaydın yok.")
+        st.caption(t("Bu dönemde öğün kaydın yok."))
         return
 
     ortalama = kayitli["alinan"].mean()
@@ -108,9 +111,9 @@ def _kalori_bolumu(df, hedef_kalori, gun_sayisi, renk):
         alan = alt.Scale(domain=["Hedefin altında", "Hedefin üstünde", "Kayıt yok"],
                          range=[YESIL, KIRMIZI, "#4a4a4a"])
         y_basligi = "kcal"
-        ipucu = [alt.Tooltip("tarih:T", title="Tarih", format="%d %B"),
-                 alt.Tooltip("alinan:Q", title="Alınan kcal", format=".0f"),
-                 alt.Tooltip("kalem:Q", title="Kalem")]
+        ipucu = [alt.Tooltip("tarih:T", title=t("Tarih"), format="%d %B"),
+                 alt.Tooltip("alinan:Q", title=t("Alınan kcal"), format=".0f"),
+                 alt.Tooltip("kalem:Q", title=t("Kalem"))]
         kalinlik = max(5, int(230 / max(len(veri), 1)))
     else:
         veri = df[df["kayit_var"]].copy()
@@ -120,10 +123,10 @@ def _kalori_bolumu(df, hedef_kalori, gun_sayisi, renk):
             lambda v: "Hedefin üstünde" if v > hedef_kalori else "Hedefin altında")
         alan = alt.Scale(domain=["Hedefin altında", "Hedefin üstünde"], range=[YESIL, KIRMIZI])
         y_basligi = "kcal (haftalık ortalama)"
-        ipucu = [alt.Tooltip("tarih:T", title="Hafta başı", format="%d %B"),
-                 alt.Tooltip("alinan:Q", title="Ortalama kcal", format=".0f")]
+        ipucu = [alt.Tooltip("tarih:T", title=t("Hafta başı"), format="%d %B"),
+                 alt.Tooltip("alinan:Q", title=t("Ortalama kcal"), format=".0f")]
         kalinlik = 14
-        st.caption("90 günlük görünümde her çubuk bir haftanın ortalamasıdır.")
+        st.caption(t("90 günlük görünümde her çubuk bir haftanın ortalamasıdır."))
 
     cubuklar = alt.Chart(veri).mark_bar(
         cornerRadiusTopLeft=3, cornerRadiusTopRight=3, size=kalinlik).encode(
@@ -137,12 +140,12 @@ def _kalori_bolumu(df, hedef_kalori, gun_sayisi, renk):
 
     st.altair_chart(_tema((cubuklar + hedef_cizgi).properties(height=240), renk),
                     use_container_width=True)
-    st.caption("Mavi kesikli çizgi günlük hedefin.")
+    st.caption(t("Mavi kesikli çizgi günlük hedefin."))
 
 
 # ----------------------------------------------------------------- Kilo raporu
 def _kilo_bolumu(profil, gun_sayisi, renk):
-    st.markdown("#### Kilo")
+    st.markdown(h("#### Kilo"))
     gecmis = sorted(profil.get("kilo_gecmisi", []), key=lambda x: x.get("tarih", ""))
     if len(gecmis) < 2:
         st.caption("Kilo grafiğin ikinci tartından sonra görünecek. "
@@ -156,7 +159,7 @@ def _kilo_bolumu(profil, gun_sayisi, renk):
             for k in gecmis if datetime.date.fromisoformat(k["tarih"]) >= baslangic
         ])
     except (ValueError, KeyError):
-        st.caption("Kilo kayıtlarında okunamayan bir tarih var.")
+        st.caption(t("Kilo kayıtlarında okunamayan bir tarih var."))
         return
 
     if len(veri) < 2:
@@ -183,10 +186,10 @@ def _kilo_bolumu(profil, gun_sayisi, renk):
                          axis=alt.Axis(format="%d %b", labelAngle=0,
                                        tickCount=min(len(veri), 7), labelOverlap="greedy"))
     nokta = alt.Chart(veri).mark_circle(size=50, color=MAVI, opacity=0.45).encode(
-        x=tarih_ekseni, y=alt.Y("kilo:Q", title="kg", scale=olcek),
-        tooltip=[alt.Tooltip("tarih:T", title="Tarih", format="%d %B"),
+        x=tarih_ekseni, y=alt.Y("kilo:Q", title=t("kg"), scale=olcek),
+        tooltip=[alt.Tooltip("tarih:T", title=t("Tarih"), format="%d %B"),
                  alt.Tooltip("kilo:Q", title="Tartı", format=".1f"),
-                 alt.Tooltip("ortalama:Q", title="7 günlük ortalama", format=".1f")])
+                 alt.Tooltip("ortalama:Q", title=t("7 günlük ortalama"), format=".1f")])
     ortalama_cizgi = alt.Chart(veri).mark_line(
         color=MAVI, size=3, interpolate="monotone").encode(
         x="tarih:T", y=alt.Y("ortalama:Q", scale=olcek))
@@ -214,10 +217,10 @@ def _kilo_bolumu(profil, gun_sayisi, renk):
 
 # ---------------------------------------------------------------- Makro raporu
 def _makro_bolumu(df, hedef_kalori, renk):
-    st.markdown("#### Makro dağılımın")
+    st.markdown(h("#### Makro dağılımın"))
     kayitli = df[df["kayit_var"]]
     if kayitli.empty:
-        st.caption("Bu dönemde öğün kaydın yok.")
+        st.caption(t("Bu dönemde öğün kaydın yok."))
         return
 
     gercek = {"Protein": kayitli["protein"].mean(),
@@ -234,7 +237,7 @@ def _makro_bolumu(df, hedef_kalori, renk):
     grafik = alt.Chart(veri).mark_bar(cornerRadiusEnd=3).encode(
         y=alt.Y("makro:N", title=None, sort=["Protein", "Karbonhidrat", "Yağ"],
                 axis=alt.Axis(labelOverlap=False, labelLimit=140, labelPadding=8)),
-        x=alt.X("gram:Q", title="gram (günlük ortalama)", axis=alt.Axis(tickCount=6)),
+        x=alt.X("gram:Q", title=t("gram (günlük ortalama)"), axis=alt.Axis(tickCount=6)),
         yOffset="tur:N",
         color=alt.Color("tur:N", scale=alt.Scale(domain=["Ortalaman", "Hedefin"],
                                                  range=[MAVI, GRI]),
@@ -252,8 +255,39 @@ def _makro_bolumu(df, hedef_kalori, renk):
 
 
 # ------------------------------------------------------------- Öğün dağılımı
+def _mikro_bolumu(gunluk_kayitlar, gunler, gun_sayisi, renk):
+    """Dönem boyunca günlük ORTALAMA vitamin ve mineral alımı.
+
+    Toplam değil ortalama gösteriliyor, çünkü referans değerler günlük.
+    Yalnızca gerçek veri olan kalemler sayılır; verisi olmayan ev yemekleri
+    ortalamayı aşağı çekmesin diye, veri bulunan gün sayısına bölünür.
+    """
+    st.markdown(h("#### Vitamin ve mineraller"))
+    gun_kumesi = {str(g) for g in gunler}
+    ilgili = [k for k in (gunluk_kayitlar or []) if k.get("Tarih") in gun_kumesi]
+    toplam = mikro.topla(ilgili)
+    if not toplam:
+        st.caption(t("Bu dönemde vitamin ve mineral verisi olan kayıt yok. Bu veriler "
+                     "barkodlu ürünlerde ve etiket okumada geliyor."))
+        return
+
+    # Veri bulunan gün sayısı
+    veri_gunleri = {k["Tarih"] for k in ilgili
+                    if any(k.get(a) is not None for a in mikro.ALANLAR)}
+    bolen = max(len(veri_gunleri), 1)
+    ortalama = {a: d / bolen for a, d in toplam.items()}
+
+    st.caption(t("Veri bulunan") + f" {bolen} " + t("günün ortalaması."))
+    st.markdown(mikro.cubuklar_html(ortalama, renk), unsafe_allow_html=True)
+
+    eksik = mikro.eksikler(ortalama)
+    if eksik:
+        st.caption(t("Sürekli geride kaldıkların:") + " " +
+                   ", ".join(t(a) for a in eksik))
+
+
 def _ogun_bolumu(gunluk_kayitlar, gunler, renk):
-    st.markdown("#### Öğünlere göre dağılım")
+    st.markdown(h("#### Öğünlere göre dağılım"))
     aralik = {str(g) for g in gunler}
     sayac = {o: 0.0 for o in OGUNLER}
     gun_sayisi = len({k.get("Tarih") for k in (gunluk_kayitlar or []) if k.get("Tarih") in aralik})
@@ -262,23 +296,23 @@ def _ogun_bolumu(gunluk_kayitlar, gunler, renk):
             sayac[k["Öğün"]] += float(k.get("Kalori", 0) or 0)
 
     if gun_sayisi == 0 or sum(sayac.values()) == 0:
-        st.caption("Bu dönemde öğün kaydın yok.")
+        st.caption(t("Bu dönemde öğün kaydın yok."))
         return
 
     veri = pd.DataFrame([{"ogun": o, "kcal": sayac[o] / gun_sayisi} for o in OGUNLER])
     grafik = alt.Chart(veri).mark_bar(cornerRadiusEnd=3, color=SARI).encode(
         y=alt.Y("ogun:N", title=None, sort=OGUNLER,
                 axis=alt.Axis(labelOverlap=False, labelLimit=140, labelPadding=8)),
-        x=alt.X("kcal:Q", title="günlük ortalama kcal", axis=alt.Axis(tickCount=6)),
+        x=alt.X("kcal:Q", title=t("günlük ortalama kcal"), axis=alt.Axis(tickCount=6)),
         tooltip=[alt.Tooltip("ogun:N", title="Öğün"),
-                 alt.Tooltip("kcal:Q", title="Ortalama kcal", format=".0f")],
+                 alt.Tooltip("kcal:Q", title=t("Ortalama kcal"), format=".0f")],
     ).properties(height=200)
     st.altair_chart(_tema(grafik, renk), use_container_width=True)
 
 
 # -------------------------------------------------------- Egzersiz ve aktivite
 def _egzersiz_bolumu(df, aktivite_loglari, gunler, renk):
-    st.markdown("#### Egzersiz ve aktivite")
+    st.markdown(h("#### Egzersiz ve aktivite"))
     hareketli = df[df["adim"] > 0]
     antrenmanli = df[df["egzersiz"] > 0]
 
@@ -294,13 +328,13 @@ def _egzersiz_bolumu(df, aktivite_loglari, gunler, renk):
             size=max(5, int(230 / max(len(df), 1)))).encode(
             x=_tarih_ekseni(len(df)),
             y=alt.Y("adim:Q", title="adım"),
-            tooltip=[alt.Tooltip("tarih:T", title="Tarih", format="%d %B"),
+            tooltip=[alt.Tooltip("tarih:T", title=t("Tarih"), format="%d %B"),
                      alt.Tooltip("adim:Q", title="Adım")])
         hedef_cizgi = alt.Chart(pd.DataFrame({"h": [10000]})).mark_rule(
             color=MAVI, strokeDash=[6, 4], size=2).encode(y="h:Q")
         st.altair_chart(_tema((cubuk + hedef_cizgi).properties(height=180), renk),
                         use_container_width=True)
-        st.caption("Mavi kesikli çizgi günde 10.000 adım hedefi.")
+        st.caption(t("Mavi kesikli çizgi günde 10.000 adım hedefi."))
 
     kayitlar = []
     for g in gunler:
@@ -312,8 +346,8 @@ def _egzersiz_bolumu(df, aktivite_loglari, gunler, renk):
             for g, a in reversed(kayitlar):
                 hareketler = a.get("hareketler", [])
                 toplam_set = sum(int(h.get("sets_done", 0) or 0) for h in hareketler)
-                st.markdown(f"**{g.strftime('%d.%m.%Y')}** - {a.get('gun', 'Antrenman')}, "
-                            f"{toplam_set} set")
+                st.markdown(h(f"**{g.strftime('%d.%m.%Y')}** - {a.get('gun', 'Antrenman')}, "
+                            f"{toplam_set} set"))
                 for h in hareketler:
                     tekrar = f" ({h['reps']})" if h.get("reps") else ""
                     st.caption(f"{h.get('name', h.get('id', ''))} - "
@@ -328,7 +362,7 @@ def gelisim_sayfasi(gunluk_kayitlar, aktivite_loglari, profil, hedef_kalori, bmr
     """Gelişim sekmesini çizer."""
     renk = (tema or {}).get("text_color", "#ffffff")
 
-    secim = st.radio("Dönem", list(DONEMLER), horizontal=True,
+    secim = st.radio(t("Dönem"), list(DONEMLER), horizontal=True,
                      key="gelisim_donem", label_visibility="collapsed")
     gun_sayisi = DONEMLER[secim]
     gunler = _gun_listesi(gun_sayisi)
@@ -339,6 +373,8 @@ def gelisim_sayfasi(gunluk_kayitlar, aktivite_loglari, profil, hedef_kalori, bmr
     _kilo_bolumu(profil or {}, gun_sayisi, renk)
     st.divider()
     _makro_bolumu(df, hedef_kalori, renk)
+    st.divider()
+    _mikro_bolumu(gunluk_kayitlar, gunler, gun_sayisi, renk)
     st.divider()
     _ogun_bolumu(gunluk_kayitlar, gunler, renk)
     st.divider()
@@ -354,4 +390,4 @@ def gelisim_sayfasi(gunluk_kayitlar, aktivite_loglari, profil, hedef_kalori, bmr
         disa.to_csv(index=False).encode("utf-8-sig"),
         file_name=f"nova_{gun_sayisi}gun_{datetime.date.today()}.csv",
         mime="text/csv", use_container_width=True)
-    st.caption("Bu dosyayı diyetisyenine gönderebilirsin.")
+    st.caption(t("Bu dosyayı diyetisyenine gönderebilirsin."))
