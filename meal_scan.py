@@ -157,7 +157,18 @@ def _flow():
     if source == "Anlat":
         return _anlatim_akisi()
     if source == "Kamera":
-        file = st.camera_input("Yemeğin fotoğrafını çek")
+        # Kamera yalnızca istendiğinde açılır; sekme açık diye kendiliğinden açılmaz
+        file = None
+        if st.session_state.get("ogun_kamera_acik"):
+            file = st.camera_input("Yemeğin fotoğrafını çek")
+            if st.button("Kamerayı kapat", key="ogun_kamera_kapat"):
+                st.session_state["ogun_kamera_acik"] = False
+                st.rerun()
+        else:
+            if st.button("Kamerayı aç", key="ogun_kamera_ac", type="primary"):
+                st.session_state["ogun_kamera_acik"] = True
+                st.rerun()
+            st.caption("Kamera yalnızca bu düğmeye bastığında açılır.")
     else:
         file = st.file_uploader("Yemeğin fotoğrafını seç", type=["jpg", "jpeg", "png", "webp"])
 
