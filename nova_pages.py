@@ -22,6 +22,8 @@ from typing import List, Optional
 
 import streamlit as st
 
+from diller import t, h
+
 from nova_core import (
     QuotaError,
     friendly_error,
@@ -84,13 +86,13 @@ def load_exercises() -> List[dict]:
 # ------------------------------------------------------------------ Antrenman koçu
 def _plan_form(library: List[dict]):
     with st.form("coach_form"):
-        goal = st.selectbox("Hedefin", GOALS)
-        level = st.selectbox("Seviyen", list(LEVELS))
-        equipment = st.multiselect("Elindeki ekipman (boşsa ekipmansız)", list(EQUIPMENT_OPTIONS))
+        goal = st.selectbox(t("Hedefin"), GOALS)
+        level = st.selectbox(t("Seviyen"), list(LEVELS))
+        equipment = st.multiselect(t("Elindeki ekipman (boşsa ekipmansız)"), list(EQUIPMENT_OPTIONS))
         c1, c2 = st.columns(2)
         days = c1.slider("Haftada kaç gün", 2, 6, 3)
         minutes = c2.slider("Antrenman süresi (dk)", 20, 90, 45, step=5)
-        limits = st.text_input("Ağrı ya da sınırlaman var mı? (isteğe bağlı)", max_chars=200,
+        limits = st.text_input(t("Ağrı ya da sınırlaman var mı? (isteğe bağlı)"), max_chars=200,
                                placeholder="Örn: sol dizimde ağrı var")
         submitted = st.form_submit_button("Planımı hazırla", type="primary")
     if not submitted:
@@ -99,7 +101,7 @@ def _plan_form(library: List[dict]):
     have = {EQUIPMENT_OPTIONS[e] for e in equipment}
     pool = usable_exercises(library, have, level)
     if len(pool) < 4:
-        st.error("Bu seçimlerle yeterli hareket yok. exercises.json dosyasına hareket ekle.")
+        st.error(t("Bu seçimlerle yeterli hareket yok. exercises.json dosyasına hareket ekle."))
         return None
 
     request = (
@@ -112,7 +114,7 @@ def _plan_form(library: List[dict]):
 
     plan = filter_plan(raw, {e["id"] for e in pool})
     if not plan["days"]:
-        st.error("Plan oluşturulamadı. Tekrar dene.")
+        st.error(t("Plan oluşturulamadı. Tekrar dene."))
         return None
     return plan
 
@@ -123,12 +125,12 @@ def _render_plan(plan: dict, by_id: dict, plan_id: str):
         with st.expander(f'{day["title"]} - {day["focus"]}', expanded=(di == 0)):
             for ei, item in enumerate(day["exercises"]):
                 ex = by_id[item["exercise_id"]]
-                st.markdown(f'**{ex["name"]}**  \n{item["sets"]} set x {item["reps"]}, dinlenme {item["rest_sec"]} sn')
+                st.markdown(h(f'**{ex["name"]}**  \n{item["sets"]} set x {item["reps"]}, dinlenme {item["rest_sec"]} sn'))
                 src = video_src(ex.get("video", ""))
                 if src:
                     st.video(src)
                 else:
-                    st.caption("Video yakında eklenecek.")
+                    st.caption(t("Video yakında eklenecek."))
                 if item.get("note"):
                     st.caption(item["note"])
                 st.markdown("\n".join(f"- {t}" for t in ex.get("tips", [])))
@@ -137,17 +139,17 @@ def _render_plan(plan: dict, by_id: dict, plan_id: str):
 
                 sets_max = max(1, min(int(item["sets"]), 10))
                 c1, c2 = st.columns(2)
-                c1.number_input("Tamamlanan set", 0, sets_max, 0, 1, key=f"done_{plan_id}_{di}_{ei}")
-                c2.text_input("Tekrarlar (örn. 12-10-8)", key=f"reps_{plan_id}_{di}_{ei}", max_chars=40)
+                c1.number_input(t("Tamamlanan set"), 0, sets_max, 0, 1, key=f"done_{plan_id}_{di}_{ei}")
+                c2.text_input(t("Tekrarlar (örn. 12-10-8)"), key=f"reps_{plan_id}_{di}_{ei}", max_chars=40)
                 st.divider()
     st.caption(plan["safety_note"])
 
 
 def _save_log(plan: dict, by_id: dict, plan_id: str):
-    st.markdown("#### Antrenmanı kaydet")
-    di = st.selectbox("Hangi günü yaptın?", range(len(plan["days"])),
+    st.markdown(h("#### Antrenmanı kaydet"))
+    di = st.selectbox(t("Hangi günü yaptın?"), range(len(plan["days"])),
                       format_func=lambda i: plan["days"][i]["title"], key=f"day_{plan_id}")
-    if not st.button("Antrenmanı kaydet", type="primary", key=f"savelog_{plan_id}"):
+    if not st.button(t("Antrenmanı kaydet"), type="primary", key=f"savelog_{plan_id}"):
         return None
 
     done = []
@@ -162,18 +164,18 @@ def _save_log(plan: dict, by_id: dict, plan_id: str):
                 "reps": st.session_state.get(f"reps_{plan_id}_{di}_{ei}", "").strip(),
             })
     if not done:
-        st.info("Önce tamamladığın setleri gir.")
+        st.info(t("Önce tamamladığın setleri gir."))
         return None
-    st.success("Antrenman kaydedildi.")
+    st.success(t("Antrenman kaydedildi."))
     return {"day": plan["days"][di]["title"], "exercises": done}
 
 
 def coach_page():
     """Plan oluşturur, videolu hareketleri gösterir. Kaydedilirse antrenman günlüğü sözlüğü döner."""
-    st.subheader("Antrenman koçu")
+    st.subheader(t("Antrenman koçu"))
     library = load_exercises()
     if not library:
-        st.error("exercises.json bulunamadı ya da boş.")
+        st.error(t("exercises.json bulunamadı ya da boş."))
         return None
     by_id = {e["id"]: e for e in library}
 
@@ -251,8 +253,8 @@ def _cevap_al(soru, gecmis, profil):
 
 def ask_page(profil=None):
     """Sohbet biçiminde beslenme ve spor asistanı."""
-    st.subheader("Asistan")
-    st.caption("Beslenme ve antrenman soruların için. Genel bilgi verir, tıbbi tavsiye değildir.")
+    st.subheader(t("Asistan"))
+    st.caption(t("Beslenme ve antrenman soruların için. Genel bilgi verir, tıbbi tavsiye değildir."))
 
     gecmis = st.session_state.setdefault("ask_history", [])
     quota_slot = st.empty()
@@ -272,14 +274,14 @@ def ask_page(profil=None):
     if not bekleyen:
         gosterilecek = HAZIR_SORULAR if not gecmis else HAZIR_SORULAR[:4]
         if not gecmis:
-            st.caption("Hazır sorular")
+            st.caption(t("Hazır sorular"))
         sutunlar = st.columns(2)
         for i, soru in enumerate(gosterilecek):
             if sutunlar[i % 2].button(soru, key=f"hazir_{i}", use_container_width=True):
                 st.session_state["ask_bekleyen"] = soru
                 st.rerun()
 
-    yazilan = st.chat_input("Bir şey sor...", key="ask_girdi")
+    yazilan = st.chat_input(t("Bir şey sor..."), key="ask_girdi")
     soru = bekleyen or (yazilan.strip() if yazilan else None)
 
     if soru:
@@ -290,7 +292,7 @@ def ask_page(profil=None):
             gecmis.append((soru, cevap))
             st.rerun()
 
-    if gecmis and st.button("Sohbeti temizle", key="ask_temizle"):
+    if gecmis and st.button(t("Sohbeti temizle"), key="ask_temizle"):
         gecmis.clear()
         st.rerun()
 
