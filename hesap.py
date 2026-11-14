@@ -16,6 +16,8 @@ import json
 
 import streamlit as st
 
+from diller import t, h
+
 
 def _tum_veri(kullanici, gunluk_kayitlar, aktivite_loglari, profil, db=None):
     """Kullanıcının Nova'daki her şeyi, tek bir JSON yapısında."""
@@ -69,13 +71,13 @@ def _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet):
     """Günlük hatırlatma tercihleri."""
     from bildirim import eposta_ayarli_mi, telegram_ayarli_mi, telegram_gonder
 
-    st.markdown("#### Hatırlatmalar")
+    st.markdown(h("#### Hatırlatmalar"))
     if not eposta_ayarli_mi() and not telegram_ayarli_mi():
-        st.caption("Hatırlatma gönderimi henüz ayarlanmamış.")
+        st.caption(t("Hatırlatma gönderimi henüz ayarlanmamış."))
         return
 
     acik = st.toggle(
-        "Her akşam hatırlatma gönder",
+        t("Her akşam hatırlatma gönder"),
         value=bool(profil.get("hatirlatma_acik")),
         help="Öğün kaydetmediğin, su hedefinin gerisinde kaldığın ya da Pazar tartısı "
              "atladığın günlerde kısa bir hatırlatma gelir. Her şey yolundaysa mesaj gelmez.",
@@ -100,16 +102,16 @@ def _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet):
             st.caption("Telegram'da botu bul, /start yaz, sana verdiği numarayı buraya gir. "
                        "E-postadan farklı olarak telefonuna anında düşer.")
             mevcut = profil.get("telegram_id", "")
-            yeni_id = st.text_input("Telegram sohbet numaran", value=mevcut, key="telegram_id_girdi")
+            yeni_id = st.text_input(t("Telegram sohbet numaran"), value=mevcut, key="telegram_id_girdi")
             c1, c2 = st.columns(2)
-            if c1.button("Kaydet", key="telegram_kaydet", use_container_width=True):
+            if c1.button(t("Kaydet"), key="telegram_kaydet", use_container_width=True):
                 profil["telegram_id"] = yeni_id.strip()
                 profil["bildirim_telegram"] = bool(yeni_id.strip())
                 kaydet()
                 st.success("Telegram bağlandı." if yeni_id.strip() else "Telegram bağlantısı kaldırıldı.")
-            if mevcut and c2.button("Deneme mesajı gönder", key="telegram_dene", use_container_width=True):
+            if mevcut and c2.button(t("Deneme mesajı gönder"), key="telegram_dene", use_container_width=True):
                 basarili, mesaj = telegram_gonder(mevcut, "Nova'dan merhaba. Bildirimler çalışıyor.")
-                st.success("Gönderildi, telefonuna bak.") if basarili else st.error(mesaj)
+                st.success(t("Gönderildi, telefonuna bak.")) if basarili else st.error(mesaj)
 
 
 def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
@@ -119,8 +121,8 @@ def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
         _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet)
         st.divider()
 
-    st.markdown("#### Verilerin")
-    st.caption("Nova'daki bütün verilerin senin. İstediğin zaman indirebilir ya da sildirebilirsin.")
+    st.markdown(h("#### Verilerin"))
+    st.caption(t("Nova'daki bütün verilerin senin. İstediğin zaman indirebilir ya da sildirebilirsin."))
 
     veri = _tum_veri(kullanici, gunluk_kayitlar, aktivite_loglari, profil, db)
     kalem = len(veri["ogun_kayitlari"])
@@ -128,7 +130,7 @@ def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
     st.caption(f"Hesabında {kalem} öğün kaydı ve {gun} günlük aktivite kaydı var.")
 
     st.download_button(
-        "Verilerimi indir (JSON)",
+        t("Verilerimi indir (JSON)"),
         json.dumps(veri, ensure_ascii=False, indent=2).encode("utf-8"),
         file_name=f"nova_verilerim_{kullanici}_{datetime.date.today()}.json",
         mime="application/json",
@@ -136,11 +138,11 @@ def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
     )
 
     st.divider()
-    st.markdown("#### Hesabını sil")
-    st.caption("Hesabın ve bütün kayıtların kalıcı olarak silinir. Bu işlem geri alınamaz.")
+    st.markdown(h("#### Hesabını sil"))
+    st.caption(t("Hesabın ve bütün kayıtların kalıcı olarak silinir. Bu işlem geri alınamaz."))
 
     with st.expander("Hesabımı silmek istiyorum"):
-        st.warning("Silmeden önce verilerini indirmeni öneririm. Silinen veriler geri getirilemez.")
+        st.warning(t("Silmeden önce verilerini indirmeni öneririm. Silinen veriler geri getirilemez."))
 
         onay = st.text_input(
             f"Onaylamak için kullanıcı adını yaz: {kullanici}",
@@ -148,20 +150,20 @@ def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
 
         sifre = ""
         if sifre_dogrula is not None and sifre_ozeti:
-            sifre = st.text_input("Şifreni gir", type="password", key="hesap_sil_sifre")
+            sifre = st.text_input(t("Şifreni gir"), type="password", key="hesap_sil_sifre")
 
-        if st.button("Hesabımı kalıcı olarak sil", key="hesap_sil_btn"):
+        if st.button(t("Hesabımı kalıcı olarak sil"), key="hesap_sil_btn"):
             if onay.strip() != kullanici:
-                st.error("Kullanıcı adını tam olarak yazman gerekiyor.")
+                st.error(t("Kullanıcı adını tam olarak yazman gerekiyor."))
             elif sifre_dogrula is not None and sifre_ozeti and not sifre_dogrula(sifre, sifre_ozeti):
-                st.error("Şifre yanlış.")
+                st.error(t("Şifre yanlış."))
             elif db is None:
-                st.error("Veritabanına bağlanılamadı, silme yapılamadı.")
+                st.error(t("Veritabanına bağlanılamadı, silme yapılamadı."))
             else:
                 hatalar = _hesabi_sil(db, kullanici)
                 if hatalar:
                     st.error("Bazı kayıtlar silinemedi: " + "; ".join(hatalar))
                 else:
                     st.session_state.clear()
-                    st.success("Hesabın silindi. Nova'yı kullandığın için teşekkürler.")
+                    st.success(t("Hesabın silindi. Nova'yı kullandığın için teşekkürler."))
                     st.rerun()
