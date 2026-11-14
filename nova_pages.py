@@ -133,7 +133,7 @@ def _render_plan(plan: dict, by_id: dict, plan_id: str):
                     st.caption(t("Video yakında eklenecek."))
                 if item.get("note"):
                     st.caption(item["note"])
-                st.markdown("\n".join(f"- {t}" for t in ex.get("tips", [])))
+                st.markdown("\n".join(f"- {ipucu}" for ipucu in ex.get("tips", [])))
                 if ex.get("mistakes"):
                     st.caption("Sık yapılan hatalar: " + "; ".join(ex["mistakes"]))
 
