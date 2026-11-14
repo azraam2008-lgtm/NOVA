@@ -29,6 +29,8 @@ import besin_kaynaklari as bk
 from nutrition_check import kcal as kcal_hesapla
 from nutrition_check import verify
 
+from diller import t, h
+
 _TR = str.maketrans("çğıöşüÇĞİÖŞÜâîû", "cgiosuCGIOSUaiu")
 
 
@@ -78,7 +80,8 @@ def _offtan(u):
         kaynak="Marka ürünü",
         kod=u.get("kod", ""),
         ekstra={"Lif (g)": u.get("lif"), "Şeker (g)": u.get("seker"),
-                "Tuz (g)": u.get("tuz"), "Doymuş yağ (g)": u.get("doymus_yag")},
+                "Tuz (g)": u.get("tuz"), "Doymuş yağ (g)": u.get("doymus_yag"),
+                **(u.get("mikro") or {})},
     )
 
 
@@ -98,7 +101,7 @@ def _kullanici_yemekleri(db, kullanici, tur):
 
 def _yemek_kaydet(db, kullanici, tur, yemek):
     if db is None or not kullanici:
-        st.warning("Veritabanına bağlanılamadı, kaydedilemedi.")
+        st.warning(t("Veritabanına bağlanılamadı, kaydedilemedi."))
         return False
     try:
         db.table("kullanici_yemekleri").upsert(
@@ -193,14 +196,14 @@ def _ekle_paneli(y, anahtar, db, kullanici, tarih, ogun):
                + (f" · kaynak: {y['kaynak']}" if y.get("kaynak") else ""))
 
     c1, c2 = st.columns([2, 1])
-    gram = c1.number_input("Yediğin miktar (gram)", min_value=5, max_value=3000,
+    gram = c1.number_input(t("Yediğin miktar (gram)"), min_value=5, max_value=3000,
                            value=int(y.get("gram") or 100), step=5, key=f"gram_{anahtar}")
 
     with st.expander("İçeriği kendine göre ayarla"):
         oran = gram / 100.0
-        pp = st.number_input("Protein (g)", 0.0, 400.0, float(round(p100 * oran, 1)), 0.5, key=f"p_{anahtar}")
-        kk = st.number_input("Karbonhidrat (g)", 0.0, 600.0, float(round(k100 * oran, 1)), 0.5, key=f"k_{anahtar}")
-        yy = st.number_input("Yağ (g)", 0.0, 400.0, float(round(y100 * oran, 1)), 0.5, key=f"y_{anahtar}")
+        pp = st.number_input(t("Protein (g)"), 0.0, 400.0, float(round(p100 * oran, 1)), 0.5, key=f"p_{anahtar}")
+        kk = st.number_input(t("Karbonhidrat (g)"), 0.0, 600.0, float(round(k100 * oran, 1)), 0.5, key=f"k_{anahtar}")
+        yy = st.number_input(t("Yağ (g)"), 0.0, 400.0, float(round(y100 * oran, 1)), 0.5, key=f"y_{anahtar}")
         elle = (abs(pp - p100 * oran) > 0.05 or abs(kk - k100 * oran) > 0.05 or abs(yy - y100 * oran) > 0.05)
 
     if elle:
@@ -213,8 +216,8 @@ def _ekle_paneli(y, anahtar, db, kullanici, tarih, ogun):
     c2.metric("Toplam", f"{toplam_kcal} kcal")
 
     b1, b2 = st.columns([3, 1])
-    eklendi = b1.button("Günlüğe ekle", type="primary", use_container_width=True, key=f"ekle_{anahtar}")
-    if b2.button("Favorilere ekle", use_container_width=True, key=f"fav_{anahtar}"):
+    eklendi = b1.button(t("Günlüğe ekle"), type="primary", use_container_width=True, key=f"ekle_{anahtar}")
+    if b2.button(t("Favorilere ekle"), use_container_width=True, key=f"fav_{anahtar}"):
         kaydedilecek = dict(y)
         kaydedilecek.update({"p": round(p_kullan, 1), "k": round(k_kullan, 1), "y": round(y_kullan, 1), "gram": int(gram)})
         if _yemek_kaydet(db, kullanici, "favori", kaydedilecek):
@@ -231,7 +234,7 @@ def _sonuc_listesi(sonuclar, on_ek, db, kullanici, tarih, ogun):
         return None
     secenekler = list(range(len(sonuclar)))
     secim = st.radio(
-        "Sonuçlar", secenekler,
+        t("Sonuçlar"), secenekler,
         format_func=lambda i: _etiket(sonuclar[i]),
         key=f"secim_{on_ek}", label_visibility="collapsed",
     )
@@ -242,12 +245,12 @@ def _sonuc_listesi(sonuclar, on_ek, db, kullanici, tarih, ogun):
 
 # ------------------------------------------------------------------ Sekmeler
 def _sekme_ara(df, db, kullanici, tarih, ogun):
-    sorgu = st.text_input("Yemek ara", placeholder="Örn: mercimek çorbası, yoğurt, Eti kraker",
+    sorgu = st.text_input(t("Yemek ara"), placeholder="Örn: mercimek çorbası, yoğurt, Eti kraker",
                           key="arama_sorgu", max_chars=60)
-    marka_dahil = st.checkbox("Marka ürünlerinde de ara (Open Food Facts)", value=True, key="arama_marka")
+    marka_dahil = st.checkbox(t("Marka ürünlerinde de ara (Open Food Facts)"), value=True, key="arama_marka")
 
     if len(sorgu.strip()) < 2:
-        st.caption("Aramak için en az iki harf yaz.")
+        st.caption(t("Aramak için en az iki harf yaz."))
         return None
 
     sonuclar = _yerel_ara(df, sorgu)
@@ -262,7 +265,7 @@ def _sekme_ara(df, db, kullanici, tarih, ogun):
                 bk.onbellege_yaz(db, disaridan)
                 sonuclar += [_offtan(u) for u in disaridan]
         except bk.KaynakHatasi:
-            st.caption("Marka ürünlerine şu an ulaşılamadı. Kendi veritabanındaki sonuçlar aşağıda.")
+            st.caption(t("Marka ürünlerine şu an ulaşılamadı. Kendi veritabanındaki sonuçlar aşağıda."))
 
     # Aynı yemek birden çok kaynaktan gelebilir
     benzersiz, gorulen = [], set()
@@ -273,7 +276,7 @@ def _sekme_ara(df, db, kullanici, tarih, ogun):
             benzersiz.append(y)
 
     if not benzersiz:
-        st.info("Bulamadım. \"Kendi yemeğim\" sekmesinden kendin ekleyebilirsin.")
+        st.info(t("Bulamadım. \"Kendi yemeğim\" sekmesinden kendin ekleyebilirsin."))
         return None
 
     st.caption(f"{len(benzersiz)} sonuç")
@@ -298,7 +301,7 @@ def _etiket_sonucu(veri, kod=""):
         return None
     p, k, y = veri.get("per_100g_protein"), veri.get("per_100g_carbs"), veri.get("per_100g_fat")
     if None in (p, k, y):
-        st.warning("Etiketteki protein, karbonhidrat ve yağ değerlerinin hepsi okunamadı. Daha net bir fotoğraf dene.")
+        st.warning(t("Etiketteki protein, karbonhidrat ve yağ değerlerinin hepsi okunamadı. Daha net bir fotoğraf dene."))
         return None
     return _yemek(
         veri.get("product_name") or "Etiketten okunan ürün", p, k, y,
@@ -310,42 +313,42 @@ def _etiket_sonucu(veri, kod=""):
 
 
 def _sekme_barkod(db, kullanici, tarih, ogun):
-    st.caption("Paketin arkasındaki barkodu okut. Bulunamazsa besin değerleri tablosunun fotoğrafından okuyabilirim.")
+    st.caption(t("Paketin arkasındaki barkodu okut. Bulunamazsa besin değerleri tablosunun fotoğrafından okuyabilirim."))
 
-    yol = st.radio("Nasıl?", ["Fotoğraf çek", "Numarayı yaz"], horizontal=True,
+    yol = st.radio(t("Nasıl?"), ["Fotoğraf çek", "Numarayı yaz"], horizontal=True,
                    key="barkod_yol", label_visibility="collapsed")
 
     kod = ""
     if yol == "Numarayı yaz":
-        girilen = st.text_input("Barkod numarası", max_chars=14, key="barkod_elle").strip()
+        girilen = st.text_input(t("Barkod numarası"), max_chars=14, key="barkod_elle").strip()
         if girilen:
             if bk.barkod_gecerli_mi(girilen):
                 kod = girilen
             else:
-                st.warning("Bu numara geçerli bir barkod gibi görünmüyor. Rakamları kontrol et.")
+                st.warning(t("Bu numara geçerli bir barkod gibi görünmüyor. Rakamları kontrol et."))
     else:
         # Kamera yalnızca istendiğinde açılır. Streamlit bütün sekmeleri aynı anda çizdiği
         # için, düğmeye bağlanmazsa bu sekmeye hiç girilmese bile kamera açık kalır.
         foto = None
         if st.session_state.get("barkod_kamera_acik"):
-            foto = st.camera_input("Barkodu ortala ve çek", key="barkod_foto")
-            if st.button("Kamerayı kapat", key="barkod_kamera_kapat"):
+            foto = st.camera_input(t("Barkodu ortala ve çek"), key="barkod_foto")
+            if st.button(t("Kamerayı kapat"), key="barkod_kamera_kapat"):
                 st.session_state["barkod_kamera_acik"] = False
                 st.rerun()
         else:
-            if st.button("Kamerayı aç", key="barkod_kamera_ac", type="primary"):
+            if st.button(t("Kamerayı aç"), key="barkod_kamera_ac", type="primary"):
                 st.session_state["barkod_kamera_acik"] = True
                 st.rerun()
-            st.caption("Kamera yalnızca bu düğmeye bastığında açılır.")
+            st.caption(t("Kamera yalnızca bu düğmeye bastığında açılır."))
 
         if foto is None:
-            foto = st.file_uploader("ya da galerinden bir fotoğraf seç",
+            foto = st.file_uploader(t("ya da galerinden bir fotoğraf seç"),
                                     type=["jpg", "jpeg", "png", "webp"], key="barkod_dosya")
         if foto is not None:
             try:
                 kodlar = bk.barkod_oku(foto.getvalue())
             except ImportError:
-                st.error("Barkod okuyucu kurulu değil. requirements.txt dosyasına zxing-cpp ekle.")
+                st.error(t("Barkod okuyucu kurulu değil. requirements.txt dosyasına zxing-cpp ekle."))
                 kodlar = []
             except Exception:  # noqa: BLE001
                 kodlar = []
@@ -353,12 +356,12 @@ def _sekme_barkod(db, kullanici, tarih, ogun):
                 kod = kodlar[0]
                 st.success(f"Barkod okundu: {kod}")
             else:
-                st.warning("Barkodu okuyamadım. Daha yakın, net ve düz çekmeyi dene ya da numarayı elle yaz.")
+                st.warning(t("Barkodu okuyamadım. Daha yakın, net ve düz çekmeyi dene ya da numarayı elle yaz."))
                 st.session_state["barkod_foto_yedek"] = foto.getvalue()
 
     # Barkod okunamadıysa etiketten okuma teklifi
     if not kod and st.session_state.get("barkod_foto_yedek"):
-        if st.button("Bunun yerine besin değerleri tablosunu oku", key="etiket_oku_yedek"):
+        if st.button(t("Bunun yerine besin değerleri tablosunu oku"), key="etiket_oku_yedek"):
             veri = _etiketten_oku(__import__("io").BytesIO(st.session_state["barkod_foto_yedek"]))
             st.session_state["etiket_sonuc"] = veri
         veri = st.session_state.get("etiket_sonuc")
@@ -376,26 +379,26 @@ def _sekme_barkod(db, kullanici, tarih, ogun):
             with st.spinner("Ürün aranıyor..."):
                 urun = bk.off_barkod(kod)
         except bk.KaynakHatasi:
-            st.error("Ürün veritabanına şu an ulaşılamadı. Biraz sonra tekrar dene.")
+            st.error(t("Ürün veritabanına şu an ulaşılamadı. Biraz sonra tekrar dene."))
             return None
         if urun and not urun.get("eksik"):
             bk.onbellege_yaz(db, [urun])
 
     if urun is None:
-        st.info("Bu barkod veritabanında yok. Paketin besin değerleri tablosunu çekersen okuyabilirim.")
+        st.info(t("Bu barkod veritabanında yok. Paketin besin değerleri tablosunu çekersen okuyabilirim."))
     elif urun.get("eksik"):
         st.info(f"**{urun['ad']}** bulundu ama besin değerleri kayıtlı değil. Besin tablosunu çekersen okuyabilirim.")
     else:
         return _ekle_paneli(_offtan(urun), f"bk_{kod}", db, kullanici, tarih, ogun)
 
-    tablo_foto = st.file_uploader("Besin değerleri tablosunun fotoğrafı", type=["jpg", "jpeg", "png", "webp"],
+    tablo_foto = st.file_uploader(t("Besin değerleri tablosunun fotoğrafı"), type=["jpg", "jpeg", "png", "webp"],
                                   key=f"etiket_foto_{kod}")
-    if tablo_foto is not None and st.button("Etiketi oku", type="primary", key=f"etiket_btn_{kod}"):
+    if tablo_foto is not None and st.button(t("Etiketi oku"), type="primary", key=f"etiket_btn_{kod}"):
         st.session_state[f"etiket_{kod}"] = _etiketten_oku(tablo_foto)
     veri = st.session_state.get(f"etiket_{kod}")
     y = _etiket_sonucu(veri, kod)
     if y:
-        st.caption("Okunan değerleri kontrol et, yanlışsa aşağıdan düzelt.")
+        st.caption(t("Okunan değerleri kontrol et, yanlışsa aşağıdan düzelt."))
         return _ekle_paneli(y, f"etiket_{kod}", db, kullanici, tarih, ogun)
     return None
 
@@ -418,47 +421,47 @@ def _sekme_favoriler(db, kullanici, tarih, ogun, gunluk_kayitlar):
     kayitlar = []
 
     favoriler = _kullanici_yemekleri(db, kullanici, "favori")
-    st.markdown("#### Favorilerin")
+    st.markdown(h("#### Favorilerin"))
     if not favoriler:
-        st.caption("Henüz favorin yok. Bir yemek eklerken \"Favorilere ekle\" düğmesini kullan.")
+        st.caption(t("Henüz favorin yok. Bir yemek eklerken \"Favorilere ekle\" düğmesini kullan."))
     else:
         for i, y in enumerate(favoriler):
             c1, c2, c3 = st.columns([6, 2, 1])
             c1.markdown(f"**{y['ad']}**" + (f" · {y['marka']}" if y.get("marka") else "")
                         + f"  \n{y['kcal']} kcal/100 g · varsayılan {y.get('gram', 100)} g")
-            if c2.button("Ekle", key=f"favekle_{i}", use_container_width=True):
+            if c2.button(t("Ekle"), key=f"favekle_{i}", use_container_width=True):
                 kayitlar.append(_kayit_yap(y, y.get("gram", 100), tarih, ogun, y["p"], y["k"], y["y"]))
-            if c3.button("Çıkar", key=f"favsil_{i}", help="Favorilerden çıkar"):
+            if c3.button(t("Çıkar"), key=f"favsil_{i}", help="Favorilerden çıkar"):
                 _yemek_sil(db, kullanici, "favori", y["ad"])
                 st.rerun()
 
     st.divider()
-    st.markdown("#### Son yedikleri")
+    st.markdown(h("#### Son yedikleri"))
     sonlar = _son_yenenler(gunluk_kayitlar)
     if not sonlar:
-        st.caption("Henüz kayıt yok.")
+        st.caption(t("Henüz kayıt yok."))
     for i, k in enumerate(sonlar):
         c1, c2 = st.columns([8, 2])
-        c1.markdown(f"{k['Tarif']} — *{round(k.get('Kalori', 0))} kcal*")
-        if c2.button("Tekrar ekle", key=f"son_{i}", use_container_width=True):
+        c1.markdown(h(f"{k['Tarif']} — *{round(k.get('Kalori', 0))} kcal*"))
+        if c2.button(t("Tekrar ekle"), key=f"son_{i}", use_container_width=True):
             yeni = dict(k)
             yeni["Tarih"], yeni["Öğün"] = tarih, ogun
             kayitlar.append(yeni)
 
     st.divider()
-    st.markdown("#### Önceki bir öğünü kopyala")
+    st.markdown(h("#### Önceki bir öğünü kopyala"))
     tarihler = sorted({k.get("Tarih") for k in (gunluk_kayitlar or []) if k.get("Tarih") and k.get("Tarih") != tarih},
                       reverse=True)[:14]
     if not tarihler:
-        st.caption("Kopyalanacak başka gün yok.")
+        st.caption(t("Kopyalanacak başka gün yok."))
     else:
         c1, c2, c3 = st.columns([3, 3, 2])
-        kaynak_tarih = c1.selectbox("Hangi gün", tarihler, key="kopya_tarih")
-        kaynak_ogun = c2.selectbox("Hangi öğün", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"],
+        kaynak_tarih = c1.selectbox(t("Hangi gün"), tarihler, key="kopya_tarih")
+        kaynak_ogun = c2.selectbox(t("Hangi öğün"), ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"],
                                    key="kopya_ogun")
         adaylar = [k for k in gunluk_kayitlar
                    if k.get("Tarih") == kaynak_tarih and k.get("Öğün") == kaynak_ogun]
-        c3.markdown("<br>", unsafe_allow_html=True)
+        c3.markdown(h("<br>"), unsafe_allow_html=True)
         if adaylar:
             st.caption(" · ".join(k["Tarif"] for k in adaylar[:6]))
             if c3.button(f"{len(adaylar)} kalemi kopyala", key="kopyala", use_container_width=True):
@@ -467,7 +470,7 @@ def _sekme_favoriler(db, kullanici, tarih, ogun, gunluk_kayitlar):
                     yeni["Tarih"], yeni["Öğün"] = tarih, ogun
                     kayitlar.append(yeni)
         else:
-            st.caption("O gün o öğünde kayıt yok.")
+            st.caption(t("O gün o öğünde kayıt yok."))
 
     return kayitlar or None
 
@@ -478,19 +481,19 @@ def _sekme_kendi(db, kullanici, tarih, ogun):
     kendi = _kullanici_yemekleri(db, kullanici, "kendi")
 
     with st.form("kendi_yemek_formu"):
-        ad = st.text_input("Yemeğin adı", max_chars=60, placeholder="Örn: Annemin İskenderi")
+        ad = st.text_input(t("Yemeğin adı"), max_chars=60, placeholder="Örn: Annemin İskenderi")
 
         c1, c2 = st.columns([1, 2])
-        porsiyon_g = c1.number_input("Bir porsiyon kaç gram?", min_value=5, max_value=3000,
+        porsiyon_g = c1.number_input(t("Bir porsiyon kaç gram?"), min_value=5, max_value=3000,
                                      value=250, step=5,
                                      help="Örnek: bir porsiyon İskender yaklaşık 250 gram, bir kase çorba 250 gram.")
         c2.caption("Aşağıdaki değerleri 100 gram için değil, **bu porsiyonun tamamı** için gir. "
                    "Paketin arkasındaki tabloda 100 g değeri yazıyorsa porsiyon gramını 100 yap.")
 
         d1, d2, d3 = st.columns(3)
-        p_porsiyon = d1.number_input("Protein (porsiyon başına, g)", 0.0, 500.0, 0.0, 0.5)
-        k_porsiyon = d2.number_input("Karbonhidrat (porsiyon başına, g)", 0.0, 800.0, 0.0, 0.5)
-        y_porsiyon = d3.number_input("Yağ (porsiyon başına, g)", 0.0, 500.0, 0.0, 0.5)
+        p_porsiyon = d1.number_input(t("Protein (porsiyon başına, g)"), 0.0, 500.0, 0.0, 0.5)
+        k_porsiyon = d2.number_input(t("Karbonhidrat (porsiyon başına, g)"), 0.0, 800.0, 0.0, 0.5)
+        y_porsiyon = d3.number_input(t("Yağ (porsiyon başına, g)"), 0.0, 500.0, 0.0, 0.5)
 
         toplam_kcal = round(kcal_hesapla(p_porsiyon, k_porsiyon, y_porsiyon))
         st.caption(f"Bir porsiyon ({int(porsiyon_g)} g) = **{toplam_kcal} kcal** · "
@@ -500,9 +503,9 @@ def _sekme_kendi(db, kullanici, tarih, ogun):
     if kaydet:
         makro_toplam = p_porsiyon + k_porsiyon + y_porsiyon
         if not ad.strip():
-            st.error("Yemeğin adını yaz.")
+            st.error(t("Yemeğin adını yaz."))
         elif makro_toplam == 0:
-            st.error("En az bir besin değeri gir.")
+            st.error(t("En az bir besin değeri gir."))
         elif makro_toplam > porsiyon_g * 1.005:
             st.error(f"Protein, karbonhidrat ve yağ toplamı {makro_toplam:.0f} gram çıkıyor "
                      f"ama porsiyon {int(porsiyon_g)} gram. Değerleri kontrol et: "
@@ -519,15 +522,15 @@ def _sekme_kendi(db, kullanici, tarih, ogun):
 
     if kendi:
         st.divider()
-        st.markdown("#### Kaydettiklerin")
+        st.markdown(h("#### Kaydettiklerin"))
         for i, y in enumerate(kendi):
             porsiyon = int(y.get("gram", 100))
             porsiyon_kcal = round(y["kcal"] * porsiyon / 100)
             c1, c2, c3 = st.columns([6, 2, 1])
-            c1.markdown(f"**{y['ad']}**  \n1 porsiyon ({porsiyon} g) = {porsiyon_kcal} kcal")
-            if c2.button("Ekle", key=f"kendiekle_{i}", use_container_width=True):
+            c1.markdown(h(f"**{y['ad']}**  \n1 porsiyon ({porsiyon} g) = {porsiyon_kcal} kcal"))
+            if c2.button(t("Ekle"), key=f"kendiekle_{i}", use_container_width=True):
                 return [_kayit_yap(y, porsiyon, tarih, ogun, y["p"], y["k"], y["y"])]
-            if c3.button("Sil", key=f"kendisil_{i}", help="Bu yemeği listenden sil"):
+            if c3.button(t("Sil"), key=f"kendisil_{i}", help="Bu yemeği listenden sil"):
                 _yemek_sil(db, kullanici, "kendi", y["ad"])
                 st.rerun()
     return None
