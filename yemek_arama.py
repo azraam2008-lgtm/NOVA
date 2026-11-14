@@ -414,7 +414,7 @@ def _sekme_favoriler(db, kullanici, tarih, ogun, gunluk_kayitlar):
                         + f"  \n{y['kcal']} kcal/100 g · varsayılan {y.get('gram', 100)} g")
             if c2.button("Ekle", key=f"favekle_{i}", use_container_width=True):
                 kayitlar.append(_kayit_yap(y, y.get("gram", 100), tarih, ogun, y["p"], y["k"], y["y"]))
-            if c3.button("✕", key=f"favsil_{i}", help="Favorilerden çıkar"):
+            if c3.button("Çıkar", key=f"favsil_{i}", help="Favorilerden çıkar"):
                 _yemek_sil(db, kullanici, "favori", y["ad"])
                 st.rerun()
 
@@ -493,7 +493,7 @@ def _sekme_kendi(db, kullanici, tarih, ogun):
             c1.markdown(f"**{y['ad']}** · {y['kcal']} kcal/100 g")
             if c2.button("Ekle", key=f"kendiekle_{i}", use_container_width=True):
                 return [_kayit_yap(y, y.get("gram", 100), tarih, ogun, y["p"], y["k"], y["y"])]
-            if c3.button("✕", key=f"kendisil_{i}", help="Sil"):
+            if c3.button("Sil", key=f"kendisil_{i}", help="Bu yemeği listenden sil"):
                 _yemek_sil(db, kullanici, "kendi", y["ad"])
                 st.rerun()
     return None
