@@ -14,6 +14,9 @@ from yemek_arama import yemek_arama_sayfasi
 from gelisim import gelisim_sayfasi
 from hesap import hesap_bolumu
 from sifre_sifirlama import sifre_sifirlama_bolumu
+from diller import t, h, tarih_yaz, dil_ayarla, aktif_dil, DIL_LISTESI, yon
+from ayarlar import ayarlar_paneli
+import mikro
 from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
                     kullanilabilir_mi, oturum_tazele)
 
@@ -217,6 +220,7 @@ def guvenlik_uyarilari(p):
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
 if "onboarding_step" not in st.session_state: st.session_state.onboarding_step = 1
+if "ayarlar_acik" not in st.session_state: st.session_state.ayarlar_acik = False
 
 # --- "BENİ HATIRLA" ÇEREZİNDEN GİRİŞ ---
 # Çerezler her çizimde tam bir kez okunur (aynı anahtar iki kez çizilemez).
@@ -264,7 +268,7 @@ if not st.session_state.giris_yapildi and google_hazir_mi():
                 st.rerun()
 
 if not st.session_state.giris_yapildi:
-    st.markdown("""
+    st.markdown(h("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         :root { color-scheme: light !important; }
@@ -284,26 +288,26 @@ if not st.session_state.giris_yapildi:
         .stTextInput input, .stTextInput input:focus, .stTextInput input:active, input, input:focus, input:active { color: #000000 !important; background-color: #ffffff !important; caret-color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-weight: 600 !important; }
         input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active { -webkit-box-shadow: 0 0 0 30px white inset !important; -webkit-text-fill-color: #000000 !important; transition: background-color 5000s ease-in-out 0s; }
         </style>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
     
-    st.markdown('<div class="nova-logo-giris">N O V A</div>', unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666666 !important; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;'>ZARAFET VE DENGE</p>", unsafe_allow_html=True)
+    st.markdown(h('<div class="nova-logo-giris">N O V A</div>'), unsafe_allow_html=True)
+    st.markdown(h("<p style='text-align: center; color: #666666 !important; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;'>ZARAFET VE DENGE</p>"), unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         with st.container(key="novakart1"):
-            tab_giris, tab_kayit = st.tabs(["Giriş Yap", "Kayıt Ol"])
+            tab_giris, tab_kayit = st.tabs([t("Giriş Yap"), t("Kayıt Ol")])
             users = kullanicilari_yukle()
 
             with tab_giris:
-                g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
-                g_pass = st.text_input("Şifre", type="password", key="g_pass")
+                g_user = st.text_input(t("Kullanıcı Adı"), key="g_user").strip().lower()
+                g_pass = st.text_input(t("Şifre"), type="password", key="g_pass")
                 g_hatirla = st.checkbox(
-                    "Beni hatırla", value=True, key="g_hatirla",
+                    t("Beni hatırla"), value=True, key="g_hatirla",
                     disabled=not kullanilabilir_mi(),
                     help="Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. "
                          "Ortak bir bilgisayardaysan işaretleme.")
-                if st.button("Giriş Yap", key="btn_giris", use_container_width=True):
+                if st.button(t("Giriş Yap"), key="btn_giris", use_container_width=True):
                     kayit = users.get(g_user)
                     if kayit and sifre_dogrula(g_pass, kayit.get("password_hash")):
                         # Eski SHA-256 kaydı ise sessizce bcrypt'e yükseltilir
@@ -319,22 +323,22 @@ if not st.session_state.giris_yapildi:
                         if g_hatirla:
                             oturum_baslat(supabase, g_user)
                         st.rerun()
-                    else: st.error("Hatalı kullanıcı adı veya şifre.")
+                    else: st.error(t("Hatalı kullanıcı adı veya şifre."))
 
             with tab_kayit:
-                k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
-                k_mail = st.text_input("E-posta (şifreni unutursan gerekli)", key="k_mail").strip().lower()
-                k_pass = st.text_input("Şifre (en az 8 karakter, bir büyük harf ve bir rakam)", type="password", key="k_pass")
-                if st.button("Hesap Oluştur", key="btn_kayit", use_container_width=True):
+                k_user = st.text_input(t("Yeni Kullanıcı Adı"), key="k_user").strip().lower()
+                k_mail = st.text_input(t("E-posta (şifreni unutursan gerekli)"), key="k_mail").strip().lower()
+                k_pass = st.text_input(t("Şifre (en az 8 karakter, bir büyük harf ve bir rakam)"), type="password", key="k_pass")
+                if st.button(t("Hesap Oluştur"), key="btn_kayit", use_container_width=True):
                     hata = sifre_kontrol(k_pass)
                     if hata:
                         st.error(hata)
                     elif not k_user:
-                        st.error("Kullanıcı adı boş olamaz.")
+                        st.error(t("Kullanıcı adı boş olamaz."))
                     elif k_user in users:
-                        st.error("Bu kullanıcı adı zaten alınmış.")
+                        st.error(t("Bu kullanıcı adı zaten alınmış."))
                     elif k_mail and ("@" not in k_mail or "." not in k_mail.split("@")[-1]):
-                        st.error("E-posta adresi geçerli görünmüyor.")
+                        st.error(t("E-posta adresi geçerli görünmüyor."))
                     else:
                         supabase.table("kullanicilar").insert({
                             "username": k_user, "password_hash": sifre_olustur(k_pass),
@@ -350,21 +354,32 @@ if not st.session_state.giris_yapildi:
             sifre_sifirlama_bolumu(supabase, sifre_olustur, sifre_kontrol)
 
             if google_hazir_mi():
-                st.markdown("<p style='text-align:center; margin:18px 0 8px; color:#888 !important;'>ya da</p>",
+                st.markdown(h("<p style='text-align:center; margin:18px 0 8px; color:#888 !important;'>ya da</p>"),
                             unsafe_allow_html=True)
-                if st.button("Google ile devam et", key="btn_google", use_container_width=True):
+                if st.button(t("Google ile devam et"), key="btn_google", use_container_width=True):
                     st.login()
 
 else:
     aktif_user = st.session_state.aktif_kullanici
     p = st.session_state.profil
+    # Kullanicinin sectigi dil her cizimde yeniden uygulanir
+    if p.get("dil") in DIL_LISTESI:
+        dil_ayarla(p["dil"])
     aktif_tema = p.get("tema", "Koyu Cam")
     if aktif_tema not in TEMA_AYARLARI: aktif_tema = "Koyu Cam"
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
+    # Arapca gibi sagdan sola yazilan dillerde butun arayuz ters cevrilir
+    if yon() == "rtl":
+        st.markdown(h("""<style>
+        [data-testid="stAppViewContainer"], [data-testid="stSidebar"] { direction: rtl !important; }
+        .stTextInput input, .stNumberInput input, textarea { direction: rtl !important; text-align: right !important; }
+        [data-testid="stMarkdownContainer"] { text-align: right; }
+        </style>"""), unsafe_allow_html=True)
+
     # STREAMLIT KOYU MOD ÇAKIŞMASINI %100 BİTİREN GÜNCEL CSS EKLENDİ
-    st.markdown(f"""
+    st.markdown(h(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         
@@ -516,121 +531,143 @@ else:
         th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; color: {tema['text_color']} !important; }}
         th {{ font-weight: 800; font-size: 1.2rem; opacity: 0.9; }}
         </style>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     # ----------------------------------------------------
     # FATSECRET TARZI DETAYLI ONBOARDING SÜRECİ
     # ----------------------------------------------------
     if not p.get("setup_tamamlandi", False):
-        st.markdown('<div class="nova-header kucuk">N O V A</div>', unsafe_allow_html=True)
+        st.markdown(h('<div class="nova-header kucuk">N O V A</div>'), unsafe_allow_html=True)
         with st.container(key="novakart2"):
 
             step = st.session_state.onboarding_step
 
             if step == 1:
-                st.markdown("<h2 style='text-align:center;'>Tanıştığımıza memnun oldum,<br>Nova'ya Hoş Geldin! </h2>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; opacity:0.9;'>Hedeflerine ulaşmanda sana yardımcı olmak için buradayız.<br>Başlamak için birkaç kısa sorumuz olacak.</p>", unsafe_allow_html=True)
-                st.markdown('<div class="info-box">Cevapların, hedeflerini anlamamıza ve uygulamayı senin için kişiselleştirmemize yardımcı olacak.</div>', unsafe_allow_html=True)
-                if st.button("Başla ", use_container_width=True):
+                # İlk soru dil. Seçilen dil anında uygulanır ve sonraki
+                # bütün sorular o dilde sorulur.
+                st.markdown(h(f"<h2 style='text-align:center;'>{t('Hangi dili kullanmak istersin?')}</h2>"),
+                            unsafe_allow_html=True)
+                _kodlar = list(DIL_LISTESI.keys())
+                _simdiki = p.get("dil", aktif_dil())
+                if _simdiki not in _kodlar:
+                    _simdiki = "tr"
+                secilen_dil = st.selectbox(t("Dil"), _kodlar, index=_kodlar.index(_simdiki),
+                                           format_func=lambda k: DIL_LISTESI[k],
+                                           key="kurulum_dil", label_visibility="collapsed")
+                if secilen_dil != aktif_dil():
+                    dil_ayarla(secilen_dil)
+                    st.session_state.profil["dil"] = secilen_dil
+                    st.rerun()
+
+                _dil_notu = t("Nova'yı bu dilde kullanacaksın. Daha sonra ayarlardan değiştirebilirsin.")
+                st.markdown(h(f'<div class="info-box">{_dil_notu}</div>'),
+                            unsafe_allow_html=True)
+                _hosgeldin = t("Nova'ya Hoş Geldin!")
+                st.markdown(h(f"<h2 style='text-align:center;'>{t('Tanıştığımıza memnun oldum,')}<br>{_hosgeldin}</h2>"),
+                            unsafe_allow_html=True)
+                st.markdown(h(f"<p style='text-align:center; opacity:0.9;'>{t('Hedeflerine ulaşmanda sana yardımcı olmak için buradayız.')}<br>{t('Başlamak için birkaç kısa sorumuz olacak.')}</p>"),
+                            unsafe_allow_html=True)
+                if st.button(t("Devam"), use_container_width=True):
+                    st.session_state.profil["dil"] = secilen_dil
                     st.session_state.onboarding_step = 2
                     st.rerun()
 
             elif step == 2:
-                st.markdown("<h2 style='text-align:center;'>Merhaba! Adın nedir?</h2>", unsafe_allow_html=True)
-                ad_input = st.text_input("Adını Gir", value=p.get("ad", ""))
-                st.markdown('<div class="info-box">Nova uygulamasını sana özel hale getirmek ve sana hitap edebilmek için adını kullanacağız.</div>', unsafe_allow_html=True)
+                st.markdown(h(f"<h2 style='text-align:center;'>{t('Merhaba! Adın nedir?')}</h2>"), unsafe_allow_html=True)
+                ad_input = st.text_input(t("Adını Gir"), value=p.get("ad", ""))
+                st.markdown(h(f'<div class="info-box">{t("Nova uygulamasını sana özel hale getirmek ve sana hitap edebilmek için adını kullanacağız.")}</div>'), unsafe_allow_html=True)
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 1; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 1; st.rerun()
+                if b2.button(t("İleri ")):
                     if ad_input:
                         st.session_state.profil["ad"] = ad_input
                         st.session_state.onboarding_step = 3
                         st.rerun()
-                    else: st.error("Lütfen adını gir.")
+                    else: st.error(t("Lütfen adını gir."))
 
             elif step == 3:
-                st.markdown(f"<h2 style='text-align:center;'>Nova'yı Hangi Amaçla Kullanmak İstiyorsun {p.get('ad', '')}?</h2>", unsafe_allow_html=True)
-                amaclar = st.multiselect("Hedeflerin (Birden fazla seçebilirsin)", ["Kilo vermek istiyorum", "Kilomu korumak istiyorum", "Kilo almak istiyorum", "Kas kazanmak istiyorum", "Sağlıklı beslenmek istiyorum"], default=p.get("amaclar", []))
+                st.markdown(h(f"<h2 style='text-align:center;'>Nova'yı Hangi Amaçla Kullanmak İstiyorsun {p.get('ad', '')}?</h2>"), unsafe_allow_html=True)
+                amaclar = st.multiselect(t("Hedeflerin (Birden fazla seçebilirsin)"), ["Kilo vermek istiyorum", "Kilomu korumak istiyorum", "Kilo almak istiyorum", "Kas kazanmak istiyorum", "Sağlıklı beslenmek istiyorum"], default=p.get("amaclar", []))
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 2; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 2; st.rerun()
+                if b2.button(t("İleri ")):
                     st.session_state.profil["amaclar"] = amaclar
                     st.session_state.onboarding_step = 4
                     st.rerun()
 
             elif step == 4:
-                st.markdown("<h2 style='text-align:center;'>Cinsiyetin nedir?</h2>", unsafe_allow_html=True)
-                cinsiyet = st.selectbox("Seçimini yap:", ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
-                st.markdown('<div class="info-box">Cinsiyetin, vücudunun günlük enerji ihtiyacını hesaplamamızı doğrudan etkiler.</div>', unsafe_allow_html=True)
+                st.markdown(h("<h2 style='text-align:center;'>Cinsiyetin nedir?</h2>"), unsafe_allow_html=True)
+                cinsiyet = st.selectbox(t("Seçimini yap:"), ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
+                st.markdown(h('<div class="info-box">Cinsiyetin, vücudunun günlük enerji ihtiyacını hesaplamamızı doğrudan etkiler.</div>'), unsafe_allow_html=True)
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 3; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 3; st.rerun()
+                if b2.button(t("İleri ")):
                     st.session_state.profil["cinsiyet"] = cinsiyet
                     st.session_state.onboarding_step = 5
                     st.rerun()
 
             elif step == 5:
-                st.markdown("<h2 style='text-align:center;'>Doğum yılın ne?</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='text-align:center;'>Doğum yılın ne?</h2>"), unsafe_allow_html=True)
                 mevcut_yil = datetime.date.today().year
-                dogum_yili = st.number_input("Yıl", min_value=1920, max_value=mevcut_yil-13, value=int(p.get("dogum_yili", 2000)))
+                dogum_yili = st.number_input(t("Yıl"), min_value=1920, max_value=mevcut_yil-13, value=int(p.get("dogum_yili", 2000)))
                 yas = mevcut_yil - dogum_yili
-                st.markdown(f"<h4 style='text-align:center;'>Şu an <b>{yas}</b> yaşındasın.</h4>", unsafe_allow_html=True)
-                st.markdown('<div class="info-box">Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>', unsafe_allow_html=True)
+                st.markdown(h(f"<h4 style='text-align:center;'>{t('Şu an')} <b>{yas}</b> {t('yaşındasın.')}</h4>"), unsafe_allow_html=True)
+                st.markdown(h('<div class="info-box">Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>'), unsafe_allow_html=True)
                 if yas < 18:
-                    st.warning(
+                    st.warning(t(
                         "18 yaşından küçüksün. Büyüme çağında kalori kısıtlamak gelişimi etkileyebilir. "
                         "Nova senin için günlük hedefi dinlenik metabolizmanın altına indirmeyecek, ama "
-                        "kilo hedefi koymadan önce bir doktora ya da diyetisyene danışmanı öneririm."
+                        "kilo hedefi koymadan önce bir doktora ya da diyetisyene danışmanı öneririm.")
                     )
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 4; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 4; st.rerun()
+                if b2.button(t("İleri ")):
                     st.session_state.profil["dogum_yili"] = dogum_yili
                     st.session_state.onboarding_step = 6
                     st.rerun()
 
             elif step == 6:
-                st.markdown("<h2 style='text-align:center;'>Boyun kaç?</h2>", unsafe_allow_html=True)
-                boy = st.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
-                st.markdown('<div class="info-box">Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.</div>', unsafe_allow_html=True)
+                st.markdown(h("<h2 style='text-align:center;'>Boyun kaç?</h2>"), unsafe_allow_html=True)
+                boy = st.number_input(t("Boy (cm)"), min_value=130, max_value=220, value=int(p.get("boy", 165)))
+                st.markdown(h('<div class="info-box">Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.</div>'), unsafe_allow_html=True)
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 5; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 5; st.rerun()
+                if b2.button(t("İleri ")):
                     st.session_state.profil["boy"] = boy
                     st.session_state.onboarding_step = 7
                     st.rerun()
 
             elif step == 7:
-                st.markdown("<h2 style='text-align:center;'>Şu andaki kilon ne?</h2>", unsafe_allow_html=True)
-                mevcut_kilo = st.number_input("Kilo (kg)", min_value=35.0, max_value=250.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
-                st.markdown('<div class="info-box">Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>', unsafe_allow_html=True)
+                st.markdown(h("<h2 style='text-align:center;'>Şu andaki kilon ne?</h2>"), unsafe_allow_html=True)
+                mevcut_kilo = st.number_input(t("Kilo (kg)"), min_value=35.0, max_value=250.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
+                st.markdown(h('<div class="info-box">Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>'), unsafe_allow_html=True)
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 6; st.rerun()
-                if b2.button("İleri "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 6; st.rerun()
+                if b2.button(t("İleri ")):
                     st.session_state.profil["mevcut_kilo"] = mevcut_kilo
                     st.session_state.onboarding_step = 8
                     st.rerun()
 
             elif step == 8:
-                st.markdown("<h2 style='text-align:center;'>Hedef kilon nedir?</h2>", unsafe_allow_html=True)
-                hedef_kilo = st.number_input("Hedef Kilo (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
-                hedef_sure = st.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
+                st.markdown(h("<h2 style='text-align:center;'>Hedef kilon nedir?</h2>"), unsafe_allow_html=True)
+                hedef_kilo = st.number_input(t("Hedef Kilo (kg)"), min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
+                hedef_sure = st.number_input(t("Hedefe Ulaşma Süresi (Ay)"), min_value=1, value=int(p.get("hedef_sure_ay", 2)))
 
                 aktivite_listesi = list(AKTIVITE_DUZEYLERI.keys())
                 mevcut_aktivite = p.get("aktivite", aktivite_listesi[1])
                 if mevcut_aktivite not in aktivite_listesi:
                     mevcut_aktivite = aktivite_listesi[1]
-                aktivite = st.selectbox("Günlük hareket düzeyin", aktivite_listesi,
+                aktivite = st.selectbox(t("Günlük hareket düzeyin"), aktivite_listesi,
                                         index=aktivite_listesi.index(mevcut_aktivite))
-                st.markdown('<div class="info-box">Hareket düzeyin, günde ne kadar enerji harcadığını belirleyen en önemli etken. Adım ve egzersiz kayıtların bunun üzerine eklenir.</div>', unsafe_allow_html=True)
+                st.markdown(h('<div class="info-box">Hareket düzeyin, günde ne kadar enerji harcadığını belirleyen en önemli etken. Adım ve egzersiz kayıtların bunun üzerine eklenir.</div>'), unsafe_allow_html=True)
 
-                sec_tema = st.selectbox("Nova Deneyimin İçin Bir Tema Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
+                sec_tema = st.selectbox(t("Nova Deneyimin İçin Bir Tema Seç"), list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
 
                 # Hedef temposu güvenli mi, daha hesaplamadan göster
                 onizleme = dict(p); onizleme.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure})
@@ -639,23 +676,23 @@ else:
                     yon = "kayıp" if hiz > 0 else "alım"
                     st.caption(f"Bu hedef haftada yaklaşık {abs(hiz):.2f} kilo {yon} demek.")
                 if hiz > 1.0:
-                    st.warning("Bu tempo hızlı. Güvenli aralık genelde haftada 0,5-1 kilodur; süreyi uzatmanı öneririm.")
+                    st.warning(t("Bu tempo hızlı. Güvenli aralık genelde haftada 0,5-1 kilodur; süreyi uzatmanı öneririm."))
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 7; st.rerun()
-                if b2.button("Kalori Hedefimi Hesapla "):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 7; st.rerun()
+                if b2.button(t("Kalori Hedefimi Hesapla ")):
                     st.session_state.profil.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure,
                                                     "aktivite": aktivite, "tema": sec_tema})
                     st.session_state.onboarding_step = 9
                     st.rerun()
 
             elif step == 9:
-                st.markdown(f"<h2 style='text-align:center;'>Paylaştığın için teşekkürler, {p.get('ad', '')} </h2>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; font-size:1.2rem; opacity:0.9;'>Bize söylediklerin, seni nasıl destekleyeceğimizi şekillendirmemize yardımcı olacak.</p>", unsafe_allow_html=True)
+                st.markdown(h(f"<h2 style='text-align:center;'>Paylaştığın için teşekkürler, {p.get('ad', '')} </h2>"), unsafe_allow_html=True)
+                st.markdown(h("<p style='text-align:center; font-size:1.2rem; opacity:0.9;'>Bize söylediklerin, seni nasıl destekleyeceğimizi şekillendirmemize yardımcı olacak.</p>"), unsafe_allow_html=True)
 
                 bmr, tdee, gunluk_acik, hedef_kalori = hesapla_bmr_ve_hedef(p)
 
-                st.markdown(f"""
+                st.markdown(h(f"""
                 <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin-top:20px;">
                     <h3 style="text-align:center; margin-bottom: 20px;">İşte Kişisel Kalori Hedefin</h3>
                     <p><b>Amacın:</b> {', '.join(p.get('amaclar', ['Belirtilmedi']))}</p>
@@ -665,16 +702,16 @@ else:
                     <h2 style="color: #007aff !important; text-align:center;">Günlük Hedefin: {round(hedef_kalori)} kcal</h2>
                     <p style="opacity:0.8; font-size: 0.9rem; text-align:center;"><i>Nova Kalori Hedefin, amacına ulaşmak için her gün kaç kalori tüketmen gerektiğini gösterir. Her gün bu hedefe yakın miktarda tüketirsen başarıya ulaşırsın.</i></p>
                 </div><br>
-                """, unsafe_allow_html=True)
+                """), unsafe_allow_html=True)
 
                 for uyari in guvenlik_uyarilari(p):
                     st.warning(uyari)
-                st.caption("Nova bir sağlık uygulaması değildir ve tıbbi tavsiye vermez. "
-                           "Hesaplamalar genel formüllere dayanan tahminlerdir.")
+                st.caption(t("Nova bir sağlık uygulaması değildir ve tıbbi tavsiye vermez.") + " " +
+                           t("Hesaplamalar genel formüllere dayanan tahminlerdir."))
 
                 b1, b2 = st.columns(2)
-                if b1.button("Geri"): st.session_state.onboarding_step = 8; st.rerun()
-                if b2.button("Harika, Uygulamaya Başla!", type="primary"):
+                if b1.button(t("Geri")): st.session_state.onboarding_step = 8; st.rerun()
+                if b2.button(t("Harika, Uygulamaya Başla!"), type="primary"):
                     st.session_state.profil["setup_tamamlandi"] = True
                     verileri_kaydet(aktif_user)
                     st.rerun()
@@ -682,18 +719,26 @@ else:
         st.stop()
 
     # ----------------------------------------------------
+    # AYARLAR PANELİ
+    # Kurulum sihirbazini bastan baslatmak yerine tek sayfalik panel
+    # ----------------------------------------------------
+    if st.session_state.get("ayarlar_acik"):
+        ayarlar_paneli(p, TEMA_AYARLARI, AKTIVITE_DUZEYLERI,
+                       lambda: verileri_kaydet(aktif_user),
+                       hesapla_bmr_ve_hedef, haftalik_hiz, guvenlik_uyarilari)
+        st.stop()
+
+    # ----------------------------------------------------
     # ANA EKRAN
     # ----------------------------------------------------
     gosterilecek_isim = p.get("ad", aktif_user).capitalize()
-    st.markdown('<div class="nova-header">N O V A</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="nova-user">{gosterilecek_isim}</div>', unsafe_allow_html=True)
+    st.markdown(h('<div class="nova-header">N O V A</div>'), unsafe_allow_html=True)
+    st.markdown(h(f'<div class="nova-user">{gosterilecek_isim}</div>'), unsafe_allow_html=True)
     
     # Türkçe Tarih Gösterimi
-    aylar_tr = {1: "Ocak", 2: "Şubat", 3: "Mart", 4: "Nisan", 5: "Mayıs", 6: "Haziran", 7: "Temmuz", 8: "Ağustos", 9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık"}
-    gunler_tr = {0: "Pazartesi", 1: "Salı", 2: "Çarşamba", 3: "Perşembe", 4: "Cuma", 5: "Cumartesi", 6: "Pazar"}
     bugun_dt = datetime.date.today()
-    tarih_str = f"{bugun_dt.day} {aylar_tr[bugun_dt.month]} {bugun_dt.year} {gunler_tr[bugun_dt.weekday()]}"
-    st.markdown(f'<div class="nova-tarih">{tarih_str}</div>', unsafe_allow_html=True)
+    tarih_str = tarih_yaz(bugun_dt)
+    st.markdown(h(f'<div class="nova-tarih">{tarih_str}</div>'), unsafe_allow_html=True)
 
     # ----------------------------------------------------
     # PAZAR GÜNÜ TARTI & HEDEF GÜNCELLEME KONTROLÜ
@@ -703,34 +748,33 @@ else:
     son_tarti = p.get("son_tarti_tarihi", "")
     
     if bugun_pazar_mu and son_tarti != str(bugun_dt) and not st.session_state.get(pazar_guncellendi_key, False):
-        st.markdown(f"""
+        st.markdown(h(f"""
             <div class="calai-card" style="border: 2px solid #ffcc00; background: rgba(50, 40, 0, 0.9);">
                 <h3 style="color: #ffcc00 !important;">Pazar Günü Tartı ve Durum Güncellemesi!</h3>
                 <p>Harika bir hafta geçirdik! Haftayı kapatmadan önce bugün sabah tartıldığın güncel kilonu girerek hedeflerini ve kalori planını yeni kilosuna göre güncelleyebilirsin.</p>
             </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
         
-        yeni_tartilinan_kilo = st.number_input("Bugünkü Güncel Kilon (kg)", min_value=30.0, max_value=250.0, value=float(p["mevcut_kilo"]), step=0.1, key="pazar_kilo_input")
-        if st.button("Kilomu Güncelle ve Hedeflerimi Yenile", use_container_width=True):
+        yeni_tartilinan_kilo = st.number_input(t("Bugünkü Güncel Kilon (kg)"), min_value=30.0, max_value=250.0, value=float(p["mevcut_kilo"]), step=0.1, key="pazar_kilo_input")
+        if st.button(t("Kilomu Güncelle ve Hedeflerimi Yenile"), use_container_width=True):
             p["mevcut_kilo"] = yeni_tartilinan_kilo
             p["son_tarti_tarihi"] = str(bugun_dt)
             p.setdefault("kilo_gecmisi", []).append({"tarih": str(bugun_dt), "kilo": yeni_tartilinan_kilo})
             st.session_state[pazar_guncellendi_key] = True
             verileri_kaydet(aktif_user)
-            st.success("Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!")
+            st.success(t("Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!"))
             st.rerun()
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(h("<br>"), unsafe_allow_html=True)
 
     c_sol, c_orta, c_sag = st.columns([1, 10, 1])
     with c_orta:
         t_col1, t_col2 = st.columns([8, 2])
         with t_col1:
-            secilen_tarih = str(st.date_input("Geçmiş Tarih İnceleme", datetime.date.today()))
+            secilen_tarih = str(st.date_input(t("Geçmiş Tarih İnceleme"), datetime.date.today()))
         with t_col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Ayarlar", use_container_width=True):
-                st.session_state.profil["setup_tamamlandi"] = False
-                st.session_state.onboarding_step = 2
+            st.markdown(h("<br>"), unsafe_allow_html=True)
+            if st.button(t("Ayarlar"), use_container_width=True):
+                st.session_state.ayarlar_acik = True
                 st.rerun()
 
         if secilen_tarih not in st.session_state.aktivite_loglari:
@@ -738,7 +782,7 @@ else:
         curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
         tab_ozet, tab_gelisim, tab_ai_ogun, tab_ai_koc, tab_ai_asistan = st.tabs(
-            ["Günlük Özet", "Gelişim", "Öğün Tarama", "Antrenman Koçu", "Asistan"])
+            [t("Günlük Özet"), t("Gelişim"), t("Öğün Tarama"), t("Antrenman Koçu"), t("Asistan")])
 
         # ==========================================
         # 1. SEKME: GÜNLÜK ÖZET & MANUEL EKLEME
@@ -746,7 +790,7 @@ else:
         with tab_ozet:
             # KALORİ TABLOSU
             with st.container(key="novakart3"):
-                st.markdown("<h2 style='font-size: 2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='font-size: 2rem;'>Kalori ve Denge Tablosu</h2>"), unsafe_allow_html=True)
 
                 bugun_og = [k for k in st.session_state.gunluk_kayitlar if k["Tarih"] == secilen_tarih]
                 top_kalori = sum([k["Kalori"] for k in bugun_og])
@@ -762,7 +806,7 @@ else:
                 hedef_karb = (hedef_kalori_alim * 0.4) / 4
                 hedef_yag = (hedef_kalori_alim * 0.3) / 9
 
-                st.markdown(f"""
+                st.markdown(h(f"""
                 <table>
                     <tr><th>Metrik</th><th style="text-align: right;">Değer</th></tr>
                     <tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#007aff;margin-right:10px;vertical-align:middle;"></span>Günlük Hedef Kalori Bütçen</td><td style="text-align: right; color: #007aff !important;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
@@ -773,19 +817,22 @@ else:
                         <td style="text-align: right; font-size: 1.3rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
                     </tr>
                 </table><br>
-                """, unsafe_allow_html=True)
+                """), unsafe_allow_html=True)
 
                 if kalan_kalori < 0: 
-                    st.error(f"Limitini {abs(round(kalan_kalori))} kcal aştın. Hedefe dönmek için biraz egzersiz yapmalısın!")
+                    st.error(t("Limitini") + f" {abs(round(kalan_kalori))} kcal " +
+                             t("aştın. Hedefe dönmek için biraz egzersiz yapmalısın!"))
                 else: 
-                    st.success(f"Harika gidiyorsun! Günün geri kalanı için {round(kalan_kalori)} kcal yeme hakkın duruyor.")
+                    st.success(t("Harika gidiyorsun! Günün geri kalanı için") +
+                               f" {round(kalan_kalori)} kcal " +
+                               t("yeme hakkın duruyor."))
 
                 def render_makro(isim, mevcut, hedef, renk):
                     yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
                     return f"""
                     <div style="margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 5px;">
-                            <span>{isim}</span>
+                            <span>{t(isim)}</span>
                             <span>{round(mevcut)}g / {round(hedef)}g</span>
                         </div>
                         <div style="width: 100%; background-color: rgba(255,255,255,0.15); border-radius: 4px; height: 6px;">
@@ -793,17 +840,33 @@ else:
                         </div>
                     </div>
                     """
-                st.markdown("<h4>Günlük Makro İhtiyaçları</h4>", unsafe_allow_html=True)
+                st.markdown(h("<h4>Günlük Makro İhtiyaçları</h4>"), unsafe_allow_html=True)
                 st.markdown(render_makro("Protein", top_pro, hedef_pro, "#ff3b30"), unsafe_allow_html=True)
                 st.markdown(render_makro("Karbonhidrat", top_karb, hedef_karb, "#007aff"), unsafe_allow_html=True)
                 st.markdown(render_makro("Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
 
+                # --- MİKRO BESİNLER ---
+                # Yalnızca gerçek veri olan kalemler gösterilir. Ev yemeklerinde
+                # bu veri yok ve tahmini bir sayı yazmak yanlış olur.
+                mikro_toplam = mikro.topla(bugun_og)
+                if mikro_toplam:
+                    st.markdown(h("<h4>Vitamin ve Mineraller</h4>"), unsafe_allow_html=True)
+                    st.markdown(mikro.cubuklar_html(mikro_toplam, tema["text_color"]),
+                                unsafe_allow_html=True)
+                    veri_var, kalem = mikro.kapsama(bugun_og)
+                    if kalem and veri_var < kalem:
+                        st.caption(f"{kalem} " + t("kalemden") + f" {veri_var} " +
+                                   t("tanesinde vitamin ve mineral verisi var. Bu veriler barkodlu "
+                                     "ürünlerde ve etiket okumada geliyor, ev yemeklerinde gelmiyor."))
+                    for _ad in mikro.asilanlar(mikro_toplam):
+                        st.warning(t(_ad) + " " + t("günlük sınırını aştın."))
+
 
             # YEMEK EKLEME: arama, barkod, favoriler, kendi yemeğin
             with st.container(key="novakart4"):
-                st.markdown("<h2 style='font-size: 2rem;'>Yemek Ekle</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='font-size: 2rem;'>Yemek Ekle</h2>"), unsafe_allow_html=True)
 
-                secilen_ogun = st.selectbox("Hangi öğüne eklenecek?",
+                secilen_ogun = st.selectbox(t("Hangi öğüne eklenecek?"),
                                             ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="db_ogun")
                 yeni_kayitlar = yemek_arama_sayfasi(df_yemek, supabase, aktif_user, secilen_tarih,
                                                     secilen_ogun, st.session_state.gunluk_kayitlar)
@@ -813,16 +876,16 @@ else:
                     st.toast(f"{len(yeni_kayitlar)} kalem {secilen_ogun.lower()} öğününe eklendi")
                     st.rerun()
 
-                st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>", unsafe_allow_html=True)
-                st.markdown("<h3>Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
+                st.markdown(h("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>"), unsafe_allow_html=True)
+                st.markdown(h("<h3>Bugünkü Öğünlerin</h3>"), unsafe_allow_html=True)
                 for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]:
                     ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
                     if ogun_yemekleri:
-                        st.markdown(f"**{ogun_turu}**")
+                        st.markdown(h(f"**{ogun_turu}**"))
                         for i, k in ogun_yemekleri:
                             c1, c2 = st.columns([10, 1])
-                            c1.markdown(f"• {k['Tarif']} — *{k['Kalori']} kcal*")
-                            if c2.button("Sil", key=f"sil_{i}", help="Bu öğünü günlükten çıkar"):
+                            c1.markdown(h(f"• {k['Tarif']} — *{k['Kalori']} kcal*"))
+                            if c2.button(t("Sil"), key=f"sil_{i}", help="Bu öğünü günlükten çıkar"):
                                 st.session_state.gunluk_kayitlar.pop(i)
                                 verileri_kaydet(aktif_user)
                                 st.rerun()
@@ -830,76 +893,76 @@ else:
 
             # BUGÜNKÜ EGZERSİZİN
             with st.container(key="novakart5"):
-                st.markdown("<h2 style='font-size: 2rem;'>Bugünkü Egzersizin</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='font-size: 2rem;'>Bugünkü Egzersizin</h2>"), unsafe_allow_html=True)
                 bugunku_antrenmanlar = curr_aktivite.get("antrenmanlar", [])
                 if bugunku_antrenmanlar:
                     for a in bugunku_antrenmanlar:
                         hareketler = a.get("hareketler", [])
                         toplam_set = sum(int(h.get("sets_done", 0) or 0) for h in hareketler)
-                        st.markdown(f"**{a.get('gun', 'Antrenman')}** - {toplam_set} set")
+                        st.markdown(h(f"**{a.get('gun', 'Antrenman')}** - {toplam_set} set"))
                         for h in hareketler:
                             tekrar = f" ({h['reps']})" if h.get("reps") else ""
                             st.caption(f"{h.get('name', h.get('id', ''))} - {h.get('sets_done', 0)} set{tekrar}")
                 else:
-                    st.caption("Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.")
+                    st.caption(t("Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin."))
 
                 ek_kalori = st.number_input(
-                    "Başka bir egzersiz yaptıysan yaktığın tahmini kalori",
+                    t("Başka bir egzersiz yaptıysan yaktığın tahmini kalori"),
                     min_value=0, max_value=2000, value=int(curr_aktivite.get("egzersiz_kalori", 0)), step=25,
                     help="Koştun, yüzdün ya da bisiklete bindiysen buraya yazabilirsin. Üzerine eklemez, bu sayıyı yazar.")
-                if st.button("Egzersiz kalorisini kaydet", use_container_width=True):
+                if st.button(t("Egzersiz kalorisini kaydet"), use_container_width=True):
                     curr_aktivite["egzersiz_kalori"] = int(ek_kalori)
                     verileri_kaydet(aktif_user)
                     st.rerun()
 
 
             with st.container(key="novakart6"):
-                st.markdown("<h2 style='text-align:center; font-size: 2rem; margin-bottom: 25px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='text-align:center; font-size: 2rem; margin-bottom: 25px;'>Günlük Aktivite ve Su Halkaları</h2>"), unsafe_allow_html=True)
                 adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
                 su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
 
                 hc1, hc2 = st.columns(2)
                 with hc1:
-                    st.markdown(f"""
+                    st.markdown(h(f"""
                         <div class="ring-container" style="background: conic-gradient(#ff3b30 {adim_yuzde}%, {tema['ring_track']} 0deg);">
                             <div class="ring-inner">
                                 <div class="ring-val" style="color:#ff3b30 !important;">{curr_aktivite['adim']}</div>
                                 <div class="ring-lbl">ADIM</div>
                             </div>
                         </div><br>
-                    """, unsafe_allow_html=True)
-                    yeni_adim = st.number_input("Bugünkü toplam adımın", min_value=0, max_value=100000,
+                    """), unsafe_allow_html=True)
+                    yeni_adim = st.number_input(t("Bugünkü toplam adımın"), min_value=0, max_value=100000,
                                                 value=int(curr_aktivite.get("adim", 0)), step=500,
                                                 help="Telefonundaki sağlık uygulamasında yazan günlük toplamı gir. Üzerine eklemez, bu sayıyı yazar.")
-                    if st.button("Adımı Kaydet", use_container_width=True):
+                    if st.button(t("Adımı Kaydet"), use_container_width=True):
                         curr_aktivite["adim"] = int(yeni_adim)
                         verileri_kaydet(aktif_user)
                         st.rerun()
                 with hc2:
-                    st.markdown(f"""
+                    st.markdown(h(f"""
                         <div class="ring-container" style="background: conic-gradient(#007aff {su_yuzde}%, {tema['ring_track']} 0deg);">
                             <div class="ring-inner">
                                 <div class="ring-val" style="color:#007aff !important;">{curr_aktivite['su']:.2f}</div>
                                 <div class="ring-lbl">LİTRE</div>
                             </div>
                         </div><br>
-                    """, unsafe_allow_html=True)
-                    su_secim = st.number_input("Eklenecek su (litre)", min_value=0.0, max_value=3.0,
+                    """), unsafe_allow_html=True)
+                    su_secim = st.number_input(t("Eklenecek su (litre)"), min_value=0.0, max_value=3.0,
                                                value=0.25, step=0.25,
                                                help="İçtikçe ekle. Bir bardak yaklaşık 0,25 litredir.")
                     sc1, sc2 = st.columns([3, 1])
-                    if sc1.button("Suyu Ekle", use_container_width=True):
+                    if sc1.button(t("Suyu Ekle"), use_container_width=True):
                         curr_aktivite["su"] = round(curr_aktivite.get("su", 0.0) + su_secim, 2)
                         verileri_kaydet(aktif_user)
                         st.rerun()
-                    if sc2.button("Sıfırla", use_container_width=True, help="Bugünkü su sayacını sıfırla"):
+                    if sc2.button(t("Sıfırla"), use_container_width=True, help="Bugünkü su sayacını sıfırla"):
                         curr_aktivite["su"] = 0.0
                         verileri_kaydet(aktif_user)
                         st.rerun()
 
             # HESAP VE VERİLERİN
             with st.container(key="novakart7"):
-                st.markdown("<h2 style='font-size: 2rem;'>Hesap ve Verilerin</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='font-size: 2rem;'>Hesap ve Verilerin</h2>"), unsafe_allow_html=True)
                 hesap_bolumu(supabase, aktif_user, st.session_state.gunluk_kayitlar,
                              st.session_state.aktivite_loglari, p,
                              sifre_dogrula=sifre_dogrula,
@@ -907,21 +970,21 @@ else:
                              kullanici_eposta=kullanici_epostasi(aktif_user),
                              kaydet=lambda: verileri_kaydet(aktif_user))
                 st.divider()
-                st.markdown("#### Oturum")
-                st.caption("Çıkış yaparsan bu tarayıcıdaki kayıtlı oturum da silinir.")
+                st.markdown(h("#### Oturum"))
+                st.caption(t("Çıkış yaparsan bu tarayıcıdaki kayıtlı oturum da silinir."))
                 cikis_dugmesi(supabase, aktif_user)
 
 
         with tab_gelisim:
             with st.container(key="novakart8"):
-                st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>Gelişimin</h2>", unsafe_allow_html=True)
+                st.markdown(h("<h2 style='font-size: 2rem; margin-bottom: 20px;'>Gelişimin</h2>"), unsafe_allow_html=True)
                 gelisim_sayfasi(st.session_state.gunluk_kayitlar, st.session_state.aktivite_loglari,
                                 p, hedef_kalori_alim, bmr, tema)
 
 
         with tab_ai_ogun:
             with st.container(key="novakart9"):
-                secilen_ogun_ai = st.selectbox("Hangi Öğün İçin Tarama Yapıyorsun?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="ai_ogun_sec")
+                secilen_ogun_ai = st.selectbox(t("Hangi Öğün İçin Tarama Yapıyorsun?"), ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="ai_ogun_sec")
                 totals = meal_scan_page()
                 if totals:
                     for item in totals["items"]:
