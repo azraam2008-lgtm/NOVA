@@ -30,6 +30,7 @@ from nutrition_check import kcal as kcal_hesapla
 from nutrition_check import verify
 
 from diller import t, h
+import tarif as tarif_modulu
 
 _TR = str.maketrans("çğıöşüÇĞİÖŞÜâîû", "cgiosuCGIOSUaiu")
 
@@ -539,7 +540,7 @@ def _sekme_kendi(db, kullanici, tarih, ogun):
 # -------------------------------------------------------------------- Giriş
 def yemek_arama_sayfasi(df_yemek, db, kullanici, tarih, ogun, gunluk_kayitlar):
     """Yemek bulma ekranını çizer. Eklenecek kayıtların listesini ya da None döner."""
-    sekmeler = st.tabs(["Ara", "Barkod", "Favoriler", "Kendi yemeğim"])
+    sekmeler = st.tabs([t("Ara"), t("Barkod"), t("Tarif"), t("Favoriler"), t("Kendi yemeğim")])
 
     with sekmeler[0]:
         kayit = _sekme_ara(df_yemek, db, kullanici, tarih, ogun)
@@ -552,11 +553,22 @@ def yemek_arama_sayfasi(df_yemek, db, kullanici, tarih, ogun, gunluk_kayitlar):
             return [kayit]
 
     with sekmeler[2]:
-        kayitlar = _sekme_favoriler(db, kullanici, tarih, ogun, gunluk_kayitlar)
+        kayitlar = tarif_modulu.sekme_tarif(
+            df_yemek, db, kullanici, tarih, ogun,
+            ara_fn=_yerel_ara, liste_ara_fn=_liste_ara,
+            kullanici_yemekleri_fn=_kullanici_yemekleri,
+            yemek_kaydet_fn=_yemek_kaydet, yemek_sil_fn=_yemek_sil,
+            yemek_yap_fn=_yemek, kayit_yap_fn=_kayit_yap, kcal_fn=kcal_hesapla,
+            off_ara_fn=bk.off_ara, offtan_fn=_offtan, onbellege_yaz_fn=bk.onbellege_yaz)
         if kayitlar:
             return kayitlar
 
     with sekmeler[3]:
+        kayitlar = _sekme_favoriler(db, kullanici, tarih, ogun, gunluk_kayitlar)
+        if kayitlar:
+            return kayitlar
+
+    with sekmeler[4]:
         kayitlar = _sekme_kendi(db, kullanici, tarih, ogun)
         if kayitlar:
             return kayitlar
