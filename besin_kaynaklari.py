@@ -22,6 +22,19 @@ ARAMA_URL = "https://search.openfoodfacts.org/search"
 ESKI_ARAMA_URL = "https://world.openfoodfacts.org/cgi/search.pl"  # yeni arama servisi cevap vermezse
 URUN_URL = "https://world.openfoodfacts.org/api/v2/product/{kod}.json"
 ALANLAR = "code,product_name,product_name_tr,brands,nutriments,serving_quantity,countries_tags"
+
+# Open Food Facts mikro besinleri de veriyor; hepsi 100 gram basina.
+# Nova bu degerleri uydurmaz, yalnizca burada gercekten gelenleri kullanir.
+MIKRO_ESLEME = {
+    "Demir (mg)": ("iron_100g", 1000.0),            # OFF gram verir, mg'ye cevrilir
+    "Kalsiyum (mg)": ("calcium_100g", 1000.0),
+    "Magnezyum (mg)": ("magnesium_100g", 1000.0),
+    "Çinko (mg)": ("zinc_100g", 1000.0),
+    "Potasyum (mg)": ("potassium_100g", 1000.0),
+    "C vitamini (mg)": ("vitamin-c_100g", 1000.0),
+    "D vitamini (µg)": ("vitamin-d_100g", 1000000.0),
+    "B12 vitamini (µg)": ("vitamin-b12_100g", 1000000.0),
+}
 ZAMAN_ASIMI = 10  # saniye
 
 
@@ -92,7 +105,28 @@ def urun_satiri(p):
         "tuz": round(tuz, 2) if tuz is not None else None, "doymus_yag": _sayi(n.get("saturated-fat_100g")),
         "porsiyon": int(porsiyon) if porsiyon and 5 <= porsiyon <= 2000 else None,
         "turkiye": "turkey" in ulkeler or "turkiye" in ulkeler,
+        "mikro": _mikro_cikar(n),
     }
+
+
+def _mikro_cikar(n):
+    """Open Food Facts kayitlarindan mikro besinleri alir.
+
+    OFF bu degerleri gram cinsinden tutuyor; tabloda mg ve mikrogram
+    gosterdigimiz icin cevriliyor. Olmayan deger None kalir, sifir yazilmaz:
+    "veri yok" ile "sifir" ayni sey degil.
+    """
+    cikti = {}
+    for ad, (anahtar, carpan) in MIKRO_ESLEME.items():
+        ham = _sayi(n.get(anahtar))
+        if ham is None:
+            continue
+        deger = ham * carpan
+        # Acikca sacma degerleri ele: 100 gramda 100 gram demir olamaz
+        if deger < 0 or deger > 100000:
+            continue
+        cikti[ad] = round(deger, 2)
+    return cikti
 
 
 # ------------------------------------------------------------------ Open Food Facts
