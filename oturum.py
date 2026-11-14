@@ -56,6 +56,28 @@ def oturum_tazele():
     cerezler = cm.cookies or {}
     st.session_state["_cerez_yoneticisi"] = cm
     st.session_state["_cerezler"] = cerezler
+
+    # Bekleyen çerez işleri burada yapılır. Bunun sebebi önemli:
+    # giriş anında st.rerun() çağrılıyor ve rerun betiği hemen kesiyor;
+    # o çizimde yazılan çerez bileşeni tarayıcıya hiç ulaşmıyor. Bu yüzden
+    # yazma ve silme bir sonraki çizime bırakılıyor.
+    bekleyen = st.session_state.pop("_cerez_isi", None)
+    if bekleyen:
+        islem, deger = bekleyen
+        if islem == "yaz":
+            try:
+                cm.set(CEREZ_ADI, deger,
+                       expires_at=datetime.now() + timedelta(days=GUN),
+                       key="nova_cerez_yaz")
+                cerezler[CEREZ_ADI] = deger
+            except Exception:  # noqa: BLE001
+                pass
+        elif islem == "sil":
+            try:
+                cm.delete(CEREZ_ADI, key="nova_cerez_sil")
+                cerezler.pop(CEREZ_ADI, None)
+            except Exception:  # noqa: BLE001
+                pass
     return cerezler
 
 
@@ -65,9 +87,13 @@ def _belirtec():
 
 # ----------------------------------------------------------------- Oturum aç
 def oturum_baslat(db, kullanici):
-    """Tarayıcıya çerez yazar, özetini veritabanına kaydeder."""
-    cm = _yonetici()
-    if cm is None or db is None:
+    """Oturumu veritabanına kaydeder, çerez yazımını sıraya koyar.
+
+    Çerez burada YAZILMAZ. Giriş akışı hemen st.rerun() çağırdığı için bu
+    çizimde yazılan bileşen tarayıcıya ulaşmaz. Belirteç sıraya konur ve
+    bir sonraki çizimde oturum_tazele() tarafından yazılır.
+    """
+    if db is None or not kullanilabilir_mi():
         return False
     belirtec = secrets.token_urlsafe(32)
     son = datetime.now(timezone.utc) + timedelta(days=GUN)
@@ -79,12 +105,7 @@ def oturum_baslat(db, kullanici):
         }).execute()
     except Exception:  # noqa: BLE001
         return False
-    try:
-        cm.set(CEREZ_ADI, belirtec, expires_at=datetime.now() + timedelta(days=GUN),
-               key="nova_cerez_yaz")
-    except Exception:  # noqa: BLE001
-        return False
-    st.session_state.setdefault("_cerezler", {})[CEREZ_ADI] = belirtec
+    st.session_state["_cerez_isi"] = ("yaz", belirtec)
     return True
 
 
@@ -140,11 +161,14 @@ def cerezden_giris(db):
 
 
 # ---------------------------------------------------------------- Oturum kapat
-def _cerezi_sil(cm):
-    try:
-        cm.delete(CEREZ_ADI, key="nova_cerez_sil")
-    except Exception:  # noqa: BLE001
-        pass
+def _cerezi_sil(cm=None):
+    """Çerez silmeyi sıraya koyar.
+
+    Yazmada olduğu gibi burada da bileşen hemen çizilmez: çıkış akışı
+    st.rerun() çağırıyor ve bu çizimdeki silme işlemi tarayıcıya ulaşmıyor.
+    """
+    st.session_state["_cerez_isi"] = ("sil", None)
+    st.session_state.pop("_cerezler", None)
 
 
 def oturum_bitir(db, kullanici=None):
@@ -178,6 +202,8 @@ def cikis_dugmesi(db, kullanici, anahtar="cikis"):
         except Exception:  # noqa: BLE001
             pass
         st.session_state.clear()
+        # session_state temizlendikten SONRA sıraya konur, yoksa silinirdi
+        st.session_state["_cerez_isi"] = ("sil", None)
         if google_ile_mi:
             try:
                 st.logout()
