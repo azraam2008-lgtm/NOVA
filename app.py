@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import json
+import os
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -56,17 +57,47 @@ TEMA_AYARLARI = {
 }
 
 # ----------------------------------------------------
-# KAPSAMLI YEMEK VERİTABANINI BULUTTAN ÇEKME
+# YEMEK VERİTABANINI YÜKLEME
+#
+# Dosya zaten depoda, uygulamanın yanında duruyor. Eskiden internetten
+# çekiliyordu; tek bir ağ aksaklığında boş tablo dönüyor ve bu boş tablo
+# önbelleğe alındığı için arama o oturum boyunca hiçbir şey bulamıyordu.
+# Artık önce yerel dosya okunuyor, internet yalnızca yedek.
 # ----------------------------------------------------
-@st.cache_data
+CSV_ADI = "cok_daha_kapsamli_yemek_veritabani.csv"
+CSV_URL = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{CSV_ADI}"
+
+
+def _bos_veritabani():
+    return pd.DataFrame({"Yemek Adı": [], "Kategori": [], "Porsiyon": [], "İçerikler": [],
+                         "Gramaj (g/ml)": [], "Kalori (kcal)": [], "Protein (g)": [],
+                         "Karbonhidrat (g)": [], "Yağ (g)": []})
+
+
+@st.cache_data(show_spinner=False)
+def _csv_oku(kaynak):
+    return pd.read_csv(kaynak)
+
+
 def yemek_veritabanini_yukle():
-    try:
-        df = pd.read_csv("https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/cok_daha_kapsamli_yemek_veritabani.csv")
-        return df
-    except:
-        return pd.DataFrame({"Yemek Adı": ["Önce CSV'yi GitHub'a Yükleyin"], "Kalori (kcal)": [0], "Protein (g)": [0], "Karbonhidrat (g)": [0], "Yağ (g)": [0]})
+    yerel = os.path.join(os.path.dirname(os.path.abspath(__file__)), CSV_ADI)
+    for kaynak in (yerel, CSV_URL):
+        try:
+            df = _csv_oku(kaynak)
+            if not df.empty and "Yemek Adı" in df.columns:
+                return df
+        except Exception:  # noqa: BLE001
+            continue
+    # Hiçbiri olmadıysa boş döner. Başarısızlık ÖNBELLEĞE ALINMAZ, böylece
+    # sonraki çizimde yeniden denenir.
+    return _bos_veritabani()
+
 
 df_yemek = yemek_veritabanini_yukle()
+if df_yemek.empty:
+    st.warning("Yemek veritabanı yüklenemedi. Sayfayı yenilemeyi dene; "
+               "sorun sürerse cok_daha_kapsamli_yemek_veritabani.csv dosyasının "
+               "depoda olduğundan emin ol.")
 
 # ----------------------------------------------------
 # VERİTABANI VE HESAPLAMA FONKSİYONLARI
@@ -898,11 +929,11 @@ else:
                 if bugunku_antrenmanlar:
                     for a in bugunku_antrenmanlar:
                         hareketler = a.get("hareketler", [])
-                        toplam_set = sum(int(h.get("sets_done", 0) or 0) for h in hareketler)
+                        toplam_set = sum(int(hr.get("sets_done", 0) or 0) for hr in hareketler)
                         st.markdown(h(f"**{a.get('gun', 'Antrenman')}** - {toplam_set} set"))
-                        for h in hareketler:
-                            tekrar = f" ({h['reps']})" if h.get("reps") else ""
-                            st.caption(f"{h.get('name', h.get('id', ''))} - {h.get('sets_done', 0)} set{tekrar}")
+                        for hr in hareketler:
+                            tekrar = f" ({hr['reps']})" if hr.get("reps") else ""
+                            st.caption(f"{hr.get('name', hr.get('id', ''))} - {hr.get('sets_done', 0)} set{tekrar}")
                 else:
                     st.caption(t("Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin."))
 
@@ -1002,7 +1033,7 @@ else:
             with st.container(key="novakart10"):
                 log = coach_page()
                 if log:
-                    toplam_set = sum(int(h.get("sets_done", 0)) for h in log["exercises"])
+                    toplam_set = sum(int(hr.get("sets_done", 0)) for hr in log["exercises"])
                     tahmini_kcal = int(min(400, max(60, toplam_set * 8)))  # kaba tahmin: set başına ~8 kcal
                     curr_aktivite["egzersiz_kalori"] = curr_aktivite.get("egzersiz_kalori", 0) + tahmini_kcal
                     curr_aktivite.setdefault("antrenmanlar", []).append({"gun": log["day"], "hareketler": log["exercises"]})
