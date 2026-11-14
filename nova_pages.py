@@ -204,40 +204,95 @@ def coach_page():
 
 
 # ------------------------------------------------------------ Beslenme / spor asistanı
-def ask_page():
-    """Kısa soru-cevap. Son birkaç mesajı bağlam olarak gönderir."""
-    st.subheader("Beslenme ve spor asistanı")
-    st.caption("Genel bilgi verir, tıbbi tavsiye değildir.")
-    quota_slot = st.empty()
-    history = st.session_state.setdefault("ask_history", [])
+HAZIR_SORULAR = [
+    "Antrenmandan sonra ne yemeliyim?",
+    "Günde ne kadar protein almalıyım?",
+    "Kahvaltıda ne yesem uzun süre tok tutar?",
+    "Kilo verme hızım yavaşladı, neden olabilir?",
+    "Evde ekipmansız hangi hareketleri yapabilirim?",
+    "Akşam tatlı isteğime ne iyi gelir?",
+    "Dışarıda yemek yerken nelere dikkat etmeliyim?",
+    "Su içmeyi nasıl artırabilirim?",
+]
 
+
+def _profil_baglami(profil):
+    """Asistan kullanıcıyı tanısın diye kısa bir özet."""
+    if not profil:
+        return ""
+    parcalar = []
+    if profil.get("amaclar"):
+        parcalar.append("Amacı: " + ", ".join(profil["amaclar"]))
+    if profil.get("aktivite"):
+        parcalar.append("Hareket düzeyi: " + profil["aktivite"])
+    if profil.get("cinsiyet"):
+        parcalar.append("Cinsiyet: " + profil["cinsiyet"])
+    if profil.get("dogum_yili"):
+        import datetime as _dt
+        parcalar.append(f"Yaş: {_dt.date.today().year - int(profil['dogum_yili'])}")
+    if not parcalar:
+        return ""
+    return ("Kullanıcı hakkında bilinenler (sorusuyla ilgiliyse kullan, değilse görmezden gel):\n"
+            + "\n".join(parcalar))
+
+
+def _cevap_al(soru, gecmis, profil):
+    onceki = "\n".join(f"Kullanıcı: {s}\nNova: {c}" for s, c in gecmis[-3:])
+    metin = (f"Önceki konuşma:\n{onceki}\n\n" if onceki else "") + f"Yeni soru: {soru}"
     try:
-        for question, answer in history[-10:]:
+        with st.spinner("Yazıyor..."):
+            return run_mode("ask", metin, context=_profil_baglami(profil))["text"]
+    except QuotaError as e:
+        show_limit_reached(str(e))
+    except Exception as e:  # noqa: BLE001
+        st.error(friendly_error(e))
+    return None
+
+
+def ask_page(profil=None):
+    """Sohbet biçiminde beslenme ve spor asistanı."""
+    st.subheader("Asistan")
+    st.caption("Beslenme ve antrenman soruların için. Genel bilgi verir, tıbbi tavsiye değildir.")
+
+    gecmis = st.session_state.setdefault("ask_history", [])
+    quota_slot = st.empty()
+
+    if gecmis:
+        for soru, cevap in gecmis[-12:]:
             with st.chat_message("user"):
-                st.write(question)
+                st.write(soru)
             with st.chat_message("assistant"):
-                st.write(answer)
+                st.write(cevap)
+    else:
+        with st.chat_message("assistant"):
+            st.write("Merhaba. Beslenme ve antrenmanla ilgili aklına takılanı sorabilirsin. "
+                     "Aşağıdaki hazır sorulardan birine dokunarak da başlayabilirsin.")
 
-        with st.form("ask_form", clear_on_submit=True):
-            question = st.text_area("Sorun", max_chars=500, placeholder="Örn: Antrenmandan sonra ne yemeliyim?")
-            sent = st.form_submit_button("Sor", type="primary")
-
-        if sent and question.strip():
-            recent = "\n".join(f"Kullanıcı: {q}\nNova: {a}" for q, a in history[-3:])
-            text = (f"Önceki konuşma:\n{recent}\n\n" if recent else "") + f"Yeni soru: {question.strip()}"
-            try:
-                with st.spinner("Cevap hazırlanıyor..."):
-                    answer = run_mode("ask", text)["text"]
-                history.append((question.strip(), answer or "Cevap üretilemedi, tekrar dene."))
+    bekleyen = st.session_state.pop("ask_bekleyen", None)
+    if not bekleyen:
+        gosterilecek = HAZIR_SORULAR if not gecmis else HAZIR_SORULAR[:4]
+        if not gecmis:
+            st.caption("Hazır sorular")
+        sutunlar = st.columns(2)
+        for i, soru in enumerate(gosterilecek):
+            if sutunlar[i % 2].button(soru, key=f"hazir_{i}", use_container_width=True):
+                st.session_state["ask_bekleyen"] = soru
                 st.rerun()
-            except QuotaError as e:
-                show_limit_reached(str(e))
-            except Exception as e:  # noqa: BLE001
-                st.error(friendly_error(e))
 
-        if history and st.button("Sohbeti temizle"):
-            history.clear()
+    yazilan = st.chat_input("Bir şey sor...", key="ask_girdi")
+    soru = bekleyen or (yazilan.strip() if yazilan else None)
+
+    if soru:
+        with st.chat_message("user"):
+            st.write(soru)
+        cevap = _cevap_al(soru, gecmis, profil)
+        if cevap:
+            gecmis.append((soru, cevap))
             st.rerun()
-    finally:
-        with quota_slot.container():
-            quota_caption("ask")
+
+    if gecmis and st.button("Sohbeti temizle", key="ask_temizle"):
+        gecmis.clear()
+        st.rerun()
+
+    with quota_slot.container():
+        quota_caption("ask")
