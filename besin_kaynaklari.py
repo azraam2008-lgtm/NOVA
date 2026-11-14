@@ -159,21 +159,73 @@ def barkod_gecerli_mi(kod):
     return True
 
 
+def _on_islemeler(goruntu_bytes):
+    """Telefon fotoğrafı için birkaç farklı hazırlık; sırayla denenir."""
+    from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+
+    img = ImageOps.exif_transpose(Image.open(io.BytesIO(goruntu_bytes)))
+    gri = img.convert("L")
+    if max(gri.size) > 2000:
+        gri.thumbnail((2000, 2000), Image.LANCZOS)
+    # Uzaktan çekilmişse barkod çizgileri çok ince kalır; büyütmek okunurluğu artırır
+    if min(gri.size) < 500:
+        kat = max(2, int(700 / max(min(gri.size), 1)))
+        gri = gri.resize((gri.width * kat, gri.height * kat), Image.LANCZOS)
+
+    yield gri
+    yield gri.filter(ImageFilter.UnsharpMask(radius=3, percent=200, threshold=2))  # bulanık kare
+    yield ImageOps.autocontrast(gri, cutoff=2)                                     # soluk kare
+    yield ImageEnhance.Contrast(gri).enhance(2.2)                                  # karanlık kare
+
+
 def barkod_oku(goruntu_bytes):
-    """Fotoğraftaki barkod numaralarını döndürür. OpenCV kurulu değilse ImportError fırlatır."""
+    """Fotoğraftaki barkod numaralarını döndürür.
+
+    zxing-cpp kullanılır (requirements.txt: zxing-cpp). OpenCV'nin barkod okuyucusu
+    telefon fotoğraflarında güvenilir sonuç vermediği için yalnızca yedek olarak denenir.
+    """
+    try:
+        import zxingcpp
+    except ImportError:
+        return _barkod_oku_opencv(goruntu_bytes)
+
+    for hazirlanmis in _on_islemeler(goruntu_bytes):
+        # Telefon dik tutulduğunda barkod yan ya da ters durabilir
+        for aci in (0, 90, 270, 180):
+            kare = hazirlanmis if aci == 0 else hazirlanmis.rotate(aci, expand=True)
+            try:
+                sonuclar = zxingcpp.read_barcodes(kare)
+            except Exception:  # noqa: BLE001
+                continue
+            bulunan = []
+            for s in sonuclar or ():
+                kod = (getattr(s, "text", "") or "").strip()
+                if barkod_gecerli_mi(kod) and kod not in bulunan:
+                    bulunan.append(kod)
+            if bulunan:
+                return bulunan
+    return []
+
+
+def _barkod_oku_opencv(goruntu_bytes):
+    """Yedek okuyucu. zxing-cpp kurulu değilse kullanılır; başarı oranı düşüktür."""
     import cv2
     import numpy as np
     from PIL import Image, ImageOps
 
+    if not hasattr(cv2, "barcode"):
+        raise ImportError("Barkod okuyucu yok. requirements.txt dosyasına zxing-cpp ekle.")
     img = ImageOps.exif_transpose(Image.open(io.BytesIO(goruntu_bytes))).convert("RGB")
     img.thumbnail((1600, 1600))
     bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     okuyucu = cv2.barcode.BarcodeDetector()
     bulunan = []
-    # Telefonla dik çekilen fotoğraflarda barkod yan durabilir; döndürerek de denenir
     for aci in (None, cv2.ROTATE_90_CLOCKWISE):
         resim = bgr if aci is None else cv2.rotate(bgr, aci)
-        sonuc = okuyucu.detectAndDecodeWithType(resim) if hasattr(okuyucu, "detectAndDecodeWithType") else okuyucu.detectAndDecode(resim)
+        try:
+            sonuc = okuyucu.detectAndDecodeWithType(resim)
+        except Exception:  # noqa: BLE001
+            continue
         bilgiler = sonuc[1] if isinstance(sonuc, tuple) and len(sonuc) > 1 else ()
         if isinstance(bilgiler, str):
             bilgiler = (bilgiler,)
