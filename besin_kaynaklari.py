@@ -19,6 +19,7 @@ import streamlit as st
 
 KULLANICI_AJANI = "Nova/1.0 (Streamlit diyet ve aktivite uygulamasi)"
 ARAMA_URL = "https://search.openfoodfacts.org/search"
+ESKI_ARAMA_URL = "https://world.openfoodfacts.org/cgi/search.pl"  # yeni arama servisi cevap vermezse
 URUN_URL = "https://world.openfoodfacts.org/api/v2/product/{kod}.json"
 ALANLAR = "code,product_name,product_name_tr,brands,nutriments,serving_quantity,countries_tags"
 ZAMAN_ASIMI = 10  # saniye
@@ -95,11 +96,25 @@ def urun_satiri(p):
 
 
 # ------------------------------------------------------------------ Open Food Facts
+def _ham_ara(sorgu):
+    """Önce yeni arama servisi, cevap vermezse eski (cgi) servis denenir."""
+    try:
+        veri = _istek(ARAMA_URL, {"q": sorgu, "page_size": 40, "langs": "tr", "fields": ALANLAR}) or {}
+        if veri.get("hits"):
+            return veri["hits"]
+    except KaynakHatasi:
+        pass  # eski servise düşülür
+    veri = _istek(ESKI_ARAMA_URL, {
+        "search_terms": sorgu, "search_simple": 1, "action": "process",
+        "json": 1, "page_size": 40, "fields": ALANLAR,
+    }) or {}
+    return veri.get("products", [])
+
+
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
 def _off_ara_onbellekli(sorgu):
-    veri = _istek(ARAMA_URL, {"q": sorgu, "page_size": 40, "langs": "tr", "fields": ALANLAR}) or {}
-    urunler = [u for u in (urun_satiri(p) for p in veri.get("hits", [])) if u]
-    # Türkiye'de satılan ürünler önce gelsin
+    urunler = [u for u in (urun_satiri(p) for p in _ham_ara(sorgu)) if u]
+    # Türkiye'de satılan ürünler önce gelsin (diğer ülkelerin ürünleri de listede kalır)
     urunler.sort(key=lambda u: not u["turkiye"])
     return urunler[:25]
 
@@ -117,11 +132,17 @@ def _off_barkod_onbellekli(kod):
     veri = _istek(URUN_URL.format(kod=kod), {"fields": ALANLAR})
     if not veri or veri.get("status") != 1:
         return None
-    return urun_satiri(veri.get("product") or {})
+    urun = veri.get("product") or {}
+    satir = urun_satiri(urun)
+    if satir:
+        return satir
+    # Ürün kayıtlı ama besin değerleri eksik: en azından adını ve markasını döndür (etiketten eklerken hazır gelsin)
+    ad = (urun.get("product_name_tr") or urun.get("product_name") or "").strip()
+    return {"eksik": True, "kod": kod, "ad": ad[:80], "marka": _marka(urun.get("brands"))} if ad else None
 
 
 def off_barkod(kod):
-    """Barkodla ürün. Bulunamazsa ya da besin değerleri eksikse None döner."""
+    """Barkodla ürün. Bulunamazsa None, besin değerleri eksikse {"eksik": True, "ad", "marka"} döner."""
     return _off_barkod_onbellekli(kod)
 
 
