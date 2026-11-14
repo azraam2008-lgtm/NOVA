@@ -34,8 +34,11 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"
 # Seçili model yoğunluk (503) nedeniyle cevap veremezse sırayla denenecek yedekler
 YEDEK_MODELLER = ["gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
 MAX_SIDE = 1024                                   # fotoğraf bu boyuta küçültülür
-DAILY_LIMITS = {"meal": 10, "coach": 3, "ask": 20, "label": 10, "voice": 15}  # kullanıcı başına günlük hak
-GLOBAL_DAILY_LIMIT = 800                          # tüm kullanıcılar, tüm modlar (API çağrısı)
+# Kullanıcı başına günlük hak. Sayaç artık Supabase'de kalıcı tutulduğu için
+# sayfa yenileyerek sıfırlanamıyor; bu yüzden haklar yükseltildi.
+# Secrets'tan LIMIT_MEAL gibi değerlerle koda dokunmadan değiştirilebilir.
+DAILY_LIMITS = {"meal": 30, "coach": 10, "ask": 60, "label": 30, "voice": 40}
+GLOBAL_DAILY_LIMIT = 2500                         # tüm kullanıcılar, tüm modlar (API çağrısı)
 
 
 def cfg(name, default=None):
