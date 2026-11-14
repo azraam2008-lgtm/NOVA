@@ -34,6 +34,22 @@
     "mistakes": ["Belin çökmesi veya kalçanın havaya kalkması", "Dirseklerin tamamen yana açılması", "Yarım hareket"]
   },
   {
+    "id": "incline_pushup",
+    "name": "Yüksek zeminde şınav",
+    "muscle": "göğüs, omuz, arka kol",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-15",
+    "video": "",
+    "tips": [
+      "Ellerini masa, sehpa ya da duvara koy; zemin ne kadar yüksekse hareket o kadar kolaylaşır.",
+      "Vücut yine baştan topuğa düz bir çizgi olsun.",
+      "Normal şınava geçmeden önce burada 15 tekrar yapabilmeyi hedefle."
+    ],
+    "mistakes": ["Kalçanın geride kalması", "Boynun öne düşmesi"]
+  },
+  {
     "id": "plank",
     "name": "Plank",
     "muscle": "karın, omuz, core",
@@ -51,38 +67,37 @@
     "mistakes": ["Kalçanın aşağı sarkması", "Kalçanın yukarı kalkması", "Boynun düşmesi"]
   },
   {
-    "id": "lunge",
-    "name": "Hamle (Lunge)",
-    "muscle": "bacak, kalça",
+    "id": "side_plank",
+    "name": "Yan plank",
+    "muscle": "yan karın, core",
     "equipment": [],
-    "level": "başlangıç",
+    "level": "orta",
     "sets": 3,
-    "reps": "8-12 (her bacak)",
+    "reps": "15-30 sn (her taraf)",
     "video": "",
     "tips": [
-      "Adım yeterince uzun olsun; öndeki diz ayak bileğinin üzerinde kalsın.",
-      "Gövde dik, karın sıkı.",
-      "Arka diz yere yaklaşana kadar in, öndeki topuktan iterek kalk.",
-      "Dengen zayıfsa duvara ya da sandalyeye hafifçe tutun."
+      "Dirsek omzun tam altında, vücut tek bir düz çizgi.",
+      "Kalçanı yukarı it, aşağı sarkmasın.",
+      "Zorlanırsan alttaki dizini yere koy."
     ],
-    "mistakes": ["Ön dizin ayak parmaklarının çok önüne geçmesi", "Gövdenin öne eğilmesi", "Dizin içe çökmesi"]
+    "mistakes": ["Kalçanın düşmesi", "Gövdenin öne ya da arkaya dönmesi"]
   },
   {
-    "id": "glute_bridge",
-    "name": "Kalça köprüsü",
-    "muscle": "kalça, arka bacak",
+    "id": "dead_bug",
+    "name": "Ölü böcek (Dead bug)",
+    "muscle": "karın, core",
     "equipment": [],
     "level": "başlangıç",
     "sets": 3,
-    "reps": "12-15",
+    "reps": "8-12 (her taraf)",
     "video": "",
     "tips": [
-      "Sırtüstü yat, dizler bükük, ayaklar kalça genişliğinde.",
-      "Topuklarından iterek kalçanı kaldır, üstte kalçanı 1-2 saniye sık.",
-      "Bel aşırı kavislenmesin; hareketi kalçadan yap.",
-      "Yavaşça in."
+      "Sırtüstü yat, kollar tavana, dizler 90 derece bükülü.",
+      "Karşı kol ve bacağı aynı anda yavaşça uzat.",
+      "Belini yere yapışık tut; boşluk oluşuyorsa hareketi kısalt.",
+      "Nefes vererek uzat, alarak geri getir."
     ],
-    "mistakes": ["Belden kalkmak", "Dizlerin içe ya da dışa kaçması"]
+    "mistakes": ["Belin yerden kalkması", "Hareketi hızlı yapmak"]
   },
   {
     "id": "bird_dog",
@@ -102,6 +117,123 @@
     "mistakes": ["Kalçanın yana dönmesi", "Bacağı çok yükseğe kaldırıp belde kavis yapmak"]
   },
   {
+    "id": "superman",
+    "name": "Superman",
+    "muscle": "bel, sırt, kalça",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-15",
+    "video": "",
+    "tips": [
+      "Yüzüstü yat, kollar öne uzanmış.",
+      "Kol ve bacakları aynı anda birkaç santim kaldır, üstte 2 saniye bekle.",
+      "Boynunu nötr tut, başını geriye atma.",
+      "Yükseklik değil, kasılma önemli."
+    ],
+    "mistakes": ["Başı geriye atmak", "Çok yükseğe kaldırıp beli zorlamak"]
+  },
+  {
+    "id": "glute_bridge",
+    "name": "Kalça köprüsü",
+    "muscle": "kalça, arka bacak",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "12-15",
+    "video": "",
+    "tips": [
+      "Sırtüstü yat, dizler bükük, ayaklar kalça genişliğinde.",
+      "Topuklarından iterek kalçanı kaldır, üstte kalçanı 1-2 saniye sık.",
+      "Bel aşırı kavislenmesin; hareketi kalçadan yap.",
+      "Yavaşça in."
+    ],
+    "mistakes": ["Belden kalkmak", "Dizlerin içe ya da dışa kaçması"]
+  },
+  {
+    "id": "single_leg_bridge",
+    "name": "Tek bacak kalça köprüsü",
+    "muscle": "kalça, arka bacak",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "8-12 (her bacak)",
+    "video": "",
+    "tips": [
+      "Bir bacağını havaya uzat, diğerinin topuğundan it.",
+      "Kalçan yere paralel kalsın, yana yatmasın.",
+      "Normal kalça köprüsünde 15 tekrar yapabiliyorsan buna geç."
+    ],
+    "mistakes": ["Kalçanın bir tarafa düşmesi", "Belden itmek"]
+  },
+  {
+    "id": "lunge",
+    "name": "Hamle (Lunge)",
+    "muscle": "bacak, kalça",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "8-12 (her bacak)",
+    "video": "",
+    "tips": [
+      "Adım yeterince uzun olsun; öndeki diz ayak bileğinin üzerinde kalsın.",
+      "Gövde dik, karın sıkı.",
+      "Arka diz yere yaklaşana kadar in, öndeki topuktan iterek kalk.",
+      "Dengen zayıfsa duvara ya da sandalyeye hafifçe tutun."
+    ],
+    "mistakes": ["Ön dizin ayak parmaklarının çok önüne geçmesi", "Gövdenin öne eğilmesi", "Dizin içe çökmesi"]
+  },
+  {
+    "id": "reverse_lunge",
+    "name": "Geriye hamle",
+    "muscle": "bacak, kalça",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "8-12 (her bacak)",
+    "video": "",
+    "tips": [
+      "Öne değil geriye adım at; diz için daha rahat bir varyasyondur.",
+      "Gövdeni dik tut, öndeki topuktan iterek kalk.",
+      "Dizinde ağrı varsa normal hamle yerine bunu tercih et."
+    ],
+    "mistakes": ["Adımın kısa kalması", "Gövdenin öne yatması"]
+  },
+  {
+    "id": "step_up",
+    "name": "Basamak çıkma",
+    "muscle": "bacak, kalça",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-12 (her bacak)",
+    "video": "",
+    "tips": [
+      "Sağlam bir basamak ya da alçak sehpa kullan; yüksekliği diz hizasını geçmesin.",
+      "Tüm ayağını basamağa koy, üstteki topuktan iterek çık.",
+      "Yukarı iterken arkadaki ayakla yerden sekme.",
+      "Kontrollü in."
+    ],
+    "mistakes": ["Arka ayakla zıplayarak çıkmak", "Dizin içe çökmesi"]
+  },
+  {
+    "id": "wall_sit",
+    "name": "Duvar oturuşu",
+    "muscle": "ön bacak",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "20-45 sn",
+    "video": "",
+    "tips": [
+      "Sırtın duvara tam yapışık, dizler 90 dereceye yakın.",
+      "Ağırlık topuklarda olsun.",
+      "Nefesini tutma.",
+      "Dizde ağrı olursa açıyı azalt."
+    ],
+    "mistakes": ["Dizlerin ayak parmaklarını geçmesi", "Ellerle bacaklara yaslanmak"]
+  },
+  {
     "id": "calf_raise",
     "name": "Baldır kaldırma",
     "muscle": "baldır",
@@ -116,6 +248,191 @@
       "Yavaşça in, hareketi kontrollü yap."
     ],
     "mistakes": ["Sekerek yapmak", "Ayak bileğini içe ya da dışa kaçırmak"]
+  },
+  {
+    "id": "chair_dip",
+    "name": "Sandalyede dip",
+    "muscle": "arka kol, omuz",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "8-12",
+    "video": "",
+    "tips": [
+      "Sabit bir sandalye ya da kanepe kenarı kullan; kaymadığından emin ol.",
+      "Eller kalça hizasında, parmaklar öne baksın.",
+      "Dirsekler geriye bükülsün, yana açılmasın.",
+      "Omzunda sıkışma hissedersen daha az in."
+    ],
+    "mistakes": ["Çok derine inmek", "Omuzların kulaklara doğru yükselmesi"]
+  },
+  {
+    "id": "pike_pushup",
+    "name": "Pike şınav",
+    "muscle": "omuz, arka kol",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "6-10",
+    "video": "",
+    "tips": [
+      "Kalçanı yukarı kaldırıp ters V şekli al.",
+      "Başının tepesini ellerinin arasına doğru indir.",
+      "Dirsekler çok fazla yana açılmasın.",
+      "Omuz gücü geliştikçe ayaklarını yükselterek zorlaştır."
+    ],
+    "mistakes": ["Belin düzleşip hareketin normal şınava dönmesi", "Boynu zorlamak"]
+  },
+  {
+    "id": "mountain_climber",
+    "name": "Dağcı (Mountain climber)",
+    "muscle": "karın, omuz, kardiyo",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "30 sn",
+    "video": "",
+    "tips": [
+      "Şınav pozisyonunda başla, omuzlar ellerin üzerinde.",
+      "Dizlerini sırayla göğsüne çek.",
+      "Kalçan yukarı zıplamasın, gövde sabit kalsın.",
+      "Hız değil, düzgün form önemli."
+    ],
+    "mistakes": ["Kalçanın havaya kalkması", "Omuzların ellerin gerisine kayması"]
+  },
+  {
+    "id": "jumping_jack",
+    "name": "Jumping jack",
+    "muscle": "tüm vücut, kardiyo",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "30-45 sn",
+    "video": "",
+    "tips": [
+      "Isınma için de uygundur.",
+      "Dizlerini hafif bükülü tut, yere yumuşak in.",
+      "Alt komşun varsa ya da eklem ağrın varsa zıplamadan, adımlayarak yap."
+    ],
+    "mistakes": ["Düz bacakla sert inmek", "Omuzları tam açmamak"]
+  },
+  {
+    "id": "high_knees",
+    "name": "Yüksek diz koşusu",
+    "muscle": "bacak, kardiyo",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "30 sn",
+    "video": "",
+    "tips": [
+      "Dizleri kalça hizasına kadar kaldır.",
+      "Ayak ucunda kal, yere yumuşak bas.",
+      "Gövdeni dik tut, geriye yaslanma."
+    ],
+    "mistakes": ["Geriye yaslanmak", "Dizleri yeterince kaldırmamak"]
+  },
+  {
+    "id": "squat_jump",
+    "name": "Sıçrama squat",
+    "muscle": "bacak, kalça, kardiyo",
+    "equipment": [],
+    "level": "ileri",
+    "sets": 3,
+    "reps": "8-12",
+    "video": "",
+    "tips": [
+      "Normal squat'a in, patlayıcı şekilde yukarı sıçra.",
+      "Yere parmak ucundan yumuşak in, hemen squat'a geç.",
+      "Diz ya da bilek ağrın varsa bu hareketi atla.",
+      "Normal squat'ı rahat yapabiliyorsan geç."
+    ],
+    "mistakes": ["Sert, düz bacakla inmek", "Dizlerin inişte içe çökmesi"]
+  },
+  {
+    "id": "burpee",
+    "name": "Burpee",
+    "muscle": "tüm vücut, kardiyo",
+    "equipment": [],
+    "level": "ileri",
+    "sets": 3,
+    "reps": "6-10",
+    "video": "",
+    "tips": [
+      "Çömel, ellerini yere koy, ayakları geriye at, şınav pozisyonuna gel.",
+      "Ayakları geri çek ve yukarı sıçra.",
+      "Zorlanırsan sıçramayı ve şınavı çıkar, adımlayarak yap.",
+      "Yorulunca form bozulur; yavaşla."
+    ],
+    "mistakes": ["Belin çökmesi", "Hızlanıp kontrolü kaybetmek"]
+  },
+  {
+    "id": "russian_twist",
+    "name": "Rus twisti",
+    "muscle": "yan karın",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "12-16 (toplam)",
+    "video": "",
+    "tips": [
+      "Otur, dizleri bük, gövdeyi hafif geriye yatır.",
+      "Sırtını düz tut, yuvarlama.",
+      "Gövdeyi sağa sola döndür; hareket omuzdan değil belden gelsin.",
+      "Zorlaştırmak için ayaklarını yerden kaldır."
+    ],
+    "mistakes": ["Sırtı yuvarlamak", "Sadece kolları sallamak"]
+  },
+  {
+    "id": "leg_raise",
+    "name": "Yatarak bacak kaldırma",
+    "muscle": "alt karın",
+    "equipment": [],
+    "level": "orta",
+    "sets": 3,
+    "reps": "10-15",
+    "video": "",
+    "tips": [
+      "Sırtüstü yat, ellerini kalçanın altına koyabilirsin.",
+      "Bacakları düz tutarak kaldır, yavaşça indir.",
+      "Belin yerden kalkmasın; kalkıyorsa dizlerini hafif bük.",
+      "İnişte yere değdirmeden tekrar kaldır."
+    ],
+    "mistakes": ["Belin yerden kalkması", "Bacakları düşürerek indirmek"]
+  },
+  {
+    "id": "glute_kickback",
+    "name": "Dört ayak kalça itme",
+    "muscle": "kalça",
+    "equipment": [],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "12-15 (her bacak)",
+    "video": "",
+    "tips": [
+      "Dört ayak pozisyonunda, bir bacağı dizi bükülü halde yukarı it.",
+      "Hareketi kalçadan yap, belden değil.",
+      "Üstte kalçanı sık, 1 saniye bekle.",
+      "Gövden sabit kalsın, yana dönme."
+    ],
+    "mistakes": ["Belde kavis yaparak yükseltmek", "Gövdenin yana dönmesi"]
+  },
+  {
+    "id": "db_goblet_squat",
+    "name": "Goblet squat",
+    "muscle": "bacak, kalça, core",
+    "equipment": ["dambıl"],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-12",
+    "video": "",
+    "tips": [
+      "Dambılı iki elinle göğsünün önünde dik tut.",
+      "Ağırlık önde olduğu için gövdeyi dik tutmak kolaylaşır.",
+      "Dirseklerin dizlerinin içinden geçecek kadar in.",
+      "Topuklardan it."
+    ],
+    "mistakes": ["Dambılı gövdeden uzak tutmak", "Topukların kalkması"]
   },
   {
     "id": "db_row",
@@ -135,6 +452,40 @@
     "mistakes": ["Gövdeyi çevirerek sallanmak", "Çok ağır seçip hareketi kısaltmak"]
   },
   {
+    "id": "db_curl",
+    "name": "Dambıl biceps curl",
+    "muscle": "ön kol, pazu",
+    "equipment": ["dambıl"],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-12",
+    "video": "",
+    "tips": [
+      "Dirsekler gövdene yapışık kalsın.",
+      "Sadece önkolun hareket etsin; omuz ve bel sabit.",
+      "İnişi kaldırıştan yavaş yap.",
+      "Belini geriye kırarak momentum alma."
+    ],
+    "mistakes": ["Gövdeyi sallamak", "Dirsekleri öne çıkarmak"]
+  },
+  {
+    "id": "db_lateral_raise",
+    "name": "Dambıl yan kaldırış",
+    "muscle": "omuz",
+    "equipment": ["dambıl"],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "12-15",
+    "video": "",
+    "tips": [
+      "Hafif ağırlık seç; bu hareket ağırlıkla değil kontrolle çalışır.",
+      "Kolları omuz hizasına kadar kaldır, daha yukarı çıkma.",
+      "Dirsekler hafif bükülü kalsın.",
+      "Yavaşça indir."
+    ],
+    "mistakes": ["Çok ağır seçip sallanmak", "Omuz hizasını aşmak"]
+  },
+  {
     "id": "db_shoulder_press",
     "name": "Dambıl omuz press",
     "muscle": "omuz, arka kol",
@@ -152,6 +503,23 @@
     "mistakes": ["Belin geriye kırılması", "Çok ağır seçmek", "Yarım hareket"]
   },
   {
+    "id": "db_chest_press",
+    "name": "Dambıl göğüs press",
+    "muscle": "göğüs, omuz, arka kol",
+    "equipment": ["dambıl"],
+    "level": "başlangıç",
+    "sets": 3,
+    "reps": "10-12",
+    "video": "",
+    "tips": [
+      "Bank yoksa yerde sırtüstü yatarak da yapabilirsin.",
+      "Dirsekler gövdeden yaklaşık 45 derece açıda.",
+      "Yukarıda dambılları birbirine çarptırma.",
+      "İnişte göğsünde gerilme hissedene kadar in."
+    ],
+    "mistakes": ["Dirsekleri tam yana açmak", "Belden köprü kurmak"]
+  },
+  {
     "id": "db_rdl",
     "name": "Dambıl Romen deadlift",
     "muscle": "arka bacak, kalça, bel",
@@ -167,5 +535,55 @@
       "Önce hafif ağırlıkla öğren; belde ağrı olursa bırak."
     ],
     "mistakes": ["Sırtı yuvarlamak", "Dambılları vücuttan uzak tutmak", "Hareketi çömelerek yapmak"]
+  },
+  {
+    "id": "db_lunge",
+    "name": "Dambıllı hamle",
+    "muscle": "bacak, kalça",
+    "equipment": ["dambıl"],
+    "level": "orta",
+    "sets": 3,
+    "reps": "8-10 (her bacak)",
+    "video": "",
+    "tips": [
+      "Dambılları yanlarda sarkıt, omuzlar geride.",
+      "Ağırlıksız hamleyi rahat yapabiliyorsan geç.",
+      "Dengeni kaybedersen ağırlığı azalt."
+    ],
+    "mistakes": ["Öne eğilmek", "Adımın kısa kalması"]
+  },
+  {
+    "id": "pullup",
+    "name": "Barfiks",
+    "muscle": "sırt, pazu",
+    "equipment": ["barfiks"],
+    "level": "ileri",
+    "sets": 3,
+    "reps": "3-8",
+    "video": "",
+    "tips": [
+      "Eller omuzdan geniş, avuç içleri ileri baksın.",
+      "Önce kürek kemiklerini aşağı çek, sonra kollarınla çek.",
+      "Çeneni barın üzerine çıkarmayı hedefle, sallanma.",
+      "Henüz yapamıyorsan lastikle ya da negatif (sadece iniş) çalışarak başla."
+    ],
+    "mistakes": ["Sallanarak momentum almak", "Yarım hareket", "Omuzları kulaklara yapıştırmak"]
+  },
+  {
+    "id": "hanging_knee_raise",
+    "name": "Barda diz çekme",
+    "muscle": "alt karın",
+    "equipment": ["barfiks"],
+    "level": "orta",
+    "sets": 3,
+    "reps": "8-12",
+    "video": "",
+    "tips": [
+      "Bara asıl, omuzları aktif tut.",
+      "Dizlerini göğsüne doğru çek, sallanma.",
+      "İnişi kontrollü yap.",
+      "Karından çalıştığını hissetmiyorsan daha yavaş yap."
+    ],
+    "mistakes": ["Sallanarak yapmak", "Dizleri yeterince yukarı çekmemek"]
   }
 ]
