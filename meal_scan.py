@@ -1,5 +1,5 @@
 """
-meal_scan.py - Öğün taraması sayfası
+meal_scan.py - Öğün taraması sayfası (fotoğraf, kamera ya da sesle/yazarak anlatım)
 
     from meal_scan import meal_scan_page
     totals = meal_scan_page()
@@ -22,6 +22,8 @@ from nova_core import (
     support_slot,
 )
 from nutrition_check import kcal, verify
+
+KAYNAKLAR = ["Galeri", "Kamera", "Anlat"]
 
 
 def _render_editor(data: dict, scan_id: str):
@@ -61,16 +63,19 @@ def _render_editor(data: dict, scan_id: str):
 
         factor = grams / 100
         protein, carbs, fat = p100 * factor, c100 * factor, f100 * factor
-        rows.append(
-            {
-                "Yemek": item["name"],
-                "Gram": grams,
-                "Kalori": round(kcal(protein, carbs, fat)),
-                "Protein (g)": round(protein, 1),
-                "Karb. (g)": round(carbs, 1),
-                "Yağ (g)": round(fat, 1),
-            }
-        )
+        satir = {
+            "Yemek": item["name"],
+            "Gram": grams,
+            "Kalori": round(kcal(protein, carbs, fat)),
+            "Protein (g)": round(protein, 1),
+            "Karb. (g)": round(carbs, 1),
+            "Yağ (g)": round(fat, 1),
+        }
+        # Model biliyorsa lif, şeker ve tuz da taşınır (mikro besin takibi için)
+        for alan, ad in (("fiber_per_100g", "Lif (g)"), ("sugar_per_100g", "Şeker (g)"), ("salt_per_100g", "Tuz (g)")):
+            if item.get(alan) is not None:
+                satir[ad] = round(float(item[alan]) * factor, 2)
+        rows.append(satir)
 
     df = pd.DataFrame(rows)
     df = df[df["Gram"] > 0]
@@ -92,22 +97,65 @@ def _render_editor(data: dict, scan_id: str):
     c3.metric("Karbonhidrat", f'{totals["carbs"]} g')
     c4.metric("Yağ", f'{totals["fat"]} g')
 
-    st.dataframe(df, hide_index=True)
+    gosterilecek = ["Yemek", "Gram", "Kalori", "Protein (g)", "Karb. (g)", "Yağ (g)"]
+    st.dataframe(df[gosterilecek], hide_index=True)
 
     if data.get("assumptions"):
         st.info(data["assumptions"])
-    st.caption("Değerler fotoğraftan yapılan tahmindir ve gerçek değerden sapabilir.")
+    st.caption("Değerler yapay zekanın tahminidir ve gerçek değerden sapabilir.")
 
     clicked = st.button("Günlüğe ekle", type="primary", key=f"save_{scan_id}")
     support_slot()
     if clicked:
-        totals["items"] = df.to_dict("records")
+        totals["items"] = [{k: v for k, v in r.items() if not (isinstance(v, float) and pd.isna(v))} for r in df.to_dict("records")]
         return totals
     return None
 
 
+def _sonucu_goster(data, scan_id, bos_mesaj):
+    if not data["is_food"] or not data["items"]:
+        st.info(bos_mesaj)
+        return None
+    return _render_editor(data, scan_id)
+
+
+def _anlatim_akisi():
+    """Ne yediğini sesle ya da yazarak anlat; yapay zeka kalemlere ayırsın."""
+    st.caption("Örn: \"Kahvaltıda iki yumurta, bir dilim tam buğday ekmeği, yarım avuç ceviz ve şekersiz çay\"")
+    ses = None
+    if hasattr(st, "audio_input"):
+        ses = st.audio_input("Sesle anlat", key="ogun_ses")
+    yazi = st.text_area("ya da yazarak anlat", max_chars=500, key="ogun_yazi", height=90)
+    if not ses and not yazi.strip():
+        return None
+
+    ses_bytes = ses.getvalue() if ses else None
+    kimlik = hashlib.md5((ses_bytes or b"") + yazi.strip().encode("utf-8")).hexdigest()[:10]
+
+    if st.button("Analiz et", type="primary", key="anlatim_analiz"):
+        try:
+            with st.spinner("Anlattıkların analiz ediliyor..."):
+                metin = yazi.strip() or "Ses kaydında anlattığım öğünü analiz et."
+                result = run_mode("voice", metin, audio_bytes=ses_bytes, audio_mime=getattr(ses, "type", None) or "audio/wav")
+            st.session_state["anlatim_sonuc"] = result
+            st.session_state["anlatim_kimlik"] = kimlik
+        except QuotaError as e:
+            show_limit_reached(str(e))
+            return None
+        except Exception as e:  # noqa: BLE001
+            st.error(friendly_error(e))
+            return None
+
+    data = st.session_state.get("anlatim_sonuc")
+    if not data or st.session_state.get("anlatim_kimlik") != kimlik:
+        return None
+    return _sonucu_goster(data, "a" + kimlik, "Anlattıklarında yiyecek bulamadım. Ne yediğini biraz daha açık anlatıp tekrar dene.")
+
+
 def _flow():
-    source = st.radio("Kaynak", ["Galeri", "Kamera"], horizontal=True, label_visibility="collapsed")
+    source = st.radio("Kaynak", KAYNAKLAR, horizontal=True, label_visibility="collapsed", key="ogun_kaynak")
+    if source == "Anlat":
+        return _anlatim_akisi()
     if source == "Kamera":
         file = st.camera_input("Yemeğin fotoğrafını çek")
     else:
@@ -142,20 +190,18 @@ def _flow():
     data = st.session_state.get("scan_result")
     if not data or st.session_state.get("scan_file") != file_id:
         return None
-    if not data["is_food"] or not data["items"]:
-        st.info("Fotoğrafta yiyecek bulamadım. Daha yakından ve iyi ışıkta çekip tekrar dene.")
-        return None
-    return _render_editor(data, file_id)
+    return _sonucu_goster(data, file_id, "Fotoğrafta yiyecek bulamadım. Daha yakından ve iyi ışıkta çekip tekrar dene.")
 
 
 def meal_scan_page():
     """Öğün tarama ekranını çizer. 'Günlüğe ekle'ye basılırsa toplamları döndürür."""
     st.subheader("Öğün taraması")
-    st.caption("Fotoğraf analiz için Google Gemini'ye gönderilir.")
+    st.caption("Fotoğraf ya da ses kaydı analiz için Google Gemini'ye gönderilir.")
     quota_slot = st.empty()
     try:
         return _flow()
     finally:
         # Hak sayısı analizden sonra güncellensin diye en sonda çizilir
         with quota_slot.container():
-            quota_caption("meal")
+            kaynak = st.session_state.get("ogun_kaynak")
+            quota_caption("voice" if kaynak == "Anlat" else "meal")
