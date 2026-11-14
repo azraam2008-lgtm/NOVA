@@ -23,14 +23,16 @@ from nova_core import (
 )
 from nutrition_check import kcal, verify
 
+from diller import t, h
+
 KAYNAKLAR = ["Galeri", "Kamera", "Anlat"]
 
 
 def _render_editor(data: dict, scan_id: str):
-    st.markdown("#### Değerleri düzenle")
-    st.caption("Gramajı kaydırarak değiştir. Bir kalemi çıkarmak için 0'a çek.")
+    st.markdown(h("#### Değerleri düzenle"))
+    st.caption(t("Gramajı kaydırarak değiştir. Bir kalemi çıkarmak için 0'a çek."))
     prefer_ref = st.toggle(
-        "Referans değerlerle doğrula",
+        t("Referans değerlerle doğrula"),
         value=True,
         help="Yumurta, elma gibi basit besinlerde model değeri referanstan çok sapıyorsa referansı kullanır.",
         key="meal_verify_toggle",
@@ -59,7 +61,7 @@ def _render_editor(data: dict, scan_id: str):
         for message in check.messages:
             st.caption(message)
         if item["confidence"] < 0.6:
-            st.caption("Bu kalemden emin değilim. Gramajı kontrol et.")
+            st.caption(t("Bu kalemden emin değilim. Gramajı kontrol et."))
 
         factor = grams / 100
         protein, carbs, fat = p100 * factor, c100 * factor, f100 * factor
@@ -80,7 +82,7 @@ def _render_editor(data: dict, scan_id: str):
     df = pd.DataFrame(rows)
     df = df[df["Gram"] > 0]
     if df.empty:
-        st.info("Tüm kalemler 0 gram. En az birini artır.")
+        st.info(t("Tüm kalemler 0 gram. En az birini artır."))
         return None
 
     totals = {
@@ -102,9 +104,9 @@ def _render_editor(data: dict, scan_id: str):
 
     if data.get("assumptions"):
         st.info(data["assumptions"])
-    st.caption("Değerler yapay zekanın tahminidir ve gerçek değerden sapabilir.")
+    st.caption(t("Değerler yapay zekanın tahminidir ve gerçek değerden sapabilir."))
 
-    clicked = st.button("Günlüğe ekle", type="primary", key=f"save_{scan_id}")
+    clicked = st.button(t("Günlüğe ekle"), type="primary", key=f"save_{scan_id}")
     support_slot()
     if clicked:
         totals["items"] = [{k: v for k, v in r.items() if not (isinstance(v, float) and pd.isna(v))} for r in df.to_dict("records")]
@@ -121,7 +123,7 @@ def _sonucu_goster(data, scan_id, bos_mesaj):
 
 def _anlatim_akisi():
     """Ne yediğini sesle ya da yazarak anlat; yapay zeka kalemlere ayırsın."""
-    st.caption("Örn: \"Kahvaltıda iki yumurta, bir dilim tam buğday ekmeği, yarım avuç ceviz ve şekersiz çay\"")
+    st.caption(t("Örn: \"Kahvaltıda iki yumurta, bir dilim tam buğday ekmeği, yarım avuç ceviz ve şekersiz çay\""))
     ses = None
     if hasattr(st, "audio_input"):
         ses = st.audio_input("Sesle anlat", key="ogun_ses")
@@ -132,7 +134,7 @@ def _anlatim_akisi():
     ses_bytes = ses.getvalue() if ses else None
     kimlik = hashlib.md5((ses_bytes or b"") + yazi.strip().encode("utf-8")).hexdigest()[:10]
 
-    if st.button("Analiz et", type="primary", key="anlatim_analiz"):
+    if st.button(t("Analiz et"), type="primary", key="anlatim_analiz"):
         try:
             with st.spinner("Anlattıkların analiz ediliyor..."):
                 metin = yazi.strip() or "Ses kaydında anlattığım öğünü analiz et."
@@ -153,27 +155,27 @@ def _anlatim_akisi():
 
 
 def _flow():
-    source = st.radio("Kaynak", KAYNAKLAR, horizontal=True, label_visibility="collapsed", key="ogun_kaynak")
+    source = st.radio(t("Kaynak"), KAYNAKLAR, horizontal=True, label_visibility="collapsed", key="ogun_kaynak")
     if source == "Anlat":
         return _anlatim_akisi()
     if source == "Kamera":
         # Kamera yalnızca istendiğinde açılır; sekme açık diye kendiliğinden açılmaz
         file = None
         if st.session_state.get("ogun_kamera_acik"):
-            file = st.camera_input("Yemeğin fotoğrafını çek")
-            if st.button("Kamerayı kapat", key="ogun_kamera_kapat"):
+            file = st.camera_input(t("Yemeğin fotoğrafını çek"))
+            if st.button(t("Kamerayı kapat"), key="ogun_kamera_kapat"):
                 st.session_state["ogun_kamera_acik"] = False
                 st.rerun()
         else:
-            if st.button("Kamerayı aç", key="ogun_kamera_ac", type="primary"):
+            if st.button(t("Kamerayı aç"), key="ogun_kamera_ac", type="primary"):
                 st.session_state["ogun_kamera_acik"] = True
                 st.rerun()
-            st.caption("Kamera yalnızca bu düğmeye bastığında açılır.")
+            st.caption(t("Kamera yalnızca bu düğmeye bastığında açılır."))
     else:
-        file = st.file_uploader("Yemeğin fotoğrafını seç", type=["jpg", "jpeg", "png", "webp"])
+        file = st.file_uploader(t("Yemeğin fotoğrafını seç"), type=["jpg", "jpeg", "png", "webp"])
 
     hint = st.text_input(
-        "Not (isteğe bağlı)",
+        t("Not (isteğe bağlı)"),
         placeholder="Örn: 1 yemek kaşığı zeytinyağı kullandım",
         max_chars=200,
     )
@@ -183,7 +185,7 @@ def _flow():
     file_id = hashlib.md5(file.getvalue()).hexdigest()[:10]
     st.image(file, width=320)
 
-    if st.button("Analiz et", type="primary"):
+    if st.button(t("Analiz et"), type="primary"):
         try:
             with st.spinner("Öğün analiz ediliyor..."):
                 image_bytes = prepare_image(file)
@@ -206,8 +208,8 @@ def _flow():
 
 def meal_scan_page():
     """Öğün tarama ekranını çizer. 'Günlüğe ekle'ye basılırsa toplamları döndürür."""
-    st.subheader("Öğün taraması")
-    st.caption("Fotoğraf ya da ses kaydı analiz için Google Gemini'ye gönderilir.")
+    st.subheader(t("Öğün taraması"))
+    st.caption(t("Fotoğraf ya da ses kaydı analiz için Google Gemini'ye gönderilir."))
     quota_slot = st.empty()
     try:
         return _flow()
