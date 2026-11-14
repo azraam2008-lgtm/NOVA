@@ -10,6 +10,7 @@ from supabase import create_client, Client
 from nova_core import cfg
 from meal_scan import meal_scan_page
 from nova_pages import coach_page, ask_page
+from yemek_arama import yemek_arama_sayfasi
 
 st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="🦢", layout="wide", initial_sidebar_state="collapsed")
 
@@ -47,19 +48,53 @@ df_yemek = yemek_veritabanini_yukle()
 # ----------------------------------------------------
 # VERİTABANI VE HESAPLAMA FONKSİYONLARI
 # ----------------------------------------------------
-def sifre_hashle(sifre): return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
+def sifre_hashle(sifre):
+    """Eski (SHA-256) kayıtları doğrulamak için. Yeni şifreler için sifre_olustur kullanılır."""
+    return hashlib.sha256(sifre.encode("utf-8")).hexdigest()
+
+def sifre_olustur(sifre):
+    """Yeni şifreler bcrypt ile, her biri kendi tuzuyla saklanır."""
+    try:
+        import bcrypt
+        return bcrypt.hashpw(sifre.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    except ImportError:
+        return sifre_hashle(sifre)  # bcrypt kurulu değilse eski yönteme düşer
+
+def sifre_dogrula(sifre, kayitli):
+    if not kayitli:
+        return False
+    if kayitli.startswith("$2"):  # bcrypt
+        try:
+            import bcrypt
+            return bcrypt.checkpw(sifre.encode("utf-8"), kayitli.encode("utf-8"))
+        except Exception:
+            return False
+    return kayitli == sifre_hashle(sifre)  # eski SHA-256 kaydı
 
 def sifre_kontrol(sifre):
-    if len(sifre) < 6: return "Şifre en az 6 karakter olmalıdır."
+    if len(sifre) < 8: return "Şifre en az 8 karakter olmalıdır."
     if not any(c.isupper() for c in sifre): return "Şifre en az bir büyük harf içermelidir."
-    if not any(c.isalpha() for c in sifre): return "Şifre en az bir harf içermelidir."
+    if not any(c.isdigit() for c in sifre): return "Şifre en az bir rakam içermelidir."
     return None
 
 def kullanicilari_yukle():
     try:
-        res = supabase.table("kullanicilar").select("*").execute()
-        return {row["username"]: row["password_hash"] for row in res.data}
+        res = supabase.table("kullanicilar").select("username, password_hash, email").execute()
+        return {row["username"]: row for row in res.data}
     except: return {}
+
+def kullanici_bul_eposta(email):
+    try:
+        res = supabase.table("kullanicilar").select("username").eq("email", email).limit(1).execute()
+        return res.data[0]["username"] if res.data else None
+    except: return None
+
+def google_hazir_mi():
+    """Streamlit'in Google girişi ayarlanmışsa True. Ayar: Secrets içinde [auth] bölümü."""
+    try:
+        return bool(dict(st.secrets.get("auth", {})).get("redirect_uri"))
+    except Exception:
+        return False
 
 def verileri_yukle(username):
     default_data = {
@@ -77,24 +112,68 @@ def verileri_kaydet(username):
     try: supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
     except: pass
 
+# Aktivite düzeyi çarpanları (yaygın kullanılan Harris-Benedict katsayıları)
+AKTIVITE_DUZEYLERI = {
+    "Hareketsiz (masa başı, çok az yürüyüş)": 1.2,
+    "Az hareketli (haftada 1-3 gün egzersiz)": 1.375,
+    "Orta hareketli (haftada 3-5 gün egzersiz)": 1.55,
+    "Çok hareketli (haftada 6-7 gün egzersiz)": 1.725,
+}
+
+def yas_hesapla(p):
+    return datetime.date.today().year - int(p.get("dogum_yili", 2000))
+
+def haftalik_hiz(p):
+    """Hedefe göre haftada kaç kilo verilmesi/alınması gerektiği (pozitif = kayıp)."""
+    fark = float(p["mevcut_kilo"]) - float(p["hedef_kilo"])
+    hafta = max(1.0, int(p.get("hedef_sure_ay", 1)) * 4.345)
+    return fark / hafta
+
 def hesapla_bmr_ve_hedef(p):
-    yas = datetime.date.today().year - int(p.get("dogum_yili", 2000))
+    yas = yas_hesapla(p)
     if p.get("cinsiyet", "Kadın") == "Kadın":
         bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * yas) - 161
     else:
         bmr = (10 * float(p["mevcut_kilo"])) + (6.25 * float(p["boy"])) - (5 * yas) + 5
 
-    amaclar = p.get("amaclar", [])
-    if "Kas kazanmak istiyorum" in amaclar: tdee = bmr * 1.55
-    elif "Kilo vermek istiyorum" in amaclar: tdee = bmr * 1.35
-    else: tdee = bmr * 1.2
+    # Günlük harcama, amaçtan değil AKTİVİTE DÜZEYİNDEN hesaplanır
+    carpan = AKTIVITE_DUZEYLERI.get(p.get("aktivite", ""), 1.375)
+    tdee = bmr * carpan
 
     kilo_farki = float(p["mevcut_kilo"]) - float(p["hedef_kilo"])
     gunluk_acik = (kilo_farki * 7700) / max(1, int(p.get("hedef_sure_ay", 1)) * 30)
-    
+
+    # Güvenli sınır: haftada 1 kilodan (günde ~1100 kcal açık) hızlı hedef kabul edilmez
+    gunluk_acik = max(min(gunluk_acik, 1100.0), -700.0)
+
     hedef_kalori = tdee - gunluk_acik
-    hedef_kalori = max(1200 if p.get("cinsiyet") == "Kadın" else 1500, hedef_kalori)
+    taban = 1200 if p.get("cinsiyet") == "Kadın" else 1500
+    if yas < 18:
+        # Gelişme çağında dinlenik metabolizmanın altına inilmez
+        taban = max(taban, bmr)
+    hedef_kalori = max(taban, hedef_kalori)
     return bmr, tdee, gunluk_acik, hedef_kalori
+
+def guvenlik_uyarilari(p):
+    """Hedefle ilgili gösterilmesi gereken uyarılar."""
+    uyarilar = []
+    hiz = haftalik_hiz(p)
+    if hiz > 1.0:
+        uyarilar.append(
+            f"Hedefin haftada {hiz:.1f} kilo kayıp anlamına geliyor. Bu hızlı bir tempo; "
+            "güvenli kabul edilen aralık genelde haftada 0,5-1 kilodur. Süreyi uzatmanı öneririm."
+        )
+    elif hiz < -0.75:
+        uyarilar.append(
+            f"Hedefin haftada {abs(hiz):.1f} kilo alım anlamına geliyor. Kas kazanmak için "
+            "haftada 0,25-0,5 kilo daha dengeli bir tempodur."
+        )
+    if yas_hesapla(p) < 18:
+        uyarilar.append(
+            "18 yaşından küçüksün. Büyüme çağında kalori kısıtlamak gelişimi etkileyebilir; "
+            "kilo hedefi koymadan önce bir doktora ya da diyetisyene danışmanı öneririm."
+        )
+    return uyarilar
 
 # ----------------------------------------------------
 # OTURUM YÖNETİMİ & TERTEMİZ AÇIK TEMA GİRİŞ EKRANI
@@ -102,6 +181,38 @@ def hesapla_bmr_ve_hedef(p):
 if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = False
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
 if "onboarding_step" not in st.session_state: st.session_state.onboarding_step = 1
+
+# --- GOOGLE İLE GİRİŞ DÖNÜŞÜ ---
+# Google'dan dönüldüğünde e-postaya bağlı hesap bulunur, yoksa oluşturulur.
+if not st.session_state.giris_yapildi and google_hazir_mi():
+    try:
+        google_girisli = st.user.is_logged_in
+    except Exception:
+        google_girisli = False
+    if google_girisli:
+        g_mail = (getattr(st.user, "email", "") or "").strip().lower()
+        if g_mail:
+            kullanici_adi = kullanici_bul_eposta(g_mail)
+            if not kullanici_adi:
+                # E-postanın baş kısmından benzersiz bir kullanıcı adı türetilir
+                taban = "".join(c for c in g_mail.split("@")[0] if c.isalnum()) or "kullanici"
+                mevcutlar = set(kullanicilari_yukle())
+                kullanici_adi = taban
+                ek = 1
+                while kullanici_adi in mevcutlar:
+                    ek += 1
+                    kullanici_adi = f"{taban}{ek}"
+                try:
+                    supabase.table("kullanicilar").insert({
+                        "username": kullanici_adi, "password_hash": "", "email": g_mail}).execute()
+                except Exception as e:
+                    st.error(f"Hesap oluşturulamadı: {e}")
+                    kullanici_adi = None
+            if kullanici_adi:
+                st.session_state.giris_yapildi = True
+                st.session_state.aktif_kullanici = kullanici_adi
+                st.session_state.update(verileri_yukle(kullanici_adi))
+                st.rerun()
 
 if not st.session_state.giris_yapildi:
     st.markdown("""
@@ -133,24 +244,47 @@ if not st.session_state.giris_yapildi:
             g_user = st.text_input("Kullanıcı Adı", key="g_user").strip().lower()
             g_pass = st.text_input("Şifre", type="password", key="g_pass")
             if st.button("Giriş Yap", key="btn_giris"):
-                if g_user in users and users[g_user] == sifre_hashle(g_pass):
+                kayit = users.get(g_user)
+                if kayit and sifre_dogrula(g_pass, kayit.get("password_hash")):
+                    # Eski SHA-256 kaydı ise sessizce bcrypt'e yükseltilir
+                    if not str(kayit.get("password_hash", "")).startswith("$2"):
+                        try:
+                            supabase.table("kullanicilar").update(
+                                {"password_hash": sifre_olustur(g_pass)}).eq("username", g_user).execute()
+                        except Exception:
+                            pass
                     st.session_state.giris_yapildi = True
                     st.session_state.aktif_kullanici = g_user
                     st.session_state.update(verileri_yukle(g_user))
                     st.rerun()
                 else: st.error("Hatalı kullanıcı adı veya şifre.")
+
         with tab_kayit:
             k_user = st.text_input("Yeni Kullanıcı Adı", key="k_user").strip().lower()
-            k_pass = st.text_input("Şifre (En az 6 karakter, büyük harf ve harf içermeli)", type="password", key="k_pass")
+            k_mail = st.text_input("E-posta (şifreni unutursan gerekli)", key="k_mail").strip().lower()
+            k_pass = st.text_input("Şifre (en az 8 karakter, bir büyük harf ve bir rakam)", type="password", key="k_pass")
             if st.button("Hesap Oluştur", key="btn_kayit"):
                 hata = sifre_kontrol(k_pass)
                 if hata:
                     st.error(hata)
-                elif k_user and k_user not in users:
-                    supabase.table("kullanicilar").insert({"username": k_user, "password_hash": sifre_hashle(k_pass)}).execute()
-                    st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
+                elif not k_user:
+                    st.error("Kullanıcı adı boş olamaz.")
+                elif k_user in users:
+                    st.error("Bu kullanıcı adı zaten alınmış.")
+                elif k_mail and ("@" not in k_mail or "." not in k_mail.split("@")[-1]):
+                    st.error("E-posta adresi geçerli görünmüyor.")
                 else:
-                    st.error("Kullanıcı adı boş olamaz veya zaten kullanımda.")
+                    supabase.table("kullanicilar").insert({
+                        "username": k_user, "password_hash": sifre_olustur(k_pass),
+                        "email": k_mail or None,
+                    }).execute()
+                    st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
+
+        if google_hazir_mi():
+            st.markdown("<p style='text-align:center; margin:18px 0 8px; color:#888 !important;'>ya da</p>",
+                        unsafe_allow_html=True)
+            if st.button("Google ile devam et", key="btn_google"):
+                st.login()
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
@@ -294,10 +428,16 @@ else:
         elif step == 5:
             st.markdown("<h2 style='text-align:center;'>Doğum yılın ne?</h2>", unsafe_allow_html=True)
             mevcut_yil = datetime.date.today().year
-            dogum_yili = st.number_input("Yıl", min_value=1920, max_value=mevcut_yil-10, value=int(p.get("dogum_yili", 2000)))
+            dogum_yili = st.number_input("Yıl", min_value=1920, max_value=mevcut_yil-13, value=int(p.get("dogum_yili", 2000)))
             yas = mevcut_yil - dogum_yili
             st.markdown(f"<h4 style='text-align:center;'>Şu an <b>{yas}</b> yaşındasın.</h4>", unsafe_allow_html=True)
             st.markdown('<div class="info-box">ℹ️ Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>', unsafe_allow_html=True)
+            if yas < 18:
+                st.warning(
+                    "18 yaşından küçüksün. Büyüme çağında kalori kısıtlamak gelişimi etkileyebilir. "
+                    "Nova senin için günlük hedefi dinlenik metabolizmanın altına indirmeyecek, ama "
+                    "kilo hedefi koymadan önce bir doktora ya da diyetisyene danışmanı öneririm."
+                )
             
             b1, b2 = st.columns(2)
             if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 4; st.rerun()
@@ -334,12 +474,31 @@ else:
             st.markdown("<h2 style='text-align:center;'>Hedef kilon nedir?</h2>", unsafe_allow_html=True)
             hedef_kilo = st.number_input("Hedef Kilo (kg)", min_value=35.0, value=float(p.get("hedef_kilo", 55.0)), step=0.5)
             hedef_sure = st.number_input("Hedefe Ulaşma Süresi (Ay)", min_value=1, value=int(p.get("hedef_sure_ay", 2)))
+
+            aktivite_listesi = list(AKTIVITE_DUZEYLERI.keys())
+            mevcut_aktivite = p.get("aktivite", aktivite_listesi[1])
+            if mevcut_aktivite not in aktivite_listesi:
+                mevcut_aktivite = aktivite_listesi[1]
+            aktivite = st.selectbox("Günlük hareket düzeyin", aktivite_listesi,
+                                    index=aktivite_listesi.index(mevcut_aktivite))
+            st.markdown('<div class="info-box">ℹ️ Hareket düzeyin, günde ne kadar enerji harcadığını belirleyen en önemli etken. Adım ve egzersiz kayıtların bunun üzerine eklenir.</div>', unsafe_allow_html=True)
+
             sec_tema = st.selectbox("Nova Deneyimin İçin Bir Tema Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
-            
+
+            # Hedef temposu güvenli mi, daha hesaplamadan göster
+            onizleme = dict(p); onizleme.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure})
+            hiz = haftalik_hiz(onizleme)
+            if abs(hiz) > 0.05:
+                yon = "kayıp" if hiz > 0 else "alım"
+                st.caption(f"Bu hedef haftada yaklaşık {abs(hiz):.2f} kilo {yon} demek.")
+            if hiz > 1.0:
+                st.warning("Bu tempo hızlı. Güvenli aralık genelde haftada 0,5-1 kilodur; süreyi uzatmanı öneririm.")
+
             b1, b2 = st.columns(2)
             if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 7; st.rerun()
             if b2.button("Kalori Hedefimi Hesapla ➔"):
-                st.session_state.profil.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure, "tema": sec_tema})
+                st.session_state.profil.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure,
+                                                "aktivite": aktivite, "tema": sec_tema})
                 st.session_state.onboarding_step = 9
                 st.rerun()
 
@@ -360,7 +519,12 @@ else:
                 <p style="opacity:0.8; font-size: 0.9rem; text-align:center;"><i>Nova Kalori Hedefin, amacına ulaşmak için her gün kaç kalori tüketmen gerektiğini gösterir. Her gün bu hedefe yakın miktarda tüketirsen başarıya ulaşırsın.</i></p>
             </div><br>
             """, unsafe_allow_html=True)
-            
+
+            for uyari in guvenlik_uyarilari(p):
+                st.warning(uyari)
+            st.caption("Nova bir sağlık uygulaması değildir ve tıbbi tavsiye vermez. "
+                       "Hesaplamalar genel formüllere dayanan tahminlerdir.")
+
             b1, b2 = st.columns(2)
             if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 8; st.rerun()
             if b2.button("🚀 Harika, Uygulamaya Başla!", type="primary"):
@@ -448,9 +612,11 @@ else:
                         </div>
                     </div><br>
                 """, unsafe_allow_html=True)
-                yeni_adim = st.number_input("Eklenecek Adım:", value=0, step=1000)
+                yeni_adim = st.number_input("Bugünkü toplam adımın", min_value=0, max_value=100000,
+                                            value=int(curr_aktivite.get("adim", 0)), step=500,
+                                            help="Telefonundaki sağlık uygulamasında yazan günlük toplamı gir. Üzerine eklemez, bu sayıyı yazar.")
                 if st.button("🔴 Adımı Kaydet", use_container_width=True):
-                    curr_aktivite["adim"] += yeni_adim
+                    curr_aktivite["adim"] = int(yeni_adim)
                     verileri_kaydet(aktif_user)
                     st.rerun()
             with hc2:
@@ -462,9 +628,16 @@ else:
                         </div>
                     </div><br>
                 """, unsafe_allow_html=True)
-                su_secim = st.number_input("Eklenecek Su (Litre):", value=0.25, step=0.25)
-                if st.button("🔵 Suyu Kaydet", use_container_width=True):
-                    curr_aktivite["su"] += su_secim
+                su_secim = st.number_input("Eklenecek su (litre)", min_value=0.0, max_value=3.0,
+                                           value=0.25, step=0.25,
+                                           help="İçtikçe ekle. Bir bardak yaklaşık 0,25 litredir.")
+                sc1, sc2 = st.columns([3, 1])
+                if sc1.button("🔵 Suyu Ekle", use_container_width=True):
+                    curr_aktivite["su"] = round(curr_aktivite.get("su", 0.0) + su_secim, 2)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
+                if sc2.button("Sıfırla", use_container_width=True, help="Bugünkü su sayacını sıfırla"):
+                    curr_aktivite["su"] = 0.0
                     verileri_kaydet(aktif_user)
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
@@ -524,49 +697,19 @@ else:
             st.markdown(render_makro("🥑 Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # MANUEL YEMEK ARAMA VE MAKRO DÜZENLEME
+            # YEMEK EKLEME: arama, barkod, favoriler, kendi yemeğin
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2rem;'>🔎 Yemek Ara & İnce Ayar Yap</h2>", unsafe_allow_html=True)
-            
-            a_col1, a_col2 = st.columns([3, 1])
-            with a_col1:
-                yemek_isimleri = df_yemek["Yemek Adı"].tolist()
-                secilen_yemek = st.selectbox("Yediğin yemeği seç...", yemek_isimleri, key="db_yemek")
-            with a_col2:
-                secilen_ogun = st.selectbox("Hangi Öğün?", ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="db_ogun")
-                
-            if secilen_yemek and secilen_yemek != "Önce CSV'yi GitHub'a Yükleyin":
-                detay = df_yemek[df_yemek["Yemek Adı"] == secilen_yemek].iloc[0]
-                # CSV'deki değerler PORSİYON BAŞINA (ör. 1 kase = 250 g). Önce 100 g'a indirge, sonra girilen gramla çarp.
-                try:
-                    ref_gram = float(detay.get("Gramaj (g/ml)", 100)) or 100.0
-                except (TypeError, ValueError):
-                    ref_gram = 100.0
-                base_p = float(detay['Protein (g)']) / ref_gram * 100
-                base_c = float(detay['Karbonhidrat (g)']) / ref_gram * 100
-                base_f = float(detay['Yağ (g)']) / ref_gram * 100
-                
-                porsiyon_adi = detay.get("Porsiyon", "1 porsiyon")
-                st.caption(f"Standart porsiyon: {porsiyon_adi} ({int(ref_gram)} g) = {int(detay['Kalori (kcal)'])} kcal | 100 g: P {base_p:.1f} g · K {base_c:.1f} g · Y {base_f:.1f} g")
-                porsiyon_g = st.number_input("Yediğin miktar (gram)", min_value=10, max_value=2000, value=int(ref_gram), step=10, key=f"porsiyon_{secilen_yemek}")
-                carp = porsiyon_g / 100.0
-                
-                with st.expander("🛠️ İçeriği Kendine Göre Ayarla (Örn: Yağsız yaptıysan yağı kıs)"):
-                    new_p = st.slider("Protein (g)", 0.0, 150.0, float(base_p * carp), 0.1)
-                    new_c = st.slider("Karbonhidrat (g)", 0.0, 300.0, float(base_c * carp), 0.1)
-                    new_f = st.slider("Yağ (g)", 0.0, 150.0, float(base_f * carp), 0.1)
-                
-                new_kcal = round((new_p * 4) + (new_c * 4) + (new_f * 9))
-                st.info(f"🔥 Hesaplanmış Son Kalori: **{new_kcal} kcal**")
-                
-                if st.button("➕ Günlüğe Ekle", use_container_width=True):
-                    st.session_state.gunluk_kayitlar.append({
-                        "Tarih": secilen_tarih, "Öğün": secilen_ogun, "Tarif": f"{secilen_yemek} ({porsiyon_g} g)",
-                        "Kalori": new_kcal, "Protein": round(new_p, 1), 
-                        "Karbonhidrat": round(new_c, 1), "Yağ": round(new_f, 1)
-                    })
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
+            st.markdown("<h2 style='font-size: 2rem;'>🔎 Yemek Ekle</h2>", unsafe_allow_html=True)
+
+            secilen_ogun = st.selectbox("Hangi öğüne eklenecek?",
+                                        ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="db_ogun")
+            yeni_kayitlar = yemek_arama_sayfasi(df_yemek, supabase, aktif_user, secilen_tarih,
+                                                secilen_ogun, st.session_state.gunluk_kayitlar)
+            if yeni_kayitlar:
+                st.session_state.gunluk_kayitlar.extend(yeni_kayitlar)
+                verileri_kaydet(aktif_user)
+                st.toast(f"{len(yeni_kayitlar)} kalem {secilen_ogun.lower()} öğününe eklendi")
+                st.rerun()
 
             st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>", unsafe_allow_html=True)
             st.markdown("<h3>🍽️ Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
@@ -599,6 +742,67 @@ else:
             
             df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
             st.line_chart(df_grafik, color=["#ff3b30", "#34c759"])
+            st.caption("Kırmızı: yediklerin. Yeşil: vücudunun harcadığı toplam (metabolizma + hareket). "
+                       "Yeşil üstteyse kilo veriyorsun demektir.")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            # --- KİLO GRAFİĞİ ---
+            st.markdown('<div class="calai-card">', unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>⚖️ Kilo Takibin</h2>", unsafe_allow_html=True)
+
+            kilo_gecmisi = sorted(p.get("kilo_gecmisi", []), key=lambda x: x.get("tarih", ""))
+            if len(kilo_gecmisi) < 2:
+                st.info("Kilo grafiğin, ikinci tartından sonra burada görünecek. "
+                        "Her Pazar tartılman yeterli; istersen aşağıdan da kilo girebilirsin.")
+            else:
+                df_kilo = pd.DataFrame([
+                    {"Tarih": k["tarih"], "Kilon": float(k["kilo"]), "Hedefin": float(p["hedef_kilo"])}
+                    for k in kilo_gecmisi
+                ]).set_index("Tarih")
+                st.line_chart(df_kilo, color=["#007aff", "#34c759"])
+
+                ilk, son = float(kilo_gecmisi[0]["kilo"]), float(kilo_gecmisi[-1]["kilo"])
+                degisim = son - ilk
+                kalan = son - float(p["hedef_kilo"])
+                k1, k2, k3 = st.columns(3)
+                k1.metric("Şu anki kilon", f"{son:.1f} kg", f"{degisim:+.1f} kg")
+                k2.metric("Hedefin", f'{float(p["hedef_kilo"]):.1f} kg')
+                k3.metric("Kalan", f"{abs(kalan):.1f} kg")
+
+                # Son dört tartıya bakarak kaba bir varış tahmini
+                if len(kilo_gecmisi) >= 3 and abs(kalan) > 0.3:
+                    try:
+                        son_dort = kilo_gecmisi[-4:]
+                        gun_farki = (datetime.date.fromisoformat(son_dort[-1]["tarih"])
+                                     - datetime.date.fromisoformat(son_dort[0]["tarih"])).days
+                        kilo_degisimi = float(son_dort[-1]["kilo"]) - float(son_dort[0]["kilo"])
+                        if gun_farki >= 7 and abs(kilo_degisimi) > 0.2:
+                            gunluk = kilo_degisimi / gun_farki
+                            if (kalan > 0 and gunluk < 0) or (kalan < 0 and gunluk > 0):
+                                kalan_gun = int(abs(kalan / gunluk))
+                                if kalan_gun < 1000:
+                                    varis = datetime.date.today() + datetime.timedelta(days=kalan_gun)
+                                    st.success(f"Bu hızla gidersen hedefine yaklaşık "
+                                               f"{varis.day} {aylar_tr[varis.month]} {varis.year} tarihinde ulaşırsın.")
+                            else:
+                                st.info("Son tartıların hedefinin ters yönünde. Bu normal olabilir; "
+                                        "birkaç hafta daha veriye bakmak gerek.")
+                    except (ValueError, KeyError, ZeroDivisionError):
+                        pass
+                st.caption("Günlük kilo dalgalanması normaldir; eğilime bak, tek bir tartıya değil.")
+
+            with st.expander("Kilo girişi ekle"):
+                ek_tarih = st.date_input("Tartı tarihi", datetime.date.today(), key="kilo_tarih")
+                ek_kilo = st.number_input("Kilon (kg)", min_value=30.0, max_value=250.0,
+                                          value=float(p["mevcut_kilo"]), step=0.1, key="kilo_deger")
+                if st.button("Kiloyu kaydet", key="kilo_kaydet"):
+                    gecmis = p.setdefault("kilo_gecmisi", [])
+                    gecmis[:] = [k for k in gecmis if k.get("tarih") != str(ek_tarih)]
+                    gecmis.append({"tarih": str(ek_tarih), "kilo": float(ek_kilo)})
+                    if str(ek_tarih) >= max((k["tarih"] for k in gecmis), default=""):
+                        p["mevcut_kilo"] = float(ek_kilo)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
         with tab_ai_ogun:
