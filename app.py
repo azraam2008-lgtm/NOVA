@@ -11,8 +11,9 @@ from nova_core import cfg
 from meal_scan import meal_scan_page
 from nova_pages import coach_page, ask_page
 from yemek_arama import yemek_arama_sayfasi
+from gelisim import gelisim_sayfasi
 
-st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="🦢", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Nova — Diyet ve Aktivite Asistanı", page_icon="", layout="wide", initial_sidebar_state="collapsed")
 
 # --- SUPABASE BAĞLANTI AYARLARI ---
 # Streamlit Secrets'ta SUPABASE_URL / SUPABASE_KEY tanımlıysa onlar kullanılır.
@@ -278,7 +279,11 @@ if not st.session_state.giris_yapildi:
                         "username": k_user, "password_hash": sifre_olustur(k_pass),
                         "email": k_mail or None,
                     }).execute()
-                    st.success("Hesap oluşturuldu, giriş yapabilirsiniz.")
+                    # Hesap açılır açılmaz içeri al; tekrar giriş yaptırma
+                    st.session_state.giris_yapildi = True
+                    st.session_state.aktif_kullanici = k_user
+                    st.session_state.update(verileri_yukle(k_user))
+                    st.rerun()
 
         if google_hazir_mi():
             st.markdown("<p style='text-align:center; margin:18px 0 8px; color:#888 !important;'>ya da</p>",
@@ -319,10 +324,45 @@ else:
         .calai-card td, .calai-card th, .calai-card span, .calai-card label,
         div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] h2, 
         div[data-testid="stMarkdownContainer"] h3, div[data-testid="stMarkdownContainer"] h4,
-        div[data-testid="stWidgetLabel"] p, label[data-baseweb="radio"] div {{ 
-            color: {tema['text_color']} !important; 
-            font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        div[data-testid="stWidgetLabel"] p, label[data-baseweb="radio"] div,
+        [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p,
+        [data-testid="stMetricValue"], [data-testid="stCaptionContainer"],
+        [data-testid="stCaptionContainer"] p, [data-testid="stExpander"] summary p,
+        [data-testid="stChatMessageContent"], [data-testid="stChatMessageContent"] p,
+        [data-testid="stToggle"] label p, div[data-testid="stMarkdownContainer"] li {{
+            color: {tema['text_color']} !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
         }}
+
+        /* Metrik delta rozetleri koyu zeminde okunsun */
+        [data-testid="stMetricDelta"] {{ background: transparent !important; }}
+        [data-testid="stMetricDelta"] div {{ font-weight: 700 !important; }}
+
+        /* Sohbet balonları */
+        [data-testid="stChatMessage"] {{
+            background: rgba(255,255,255,0.07) !important;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+        }}
+
+        /* Grafiklerin zemini karta uysun */
+        [data-testid="stVegaLiteChart"], [data-testid="stVegaLiteChart"] canvas,
+        [data-testid="stVegaLiteChart"] svg {{ background: transparent !important; }}
+
+        /* Bilgi, uyarı ve hata kutuları koyu zeminde okunsun (anlamı renkli kenarla korunur) */
+        [data-testid="stAlertContainer"] {{
+            background: rgba(255,255,255,0.08) !important;
+            border: 1px solid rgba(255,255,255,0.16) !important;
+            border-radius: 12px !important;
+        }}
+        [data-testid="stAlertContainer"] p, [data-testid="stAlertContainer"] div,
+        [data-testid="stAlertContainer"] span, [data-testid="stAlertContainer"] li {{
+            color: {tema['text_color']} !important;
+        }}
+        [data-testid="stAlertContentSuccess"] {{ border-left: 4px solid #34c759 !important; padding-left: 12px; }}
+        [data-testid="stAlertContentInfo"] {{ border-left: 4px solid #007aff !important; padding-left: 12px; }}
+        [data-testid="stAlertContentWarning"] {{ border-left: 4px solid #ffcc00 !important; padding-left: 12px; }}
+        [data-testid="stAlertContentError"] {{ border-left: 4px solid #ff3b30 !important; padding-left: 12px; }}
         
         /* GİRİŞ ALANLARI KESİN BEYAZ ZEMİN, SİYAH YAZI OLMALIDIR */
         div[data-baseweb="select"] > div, div[data-baseweb="input"] > div, 
@@ -381,21 +421,21 @@ else:
         step = st.session_state.onboarding_step
         
         if step == 1:
-            st.markdown("<h2 style='text-align:center;'>Tanıştığımıza memnun oldum,<br>Nova'ya Hoş Geldin! 🦢</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align:center;'>Tanıştığımıza memnun oldum,<br>Nova'ya Hoş Geldin! </h2>", unsafe_allow_html=True)
             st.markdown("<p style='text-align:center; opacity:0.9;'>Hedeflerine ulaşmanda sana yardımcı olmak için buradayız.<br>Başlamak için birkaç kısa sorumuz olacak.</p>", unsafe_allow_html=True)
-            st.markdown('<div class="info-box">ℹ️ Cevapların, hedeflerini anlamamıza ve uygulamayı senin için kişiselleştirmemize yardımcı olacak.</div>', unsafe_allow_html=True)
-            if st.button("Başla ➔", use_container_width=True):
+            st.markdown('<div class="info-box">Cevapların, hedeflerini anlamamıza ve uygulamayı senin için kişiselleştirmemize yardımcı olacak.</div>', unsafe_allow_html=True)
+            if st.button("Başla ", use_container_width=True):
                 st.session_state.onboarding_step = 2
                 st.rerun()
 
         elif step == 2:
             st.markdown("<h2 style='text-align:center;'>Merhaba! Adın nedir?</h2>", unsafe_allow_html=True)
             ad_input = st.text_input("Adını Gir", value=p.get("ad", ""))
-            st.markdown('<div class="info-box">ℹ️ Nova uygulamasını sana özel hale getirmek ve sana hitap edebilmek için adını kullanacağız.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Nova uygulamasını sana özel hale getirmek ve sana hitap edebilmek için adını kullanacağız.</div>', unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 1; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 1; st.rerun()
+            if b2.button("İleri "):
                 if ad_input:
                     st.session_state.profil["ad"] = ad_input
                     st.session_state.onboarding_step = 3
@@ -407,8 +447,8 @@ else:
             amaclar = st.multiselect("Hedeflerin (Birden fazla seçebilirsin)", ["Kilo vermek istiyorum", "Kilomu korumak istiyorum", "Kilo almak istiyorum", "Kas kazanmak istiyorum", "Sağlıklı beslenmek istiyorum"], default=p.get("amaclar", []))
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 2; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 2; st.rerun()
+            if b2.button("İleri "):
                 st.session_state.profil["amaclar"] = amaclar
                 st.session_state.onboarding_step = 4
                 st.rerun()
@@ -416,11 +456,11 @@ else:
         elif step == 4:
             st.markdown("<h2 style='text-align:center;'>Cinsiyetin nedir?</h2>", unsafe_allow_html=True)
             cinsiyet = st.selectbox("Seçimini yap:", ["Kadın", "Erkek"], index=["Kadın", "Erkek"].index(p.get("cinsiyet", "Kadın")))
-            st.markdown('<div class="info-box">ℹ️ Cinsiyetin, vücudunun günlük enerji ihtiyacını hesaplamamızı doğrudan etkiler.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Cinsiyetin, vücudunun günlük enerji ihtiyacını hesaplamamızı doğrudan etkiler.</div>', unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 3; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 3; st.rerun()
+            if b2.button("İleri "):
                 st.session_state.profil["cinsiyet"] = cinsiyet
                 st.session_state.onboarding_step = 5
                 st.rerun()
@@ -431,7 +471,7 @@ else:
             dogum_yili = st.number_input("Yıl", min_value=1920, max_value=mevcut_yil-13, value=int(p.get("dogum_yili", 2000)))
             yas = mevcut_yil - dogum_yili
             st.markdown(f"<h4 style='text-align:center;'>Şu an <b>{yas}</b> yaşındasın.</h4>", unsafe_allow_html=True)
-            st.markdown('<div class="info-box">ℹ️ Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Yaşın, vücudunun her gün ne kadar enerjiye (BMR) ihtiyaç duyduğunu etkiler.</div>', unsafe_allow_html=True)
             if yas < 18:
                 st.warning(
                     "18 yaşından küçüksün. Büyüme çağında kalori kısıtlamak gelişimi etkileyebilir. "
@@ -440,8 +480,8 @@ else:
                 )
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 4; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 4; st.rerun()
+            if b2.button("İleri "):
                 st.session_state.profil["dogum_yili"] = dogum_yili
                 st.session_state.onboarding_step = 6
                 st.rerun()
@@ -449,11 +489,11 @@ else:
         elif step == 6:
             st.markdown("<h2 style='text-align:center;'>Boyun kaç?</h2>", unsafe_allow_html=True)
             boy = st.number_input("Boy (cm)", min_value=130, max_value=220, value=int(p.get("boy", 165)))
-            st.markdown('<div class="info-box">ℹ️ Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.</div>', unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 5; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 5; st.rerun()
+            if b2.button("İleri "):
                 st.session_state.profil["boy"] = boy
                 st.session_state.onboarding_step = 7
                 st.rerun()
@@ -461,11 +501,11 @@ else:
         elif step == 7:
             st.markdown("<h2 style='text-align:center;'>Şu andaki kilon ne?</h2>", unsafe_allow_html=True)
             mevcut_kilo = st.number_input("Kilo (kg)", min_value=35.0, max_value=250.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
-            st.markdown('<div class="info-box">ℹ️ Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>', unsafe_allow_html=True)
             
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 6; st.rerun()
-            if b2.button("İleri ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 6; st.rerun()
+            if b2.button("İleri "):
                 st.session_state.profil["mevcut_kilo"] = mevcut_kilo
                 st.session_state.onboarding_step = 8
                 st.rerun()
@@ -481,7 +521,7 @@ else:
                 mevcut_aktivite = aktivite_listesi[1]
             aktivite = st.selectbox("Günlük hareket düzeyin", aktivite_listesi,
                                     index=aktivite_listesi.index(mevcut_aktivite))
-            st.markdown('<div class="info-box">ℹ️ Hareket düzeyin, günde ne kadar enerji harcadığını belirleyen en önemli etken. Adım ve egzersiz kayıtların bunun üzerine eklenir.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="info-box">Hareket düzeyin, günde ne kadar enerji harcadığını belirleyen en önemli etken. Adım ve egzersiz kayıtların bunun üzerine eklenir.</div>', unsafe_allow_html=True)
 
             sec_tema = st.selectbox("Nova Deneyimin İçin Bir Tema Seç", list(TEMA_AYARLARI.keys()), index=list(TEMA_AYARLARI.keys()).index(aktif_tema))
 
@@ -495,15 +535,15 @@ else:
                 st.warning("Bu tempo hızlı. Güvenli aralık genelde haftada 0,5-1 kilodur; süreyi uzatmanı öneririm.")
 
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 7; st.rerun()
-            if b2.button("Kalori Hedefimi Hesapla ➔"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 7; st.rerun()
+            if b2.button("Kalori Hedefimi Hesapla "):
                 st.session_state.profil.update({"hedef_kilo": hedef_kilo, "hedef_sure_ay": hedef_sure,
                                                 "aktivite": aktivite, "tema": sec_tema})
                 st.session_state.onboarding_step = 9
                 st.rerun()
 
         elif step == 9:
-            st.markdown(f"<h2 style='text-align:center;'>Paylaştığın için teşekkürler, {p.get('ad', '')} 🎉</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align:center;'>Paylaştığın için teşekkürler, {p.get('ad', '')} </h2>", unsafe_allow_html=True)
             st.markdown("<p style='text-align:center; font-size:1.2rem; opacity:0.9;'>Bize söylediklerin, seni nasıl destekleyeceğimizi şekillendirmemize yardımcı olacak.</p>", unsafe_allow_html=True)
             
             bmr, tdee, gunluk_acik, hedef_kalori = hesapla_bmr_ve_hedef(p)
@@ -526,8 +566,8 @@ else:
                        "Hesaplamalar genel formüllere dayanan tahminlerdir.")
 
             b1, b2 = st.columns(2)
-            if b1.button("⬅️ Geri"): st.session_state.onboarding_step = 8; st.rerun()
-            if b2.button("🚀 Harika, Uygulamaya Başla!", type="primary"):
+            if b1.button("Geri"): st.session_state.onboarding_step = 8; st.rerun()
+            if b2.button("Harika, Uygulamaya Başla!", type="primary"):
                 st.session_state.profil["setup_tamamlandi"] = True
                 verileri_kaydet(aktif_user)
                 st.rerun()
@@ -547,7 +587,7 @@ else:
     gunler_tr = {0: "Pazartesi", 1: "Salı", 2: "Çarşamba", 3: "Perşembe", 4: "Cuma", 5: "Cumartesi", 6: "Pazar"}
     bugun_dt = datetime.date.today()
     tarih_str = f"{bugun_dt.day} {aylar_tr[bugun_dt.month]} {bugun_dt.year} {gunler_tr[bugun_dt.weekday()]}"
-    st.markdown(f'<div class="nova-tarih">📅 {tarih_str}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="nova-tarih">{tarih_str}</div>', unsafe_allow_html=True)
 
     # ----------------------------------------------------
     # PAZAR GÜNÜ TARTI & HEDEF GÜNCELLEME KONTROLÜ
@@ -559,19 +599,19 @@ else:
     if bugun_pazar_mu and son_tarti != str(bugun_dt) and not st.session_state.get(pazar_guncellendi_key, False):
         st.markdown(f"""
             <div class="calai-card" style="border: 2px solid #ffcc00; background: rgba(50, 40, 0, 0.9);">
-                <h3 style="color: #ffcc00 !important;">⚖️ Pazar Günü Tartı ve Durum Güncellemesi!</h3>
+                <h3 style="color: #ffcc00 !important;">Pazar Günü Tartı ve Durum Güncellemesi!</h3>
                 <p>Harika bir hafta geçirdik! Haftayı kapatmadan önce bugün sabah tartıldığın güncel kilonu girerek hedeflerini ve kalori planını yeni kilosuna göre güncelleyebilirsin.</p>
             </div>
         """, unsafe_allow_html=True)
         
         yeni_tartilinan_kilo = st.number_input("Bugünkü Güncel Kilon (kg)", min_value=30.0, max_value=250.0, value=float(p["mevcut_kilo"]), step=0.1, key="pazar_kilo_input")
-        if st.button("⚖️ Kilomu Güncelle ve Hedeflerimi Yenile", use_container_width=True):
+        if st.button("Kilomu Güncelle ve Hedeflerimi Yenile", use_container_width=True):
             p["mevcut_kilo"] = yeni_tartilinan_kilo
             p["son_tarti_tarihi"] = str(bugun_dt)
             p.setdefault("kilo_gecmisi", []).append({"tarih": str(bugun_dt), "kilo": yeni_tartilinan_kilo})
             st.session_state[pazar_guncellendi_key] = True
             verileri_kaydet(aktif_user)
-            st.success("🎉 Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!")
+            st.success("Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!")
             st.rerun()
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -579,10 +619,10 @@ else:
     with c_orta:
         t_col1, t_col2 = st.columns([8, 2])
         with t_col1:
-            secilen_tarih = str(st.date_input("🗓️ Geçmiş Tarih İnceleme", datetime.date.today()))
+            secilen_tarih = str(st.date_input("Geçmiş Tarih İnceleme", datetime.date.today()))
         with t_col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("⚙️ Ayarlar", use_container_width=True):
+            if st.button("Ayarlar", use_container_width=True):
                 st.session_state.profil["setup_tamamlandi"] = False
                 st.session_state.onboarding_step = 2
                 st.rerun()
@@ -591,57 +631,13 @@ else:
             st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0, "egzersiz_kalori": 0}
         curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-        tab_ozet, tab_ai_ogun, tab_ai_koc, tab_ai_asistan = st.tabs(["📊 Günlük Özet", "📸 AI Öğün Tarama", "🏋️‍♀️ AI Koç", "💬 AI Asistan"])
+        tab_ozet, tab_gelisim, tab_ai_ogun, tab_ai_koc, tab_ai_asistan = st.tabs(
+            ["Günlük Özet", "Gelişim", "Öğün Tarama", "Antrenman Koçu", "Asistan"])
 
         # ==========================================
         # 1. SEKME: GÜNLÜK ÖZET & MANUEL EKLEME
         # ==========================================
         with tab_ozet:
-            st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='text-align:center; font-size: 2rem; margin-bottom: 25px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
-            adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
-            su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
-            
-            hc1, hc2 = st.columns(2)
-            with hc1:
-                st.markdown(f"""
-                    <div class="ring-container" style="background: conic-gradient(#ff3b30 {adim_yuzde}%, {tema['ring_track']} 0deg);">
-                        <div class="ring-inner">
-                            <div class="ring-val" style="color:#ff3b30 !important;">{curr_aktivite['adim']}</div>
-                            <div class="ring-lbl">ADIM</div>
-                        </div>
-                    </div><br>
-                """, unsafe_allow_html=True)
-                yeni_adim = st.number_input("Bugünkü toplam adımın", min_value=0, max_value=100000,
-                                            value=int(curr_aktivite.get("adim", 0)), step=500,
-                                            help="Telefonundaki sağlık uygulamasında yazan günlük toplamı gir. Üzerine eklemez, bu sayıyı yazar.")
-                if st.button("🔴 Adımı Kaydet", use_container_width=True):
-                    curr_aktivite["adim"] = int(yeni_adim)
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-            with hc2:
-                st.markdown(f"""
-                    <div class="ring-container" style="background: conic-gradient(#007aff {su_yuzde}%, {tema['ring_track']} 0deg);">
-                        <div class="ring-inner">
-                            <div class="ring-val" style="color:#007aff !important;">{curr_aktivite['su']:.2f}</div>
-                            <div class="ring-lbl">LİTRE</div>
-                        </div>
-                    </div><br>
-                """, unsafe_allow_html=True)
-                su_secim = st.number_input("Eklenecek su (litre)", min_value=0.0, max_value=3.0,
-                                           value=0.25, step=0.25,
-                                           help="İçtikçe ekle. Bir bardak yaklaşık 0,25 litredir.")
-                sc1, sc2 = st.columns([3, 1])
-                if sc1.button("🔵 Suyu Ekle", use_container_width=True):
-                    curr_aktivite["su"] = round(curr_aktivite.get("su", 0.0) + su_secim, 2)
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-                if sc2.button("Sıfırla", use_container_width=True, help="Bugünkü su sayacını sıfırla"):
-                    curr_aktivite["su"] = 0.0
-                    verileri_kaydet(aktif_user)
-                    st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-
             # KALORİ TABLOSU
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
             st.markdown("<h2 style='font-size: 2rem;'>Kalori ve Denge Tablosu</h2>", unsafe_allow_html=True)
@@ -663,20 +659,20 @@ else:
             st.markdown(f"""
             <table>
                 <tr><th>Metrik</th><th style="text-align: right;">Değer</th></tr>
-                <tr><td>🎯 Günlük Hedef Kalori Bütçen</td><td style="text-align: right; color: #007aff !important;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
-                <tr><td>🍽️ Bugüne Kadar Yediklerin</td><td style="text-align: right; color: #ff3b30 !important;"><b>- {round(top_kalori)} kcal</b></td></tr>
-                <tr><td>🏃‍♀️ Hareket ve Egzersizle Kazandıkların</td><td style="text-align: right; color: #34c759 !important;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
+                <tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#007aff;margin-right:10px;vertical-align:middle;"></span>Günlük Hedef Kalori Bütçen</td><td style="text-align: right; color: #007aff !important;"><b>{round(hedef_kalori_alim)} kcal</b></td></tr>
+                <tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#ff3b30;margin-right:10px;vertical-align:middle;"></span>Bugüne Kadar Yediklerin</td><td style="text-align: right; color: #ff3b30 !important;"><b>- {round(top_kalori)} kcal</b></td></tr>
+                <tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34c759;margin-right:10px;vertical-align:middle;"></span>Hareket ve Egzersizle Kazandıkların</td><td style="text-align: right; color: #34c759 !important;"><b>+ {round(aktif_harcanan)} kcal</b></td></tr>
                 <tr style="border-top: 2px solid rgba(255,255,255,0.5);">
-                    <td style="font-size: 1.3rem; font-weight: 800;">⚖️ Geriye Kalan Yeme Hakkın</td>
+                    <td style="font-size: 1.3rem; font-weight: 800;">Geriye Kalan Yeme Hakkın</td>
                     <td style="text-align: right; font-size: 1.3rem; font-weight: 800;">{round(kalan_kalori)} kcal</td>
                 </tr>
             </table><br>
             """, unsafe_allow_html=True)
             
             if kalan_kalori < 0: 
-                st.error(f"⚠️ Limitini {abs(round(kalan_kalori))} kcal aştın. Hedefe dönmek için biraz egzersiz yapmalısın!")
+                st.error(f"Limitini {abs(round(kalan_kalori))} kcal aştın. Hedefe dönmek için biraz egzersiz yapmalısın!")
             else: 
-                st.success(f"✅ Harika gidiyorsun! Günün geri kalanı için {round(kalan_kalori)} kcal yeme hakkın duruyor.")
+                st.success(f"Harika gidiyorsun! Günün geri kalanı için {round(kalan_kalori)} kcal yeme hakkın duruyor.")
 
             def render_makro(isim, mevcut, hedef, renk):
                 yuzde = min((mevcut / max(hedef, 1)) * 100, 100)
@@ -692,14 +688,15 @@ else:
                 </div>
                 """
             st.markdown("<h4>Günlük Makro İhtiyaçları</h4>", unsafe_allow_html=True)
-            st.markdown(render_makro("🥩 Protein", top_pro, hedef_pro, "#ff3b30"), unsafe_allow_html=True)
-            st.markdown(render_makro("🍞 Karbonhidrat", top_karb, hedef_karb, "#007aff"), unsafe_allow_html=True)
-            st.markdown(render_makro("🥑 Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
+            st.markdown(render_makro("Protein", top_pro, hedef_pro, "#ff3b30"), unsafe_allow_html=True)
+            st.markdown(render_makro("Karbonhidrat", top_karb, hedef_karb, "#007aff"), unsafe_allow_html=True)
+            st.markdown(render_makro("Yağ", top_yag, hedef_yag, "#ffcc00"), unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
+
 
             # YEMEK EKLEME: arama, barkod, favoriler, kendi yemeğin
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2rem;'>🔎 Yemek Ekle</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem;'>Yemek Ekle</h2>", unsafe_allow_html=True)
 
             secilen_ogun = st.selectbox("Hangi öğüne eklenecek?",
                                         ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="db_ogun")
@@ -712,7 +709,7 @@ else:
                 st.rerun()
 
             st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>", unsafe_allow_html=True)
-            st.markdown("<h3>🍽️ Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
+            st.markdown("<h3>Bugünkü Öğünlerin</h3>", unsafe_allow_html=True)
             for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]:
                 ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
                 if ogun_yemekleri:
@@ -720,90 +717,92 @@ else:
                     for i, k in ogun_yemekleri:
                         c1, c2 = st.columns([10, 1])
                         c1.markdown(f"• {k['Tarif']} — *{k['Kalori']} kcal*")
-                        if c2.button("🗑️", key=f"sil_{i}", help="Bu öğünü sil"):
+                        if c2.button("Sil", key=f"sil_{i}", help="Bu öğünü günlükten çıkar"):
                             st.session_state.gunluk_kayitlar.pop(i)
                             verileri_kaydet(aktif_user)
                             st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # --- HAFTALIK GRAFİK ---
+
+            # BUGÜNKÜ EGZERSİZİN
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>📈 Haftalık Gelişim ve Denge Analizi</h2>", unsafe_allow_html=True)
-            bugun_tarih = datetime.date.today()
-            grafik_data = []
-            
-            for i in range(6, -1, -1):
-                g = str(bugun_tarih - datetime.timedelta(days=i))
-                g_ogunler = [k for k in st.session_state.gunluk_kayitlar if k.get("Tarih") == g]
-                g_alinan = sum([k["Kalori"] for k in g_ogunler])
-                g_akt = st.session_state.aktivite_loglari.get(g, {"adim": 0, "egzersiz_kalori": 0})
-                g_harcanan = bmr + (g_akt["adim"] * 0.04) + g_akt.get("egzersiz_kalori", 0)
-                grafik_data.append({"Gün": g[5:], "Yediğin Kalori": g_alinan, "Vücudunun Toplam Yaktığı": g_harcanan})
-            
-            df_grafik = pd.DataFrame(grafik_data).set_index("Gün")
-            st.line_chart(df_grafik, color=["#ff3b30", "#34c759"])
-            st.caption("Kırmızı: yediklerin. Yeşil: vücudunun harcadığı toplam (metabolizma + hareket). "
-                       "Yeşil üstteyse kilo veriyorsun demektir.")
+            st.markdown("<h2 style='font-size: 2rem;'>Bugünkü Egzersizin</h2>", unsafe_allow_html=True)
+            bugunku_antrenmanlar = curr_aktivite.get("antrenmanlar", [])
+            if bugunku_antrenmanlar:
+                for a in bugunku_antrenmanlar:
+                    hareketler = a.get("hareketler", [])
+                    toplam_set = sum(int(h.get("sets_done", 0) or 0) for h in hareketler)
+                    st.markdown(f"**{a.get('gun', 'Antrenman')}** - {toplam_set} set")
+                    for h in hareketler:
+                        tekrar = f" ({h['reps']})" if h.get("reps") else ""
+                        st.caption(f"{h.get('name', h.get('id', ''))} - {h.get('sets_done', 0)} set{tekrar}")
+            else:
+                st.caption("Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.")
+
+            ek_kalori = st.number_input(
+                "Başka bir egzersiz yaptıysan yaktığın tahmini kalori",
+                min_value=0, max_value=2000, value=int(curr_aktivite.get("egzersiz_kalori", 0)), step=25,
+                help="Koştun, yüzdün ya da bisiklete bindiysen buraya yazabilirsin. Üzerine eklemez, bu sayıyı yazar.")
+            if st.button("Egzersiz kalorisini kaydet", use_container_width=True):
+                curr_aktivite["egzersiz_kalori"] = int(ek_kalori)
+                verileri_kaydet(aktif_user)
+                st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # --- KİLO GRAFİĞİ ---
+
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>⚖️ Kilo Takibin</h2>", unsafe_allow_html=True)
-
-            kilo_gecmisi = sorted(p.get("kilo_gecmisi", []), key=lambda x: x.get("tarih", ""))
-            if len(kilo_gecmisi) < 2:
-                st.info("Kilo grafiğin, ikinci tartından sonra burada görünecek. "
-                        "Her Pazar tartılman yeterli; istersen aşağıdan da kilo girebilirsin.")
-            else:
-                df_kilo = pd.DataFrame([
-                    {"Tarih": k["tarih"], "Kilon": float(k["kilo"]), "Hedefin": float(p["hedef_kilo"])}
-                    for k in kilo_gecmisi
-                ]).set_index("Tarih")
-                st.line_chart(df_kilo, color=["#007aff", "#34c759"])
-
-                ilk, son = float(kilo_gecmisi[0]["kilo"]), float(kilo_gecmisi[-1]["kilo"])
-                degisim = son - ilk
-                kalan = son - float(p["hedef_kilo"])
-                k1, k2, k3 = st.columns(3)
-                k1.metric("Şu anki kilon", f"{son:.1f} kg", f"{degisim:+.1f} kg")
-                k2.metric("Hedefin", f'{float(p["hedef_kilo"]):.1f} kg')
-                k3.metric("Kalan", f"{abs(kalan):.1f} kg")
-
-                # Son dört tartıya bakarak kaba bir varış tahmini
-                if len(kilo_gecmisi) >= 3 and abs(kalan) > 0.3:
-                    try:
-                        son_dort = kilo_gecmisi[-4:]
-                        gun_farki = (datetime.date.fromisoformat(son_dort[-1]["tarih"])
-                                     - datetime.date.fromisoformat(son_dort[0]["tarih"])).days
-                        kilo_degisimi = float(son_dort[-1]["kilo"]) - float(son_dort[0]["kilo"])
-                        if gun_farki >= 7 and abs(kilo_degisimi) > 0.2:
-                            gunluk = kilo_degisimi / gun_farki
-                            if (kalan > 0 and gunluk < 0) or (kalan < 0 and gunluk > 0):
-                                kalan_gun = int(abs(kalan / gunluk))
-                                if kalan_gun < 1000:
-                                    varis = datetime.date.today() + datetime.timedelta(days=kalan_gun)
-                                    st.success(f"Bu hızla gidersen hedefine yaklaşık "
-                                               f"{varis.day} {aylar_tr[varis.month]} {varis.year} tarihinde ulaşırsın.")
-                            else:
-                                st.info("Son tartıların hedefinin ters yönünde. Bu normal olabilir; "
-                                        "birkaç hafta daha veriye bakmak gerek.")
-                    except (ValueError, KeyError, ZeroDivisionError):
-                        pass
-                st.caption("Günlük kilo dalgalanması normaldir; eğilime bak, tek bir tartıya değil.")
-
-            with st.expander("Kilo girişi ekle"):
-                ek_tarih = st.date_input("Tartı tarihi", datetime.date.today(), key="kilo_tarih")
-                ek_kilo = st.number_input("Kilon (kg)", min_value=30.0, max_value=250.0,
-                                          value=float(p["mevcut_kilo"]), step=0.1, key="kilo_deger")
-                if st.button("Kiloyu kaydet", key="kilo_kaydet"):
-                    gecmis = p.setdefault("kilo_gecmisi", [])
-                    gecmis[:] = [k for k in gecmis if k.get("tarih") != str(ek_tarih)]
-                    gecmis.append({"tarih": str(ek_tarih), "kilo": float(ek_kilo)})
-                    if str(ek_tarih) >= max((k["tarih"] for k in gecmis), default=""):
-                        p["mevcut_kilo"] = float(ek_kilo)
+            st.markdown("<h2 style='text-align:center; font-size: 2rem; margin-bottom: 25px;'>Günlük Aktivite ve Su Halkaları</h2>", unsafe_allow_html=True)
+            adim_yuzde = min(curr_aktivite['adim'] / 10000 * 100, 100)
+            su_yuzde = min(curr_aktivite['su'] / 2.5 * 100, 100)
+            
+            hc1, hc2 = st.columns(2)
+            with hc1:
+                st.markdown(f"""
+                    <div class="ring-container" style="background: conic-gradient(#ff3b30 {adim_yuzde}%, {tema['ring_track']} 0deg);">
+                        <div class="ring-inner">
+                            <div class="ring-val" style="color:#ff3b30 !important;">{curr_aktivite['adim']}</div>
+                            <div class="ring-lbl">ADIM</div>
+                        </div>
+                    </div><br>
+                """, unsafe_allow_html=True)
+                yeni_adim = st.number_input("Bugünkü toplam adımın", min_value=0, max_value=100000,
+                                            value=int(curr_aktivite.get("adim", 0)), step=500,
+                                            help="Telefonundaki sağlık uygulamasında yazan günlük toplamı gir. Üzerine eklemez, bu sayıyı yazar.")
+                if st.button("Adımı Kaydet", use_container_width=True):
+                    curr_aktivite["adim"] = int(yeni_adim)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
+            with hc2:
+                st.markdown(f"""
+                    <div class="ring-container" style="background: conic-gradient(#007aff {su_yuzde}%, {tema['ring_track']} 0deg);">
+                        <div class="ring-inner">
+                            <div class="ring-val" style="color:#007aff !important;">{curr_aktivite['su']:.2f}</div>
+                            <div class="ring-lbl">LİTRE</div>
+                        </div>
+                    </div><br>
+                """, unsafe_allow_html=True)
+                su_secim = st.number_input("Eklenecek su (litre)", min_value=0.0, max_value=3.0,
+                                           value=0.25, step=0.25,
+                                           help="İçtikçe ekle. Bir bardak yaklaşık 0,25 litredir.")
+                sc1, sc2 = st.columns([3, 1])
+                if sc1.button("Suyu Ekle", use_container_width=True):
+                    curr_aktivite["su"] = round(curr_aktivite.get("su", 0.0) + su_secim, 2)
+                    verileri_kaydet(aktif_user)
+                    st.rerun()
+                if sc2.button("Sıfırla", use_container_width=True, help="Bugünkü su sayacını sıfırla"):
+                    curr_aktivite["su"] = 0.0
                     verileri_kaydet(aktif_user)
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
+
+
+        with tab_gelisim:
+            st.markdown('<div class="calai-card">', unsafe_allow_html=True)
+            st.markdown("<h2 style='font-size: 2rem; margin-bottom: 20px;'>Gelişimin</h2>", unsafe_allow_html=True)
+            gelisim_sayfasi(st.session_state.gunluk_kayitlar, st.session_state.aktivite_loglari,
+                            p, hedef_kalori_alim, bmr, tema)
+            st.markdown('</div>', unsafe_allow_html=True)
+
 
         with tab_ai_ogun:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
@@ -812,7 +811,7 @@ else:
             if totals:
                 for item in totals["items"]:
                     st.session_state.gunluk_kayitlar.append({
-                        "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai, "Tarif": f"🤖 {item['Yemek']}",
+                        "Tarih": secilen_tarih, "Öğün": secilen_ogun_ai, "Tarif": f"{item['Yemek']}",
                         "Kalori": float(item["Kalori"]), "Protein": float(item["Protein (g)"]), 
                         "Karbonhidrat": float(item["Karb. (g)"]), "Yağ": float(item["Yağ (g)"])
                     })
@@ -831,10 +830,10 @@ else:
                 curr_aktivite["egzersiz_kalori"] = curr_aktivite.get("egzersiz_kalori", 0) + tahmini_kcal
                 curr_aktivite.setdefault("antrenmanlar", []).append({"gun": log["day"], "hareketler": log["exercises"]})
                 verileri_kaydet(aktif_user)
-                st.success(f"🤖 Antrenman kaydedildi: {toplam_set} set, yaklaşık {tahmini_kcal} kcal günlüğüne eklendi.")
+                st.success(f"Antrenman kaydedildi: {toplam_set} set, yaklaşık {tahmini_kcal} kcal günlüğüne eklendi.")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with tab_ai_asistan:
             st.markdown('<div class="calai-card">', unsafe_allow_html=True)
-            ask_page()
+            ask_page(p)
             st.markdown('</div>', unsafe_allow_html=True)
