@@ -65,9 +65,60 @@ def _hesabi_sil(db, kullanici):
     return hatalar
 
 
+def _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet):
+    """Günlük hatırlatma tercihleri."""
+    from bildirim import eposta_ayarli_mi, telegram_ayarli_mi, telegram_gonder
+
+    st.markdown("#### Hatırlatmalar")
+    if not eposta_ayarli_mi() and not telegram_ayarli_mi():
+        st.caption("Hatırlatma gönderimi henüz ayarlanmamış.")
+        return
+
+    acik = st.toggle(
+        "Her akşam hatırlatma gönder",
+        value=bool(profil.get("hatirlatma_acik")),
+        help="Öğün kaydetmediğin, su hedefinin gerisinde kaldığın ya da Pazar tartısı "
+             "atladığın günlerde kısa bir hatırlatma gelir. Her şey yolundaysa mesaj gelmez.",
+        key="hatirlatma_acik_toggle")
+
+    if acik != bool(profil.get("hatirlatma_acik")):
+        profil["hatirlatma_acik"] = acik
+        kaydet()
+        st.rerun()
+
+    if not acik:
+        return
+
+    if kullanici_eposta:
+        st.caption(f"E-posta: {kullanici_eposta}")
+    else:
+        st.warning("Hesabında kayıtlı e-posta yok, bu yüzden e-posta gönderilemez. "
+                   "Telegram'ı aşağıdan bağlayabilirsin.")
+
+    if telegram_ayarli_mi():
+        with st.expander("Telefona anlık bildirim (Telegram)"):
+            st.caption("Telegram'da botu bul, /start yaz, sana verdiği numarayı buraya gir. "
+                       "E-postadan farklı olarak telefonuna anında düşer.")
+            mevcut = profil.get("telegram_id", "")
+            yeni_id = st.text_input("Telegram sohbet numaran", value=mevcut, key="telegram_id_girdi")
+            c1, c2 = st.columns(2)
+            if c1.button("Kaydet", key="telegram_kaydet", use_container_width=True):
+                profil["telegram_id"] = yeni_id.strip()
+                profil["bildirim_telegram"] = bool(yeni_id.strip())
+                kaydet()
+                st.success("Telegram bağlandı." if yeni_id.strip() else "Telegram bağlantısı kaldırıldı.")
+            if mevcut and c2.button("Deneme mesajı gönder", key="telegram_dene", use_container_width=True):
+                basarili, mesaj = telegram_gonder(mevcut, "Nova'dan merhaba. Bildirimler çalışıyor.")
+                st.success("Gönderildi, telefonuna bak.") if basarili else st.error(mesaj)
+
+
 def hesap_bolumu(db, kullanici, gunluk_kayitlar, aktivite_loglari, profil,
-                 sifre_dogrula=None, sifre_ozeti=None):
-    """Verilerini indir ve hesabını sil bölümünü çizer."""
+                 sifre_dogrula=None, sifre_ozeti=None, kullanici_eposta="", kaydet=None):
+    """Hatırlatmalar, verilerini indir ve hesabını sil bölümünü çizer."""
+    if kaydet is not None:
+        _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet)
+        st.divider()
+
     st.markdown("#### Verilerin")
     st.caption("Nova'daki bütün verilerin senin. İstediğin zaman indirebilir ya da sildirebilirsin.")
 
