@@ -21,6 +21,8 @@ import streamlit as st
 
 from bildirim import eposta_ayarli_mi, eposta_gonder
 
+from diller import t, h
+
 GECERLILIK_DK = 15
 EN_FAZLA_DENEME = 5
 
@@ -105,8 +107,8 @@ def sifre_sifirlama_bolumu(db, sifre_olustur, sifre_kontrol):
         asama = st.session_state.get("sifirlama_asama", "kod_iste")
 
         if asama == "kod_iste":
-            girdi = st.text_input("Kullanıcı adın ya da e-postan", key="sifirlama_girdi")
-            if st.button("Kod gönder", key="sifirlama_gonder", use_container_width=True):
+            girdi = st.text_input(t("Kullanıcı adın ya da e-postan"), key="sifirlama_girdi")
+            if st.button(t("Kod gönder"), key="sifirlama_gonder", use_container_width=True):
                 kullanici, eposta = _kullaniciyi_bul(db, girdi)
                 # Hesabın olup olmadığını dışarıya söyleme
                 if kullanici and eposta:
@@ -128,21 +130,21 @@ def sifre_sifirlama_bolumu(db, sifre_olustur, sifre_kontrol):
             kullanici = st.session_state.get("sifirlama_kullanici", "")
             st.success(f"**{kullanici}** hesabının e-postasına {GECERLILIK_DK} dakika geçerli "
                        "bir kod gönderildi.")
-            kod = st.text_input("E-postana gelen 6 haneli kod", max_chars=6, key="sifirlama_kod")
-            yeni = st.text_input("Yeni şifren (en az 8 karakter, bir büyük harf ve bir rakam)",
+            kod = st.text_input(t("E-postana gelen 6 haneli kod"), max_chars=6, key="sifirlama_kod")
+            yeni = st.text_input(t("Yeni şifren (en az 8 karakter, bir büyük harf ve bir rakam)"),
                                  type="password", key="sifirlama_yeni")
-            yeni2 = st.text_input("Yeni şifren (tekrar)", type="password", key="sifirlama_yeni2")
+            yeni2 = st.text_input(t("Yeni şifren (tekrar)"), type="password", key="sifirlama_yeni2")
 
             c1, c2 = st.columns([3, 1])
-            if c1.button("Şifremi değiştir", key="sifirlama_bitir",
+            if c1.button(t("Şifremi değiştir"), key="sifirlama_bitir",
                          type="primary", use_container_width=True):
                 hata = sifre_kontrol(yeni)
                 if not kod.strip():
-                    st.error("Kodu gir.")
+                    st.error(t("Kodu gir."))
                 elif hata:
                     st.error(hata)
                 elif yeni != yeni2:
-                    st.error("İki şifre birbirini tutmuyor.")
+                    st.error(t("İki şifre birbirini tutmuyor."))
                 else:
                     gecerli, mesaj = _kodu_dogrula(db, kullanici, kod)
                     if not gecerli:
@@ -160,9 +162,9 @@ def sifre_sifirlama_bolumu(db, sifre_olustur, sifre_kontrol):
                         else:
                             for anahtar in ("sifirlama_asama", "sifirlama_kullanici"):
                                 st.session_state.pop(anahtar, None)
-                            st.success("Şifren değişti. Artık yeni şifrenle giriş yapabilirsin.")
+                            st.success(t("Şifren değişti. Artık yeni şifrenle giriş yapabilirsin."))
 
-            if c2.button("Vazgeç", key="sifirlama_iptal", use_container_width=True):
+            if c2.button(t("Vazgeç"), key="sifirlama_iptal", use_container_width=True):
                 for anahtar in ("sifirlama_asama", "sifirlama_kullanici"):
                     st.session_state.pop(anahtar, None)
                 st.rerun()
