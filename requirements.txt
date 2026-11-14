@@ -1,8 +1,9 @@
 streamlit>=1.50
 supabase
 pandas
+altair
 google-genai
 Pillow
-opencv-python-headless
 requests
 bcrypt
+zxing-cpp
