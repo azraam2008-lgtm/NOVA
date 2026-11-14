@@ -34,7 +34,7 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"
 # Seçili model yoğunluk (503) nedeniyle cevap veremezse sırayla denenecek yedekler
 YEDEK_MODELLER = ["gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
 MAX_SIDE = 1024                                   # fotoğraf bu boyuta küçültülür
-DAILY_LIMITS = {"meal": 5, "coach": 3, "ask": 15}  # kullanıcı başına günlük hak
+DAILY_LIMITS = {"meal": 10, "coach": 3, "ask": 20, "label": 10, "voice": 15}  # kullanıcı başına günlük hak
 GLOBAL_DAILY_LIMIT = 800                          # tüm kullanıcılar, tüm modlar (API çağrısı)
 
 
@@ -54,12 +54,31 @@ class FoodItem(BaseModel):
     carbs_per_100g: float
     fat_per_100g: float
     confidence: float
+    fiber_per_100g: Optional[float] = None
+    sugar_per_100g: Optional[float] = None
+    salt_per_100g: Optional[float] = None
 
 
 class MealAnalysis(BaseModel):
     is_food: bool
     items: list[FoodItem]
     assumptions: str
+
+
+class LabelAnalysis(BaseModel):
+    is_label: bool
+    product_name: str
+    brand: str
+    per_100g_protein: Optional[float] = None
+    per_100g_carbs: Optional[float] = None
+    per_100g_fat: Optional[float] = None
+    per_100g_kcal: Optional[float] = None
+    per_100g_fiber: Optional[float] = None
+    per_100g_sugar: Optional[float] = None
+    per_100g_salt: Optional[float] = None
+    per_100g_saturated_fat: Optional[float] = None
+    serving_grams: Optional[float] = None
+    notes: str
 
 
 class PlanExercise(BaseModel):
@@ -99,7 +118,29 @@ Görev: Sen deneyimli bir diyetisyensin. Fotoğraftaki öğünü analiz et.
 - Protein, karbonhidrat ve yağ değerlerini 100 gram için ver. Türk mutfağı için gerçekçi değerler kullan.
 - confidence: 0 ile 1 arası, tahminden ne kadar emin olduğun.
 - Fotoğrafta yiyecek yoksa is_food=false yap ve items'ı boş bırak.
-- Emin değilsen uç değerlerden kaçın, makul orta bir tahmin ver."""
+- Emin değilsen uç değerlerden kaçın, makul orta bir tahmin ver.
+- Biliyorsan lif (fiber), şeker (sugar) ve tuz (salt) değerlerini de 100 gram için ver; bilmiyorsan boş bırak."""
+
+VOICE_SYSTEM = SAFETY + """
+
+Görev: Sen deneyimli bir diyetisyensin. Kullanıcı ne yediğini sesli ya da yazılı olarak anlatıyor.
+- Anlatılan her yiyecek veya içeceği ayrı kalem yap (en fazla 10). Adlar Türkçe olsun; kullanıcı başka dilde konuştuysa adı o dilde bırakabilirsin.
+- "Bir kase", "iki dilim", "bir avuç" gibi ölçüleri gerçekçi grama çevir. Ölçü söylenmediyse ortalama bir porsiyon varsay.
+- Protein, karbonhidrat ve yağ değerlerini 100 gram için ver; biliyorsan lif, şeker ve tuzu da 100 gram için ver.
+- confidence: 0 ile 1 arası, ne kadar emin olduğun.
+- Anlatımda yiyecek yoksa is_food=false yap ve items'ı boş bırak.
+- assumptions alanında gram varsayımlarını kısaca açıkla."""
+
+LABEL_SYSTEM = SAFETY + """
+
+Görev: Fotoğraftaki ambalajın besin değerleri tablosunu oku. Etiket herhangi bir dilde olabilir.
+- Değerleri 100 g (sıvılarda 100 ml) için ver. Tabloda yalnızca porsiyon başı değer varsa porsiyon gramına bölerek 100 g'a çevir.
+- Enerji yalnızca kJ yazıyorsa 4.184'e bölerek kcal'e çevir. Sodyum yazıyorsa tuz = sodyum x 2.5.
+- Okuyamadığın ya da tabloda olmayan değeri boş bırak; asla uydurma.
+- Ürün adını ve markayı ambalajda görünüyorsa yaz, görünmüyorsa boş bırak.
+- serving_grams: tabloda porsiyon gramı yazıyorsa onu yaz.
+- Fotoğrafta besin değerleri tablosu yoksa is_label=false yap.
+- notes: okumada emin olmadığın kısımları kısaca yaz."""
 
 COACH_SYSTEM = SAFETY + """
 
@@ -132,7 +173,16 @@ MODES = {
     "meal": Mode("meal", "Öğün taraması", MEAL_SYSTEM, MealAnalysis, needs_image=True, temperature=0.2),
     "coach": Mode("coach", "Antrenman koçu", COACH_SYSTEM, WorkoutPlan, temperature=0.4),
     "ask": Mode("ask", "Beslenme ve spor asistanı", ASK_SYSTEM, None, temperature=0.4),
+    "label": Mode("label", "Etiket okuma", LABEL_SYSTEM, LabelAnalysis, needs_image=True, temperature=0.0),
+    "voice": Mode("voice", "Sesli/yazılı öğün", VOICE_SYSTEM, MealAnalysis, temperature=0.2),
 }
+
+# Günlük hakları koda dokunmadan Secrets'tan değiştirmek için: LIMIT_MEAL = 15 gibi
+for _mod in DAILY_LIMITS:
+    try:
+        DAILY_LIMITS[_mod] = int(st.secrets.get(f"LIMIT_{_mod.upper()}", DAILY_LIMITS[_mod]))
+    except Exception:  # noqa: BLE001
+        pass
 
 
 # ----------------------------------------------------------- Kullanım sayacı
@@ -248,7 +298,8 @@ def _client():
 
 
 @st.cache_data(show_spinner=False, ttl=60 * 60 * 24)
-def _call(mode_key: str, user_text: str, context: str, image_bytes: Optional[bytes], model: str) -> dict:
+def _call(mode_key: str, user_text: str, context: str, image_bytes: Optional[bytes], model: str,
+          audio_bytes: Optional[bytes] = None, audio_mime: str = "audio/wav") -> dict:
     """Aynı girdi için sonuç önbellekten gelir. Gövde sadece önbellek ıskalandığında çalışır."""
     mode = MODES[mode_key]
     store = _fresh()
@@ -263,6 +314,8 @@ def _call(mode_key: str, user_text: str, context: str, image_bytes: Optional[byt
     contents = []
     if image_bytes:
         contents.append(types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"))
+    if audio_bytes:
+        contents.append(types.Part.from_bytes(data=audio_bytes, mime_type=audio_mime))
     contents.append(user_text or "Analiz et.")
 
     response = _client().models.generate_content(
@@ -278,7 +331,7 @@ def _call(mode_key: str, user_text: str, context: str, image_bytes: Optional[byt
 
 
 def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = None,
-             context: str = "") -> dict:
+             context: str = "", audio_bytes: Optional[bytes] = None, audio_mime: str = "audio/wav") -> dict:
     """Bir modu çalıştırır. Hak kontrolü yapar, başarılı olursa kullanıcının hakkından düşer."""
     mode = MODES[mode_key]
     if mode.needs_image and not image_bytes:
@@ -292,7 +345,7 @@ def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = 
     for sira, model in enumerate(modeller):
         for deneme in range(2 if sira == 0 else 1):
             try:
-                result = _call(mode_key, user_text.strip(), context, image_bytes, model)
+                result = _call(mode_key, user_text.strip(), context, image_bytes, model, audio_bytes, audio_mime)
             except Exception as e:  # noqa: BLE001
                 if sira == 0 and not _gecici_hata(e):
                     raise  # anahtar ya da istek hatası: tekrar denemek işe yaramaz
