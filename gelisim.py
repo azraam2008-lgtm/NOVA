@@ -345,16 +345,16 @@ def _egzersiz_bolumu(df, aktivite_loglari, gunler, renk):
         with st.expander(f"Antrenman günlüğün ({len(kayitlar)} kayıt)"):
             for g, a in reversed(kayitlar):
                 hareketler = a.get("hareketler", [])
-                toplam_set = sum(int(h.get("sets_done", 0) or 0) for h in hareketler)
+                toplam_set = sum(int(hr.get("sets_done", 0) or 0) for hr in hareketler)
                 st.markdown(h(f"**{g.strftime('%d.%m.%Y')}** - {a.get('gun', 'Antrenman')}, "
                             f"{toplam_set} set"))
-                for h in hareketler:
-                    tekrar = f" ({h['reps']})" if h.get("reps") else ""
-                    st.caption(f"{h.get('name', h.get('id', ''))} - "
-                               f"{h.get('sets_done', 0)} set{tekrar}")
+                for hr in hareketler:
+                    tekrar = f" ({hr['reps']})" if hr.get("reps") else ""
+                    st.caption(f"{hr.get('name', hr.get('id', ''))} - "
+                               f"{hr.get('sets_done', 0)} set{tekrar}")
     else:
-        st.caption("Bu dönemde kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan "
-                   "yapıp tamamladığın setleri girebilirsin.")
+        st.caption(t("Bu dönemde kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan "
+                     "yapıp tamamladığın setleri girebilirsin."))
 
 
 # -------------------------------------------------------------------- Giriş
