@@ -173,22 +173,31 @@ def _kilo_bolumu(profil, gun_sayisi, renk):
     c2.metric("Haftalık değişim", f"{haftalik:+.2f} kg")
     c3.metric("Hedefe kalan", f"{abs(son - hedef):.1f} kg")
 
+    # Günlük dalgalanma yanıltmasın diye 7 günlük kayan ortalama
+    veri = veri.sort_values("tarih").reset_index(drop=True)
+    veri["ortalama"] = (veri.set_index("tarih")["kilo"]
+                        .rolling("7D", min_periods=1).mean().to_numpy())
+
     olcek = alt.Scale(zero=False, nice=True)
     tarih_ekseni = alt.X("tarih:T", title=None,
                          axis=alt.Axis(format="%d %b", labelAngle=0,
                                        tickCount=min(len(veri), 7), labelOverlap="greedy"))
-    cizgi = alt.Chart(veri).mark_line(color=MAVI, size=2, interpolate="monotone").encode(
-        x=tarih_ekseni, y=alt.Y("kilo:Q", title="kg", scale=olcek))
-    nokta = alt.Chart(veri).mark_circle(size=55, color=MAVI).encode(
-        x="tarih:T", y=alt.Y("kilo:Q", scale=olcek),
+    nokta = alt.Chart(veri).mark_circle(size=50, color=MAVI, opacity=0.45).encode(
+        x=tarih_ekseni, y=alt.Y("kilo:Q", title="kg", scale=olcek),
         tooltip=[alt.Tooltip("tarih:T", title="Tarih", format="%d %B"),
-                 alt.Tooltip("kilo:Q", title="Kilo", format=".1f")])
+                 alt.Tooltip("kilo:Q", title="Tartı", format=".1f"),
+                 alt.Tooltip("ortalama:Q", title="7 günlük ortalama", format=".1f")])
+    ortalama_cizgi = alt.Chart(veri).mark_line(
+        color=MAVI, size=3, interpolate="monotone").encode(
+        x="tarih:T", y=alt.Y("ortalama:Q", scale=olcek))
     hedef_cizgi = alt.Chart(pd.DataFrame({"h": [hedef]})).mark_rule(
         color=YESIL, strokeDash=[6, 4], size=2).encode(y=alt.Y("h:Q", scale=olcek))
 
-    st.altair_chart(_tema((cizgi + nokta + hedef_cizgi).properties(height=240), renk),
+    st.altair_chart(_tema((nokta + ortalama_cizgi + hedef_cizgi).properties(height=240), renk),
                     use_container_width=True)
-    st.caption("Yeşil kesikli çizgi hedef kilon. Günlük dalgalanma normaldir, eğilime bak.")
+    st.caption("Soluk noktalar tek tek tartıların, kalın mavi çizgi 7 günlük ortalaman. "
+               "Günlük dalgalanma normaldir; çizgiye bak, noktalara değil. "
+               "Yeşil kesikli çizgi hedef kilon.")
 
     if abs(haftalik) > 0.05 and abs(son - hedef) > 0.3:
         dogru_yon = (hedef < son and haftalik < 0) or (hedef > son and haftalik > 0)
