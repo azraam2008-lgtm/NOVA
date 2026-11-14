@@ -4,3 +4,5 @@ pandas
 google-genai
 Pillow
 opencv-python-headless
+requests
+bcrypt
