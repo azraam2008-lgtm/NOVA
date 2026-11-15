@@ -38,22 +38,22 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 TEMA_AYARLARI = {
     "Yakut Kızılı": {"bg_image": "925912004661385138.jpg", "fallback_bg": "#2A0808",
                      "text_color": "#ffffff", "card_bg": "rgba(35, 5, 10, 0.85)",
-                     "ring_track": "rgba(255,255,255,0.15)", "scrim": "rgba(0,0,0,0.35)"},
+                     "ring_track": "rgba(255,255,255,0.15)", "accent": "#B03A4A", "scrim": "rgba(0,0,0,0.35)"},
     "Turkuaz Ferahlığı": {"bg_image": "Oppo_Find_X9s_Wallpaper.jpg", "fallback_bg": "#E0F2F1",
                           "text_color": "#06403c", "card_bg": "rgba(240, 253, 250, 0.94)",
-                          "ring_track": "rgba(0,0,0,0.12)", "scrim": "rgba(255,255,255,0.55)"},
+                          "ring_track": "rgba(0,0,0,0.12)", "accent": "#2A9D8F", "scrim": "rgba(255,255,255,0.55)"},
     "Altın Zarafet": {"bg_image": "826903181627399116.jpg", "fallback_bg": "#3e2723",
                       "text_color": "#ffffff", "card_bg": "rgba(38, 24, 18, 0.88)",
-                      "ring_track": "rgba(255,255,255,0.15)", "scrim": "rgba(0,0,0,0.55)"},
+                      "ring_track": "rgba(255,255,255,0.15)", "accent": "#C9A227", "scrim": "rgba(0,0,0,0.55)"},
     "Bordo Kadife": {"bg_image": "Deep_Maroon.jpg", "fallback_bg": "#310000",
                      "text_color": "#ffebee", "card_bg": "rgba(45, 0, 15, 0.90)",
-                     "ring_track": "rgba(255,255,255,0.15)", "scrim": "rgba(0,0,0,0.40)"},
+                     "ring_track": "rgba(255,255,255,0.15)", "accent": "#7B2D3B", "scrim": "rgba(0,0,0,0.40)"},
     "Derin Mavi": {"bg_image": "Mavi_Arka_Plan.jpg", "fallback_bg": "#00102A",
                    "text_color": "#e3f2fd", "card_bg": "rgba(0, 15, 45, 0.90)",
-                   "ring_track": "rgba(255,255,255,0.15)", "scrim": "rgba(0,0,0,0.30)"},
+                   "ring_track": "rgba(255,255,255,0.15)", "accent": "#2F6DA8", "scrim": "rgba(0,0,0,0.30)"},
     "Koyu Cam": {"bg_image": "687854543129884120.jpg", "fallback_bg": "#0f0f0f",
                  "text_color": "#ffffff", "card_bg": "rgba(20, 20, 20, 0.90)",
-                 "ring_track": "rgba(255,255,255,0.15)", "scrim": "rgba(0,0,0,0.30)"}
+                 "ring_track": "rgba(255,255,255,0.15)", "accent": "#5A6B7C", "scrim": "rgba(0,0,0,0.30)"}
 }
 
 # ----------------------------------------------------
@@ -401,6 +401,10 @@ else:
     tema = TEMA_AYARLARI[aktif_tema]
     bg_url = f"https://raw.githubusercontent.com/azraam2008-lgtm/NOVA/main/{tema['bg_image']}"
 
+    # Sohbet avatarında gösterilecek harf (kullanıcının adının baş harfi)
+    _ad = (p.get("ad") or aktif_user or "S").strip()
+    kullanici_bas_harfi = (_ad[:1] or "S").upper().replace('"', "")
+
     # Arapca gibi sagdan sola yazilan dillerde butun arayuz ters cevrilir
     if yon() == "rtl":
         st.markdown(h("""<style>
@@ -561,6 +565,45 @@ else:
         }}
         th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; color: {tema['text_color']} !important; }}
         th {{ font-weight: 800; font-size: 1.2rem; opacity: 0.9; }}
+
+        /* --- SOHBET AVATARLARI ---
+           Streamlit sohbet avatarlarını simge yazı tipiyle çiziyor. O yazı tipi
+           yüklenemezse (engelli ağ, reklam engelleyici, yavaş bağlantı) simgenin
+           ADI düz yazı olarak basılıyor ve mesajın üstüne biniyor. Avatarı kendimiz
+           çiziyoruz: hiçbir dış yazı tipine bağlı değil, her koşulda düzgün görünür. */
+        [data-testid="stChatMessageAvatarAssistant"],
+        [data-testid="stChatMessageAvatarUser"] {{
+            background: {tema['accent']} !important;
+            color: #ffffff !important;
+            border-radius: 50% !important;
+            width: 2rem !important; height: 2rem !important;
+            min-width: 2rem !important; flex: 0 0 2rem !important;
+            display: flex !important; align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }}
+        [data-testid="stChatMessageAvatarUser"] {{
+            background: rgba(255,255,255,0.22) !important;
+        }}
+        /* Simgenin ham metnini gizle */
+        [data-testid="stChatMessageAvatarAssistant"] *,
+        [data-testid="stChatMessageAvatarUser"] * {{
+            font-size: 0 !important; line-height: 0 !important;
+            width: 0 !important; height: 0 !important; overflow: hidden !important;
+        }}
+        /* Yerine kendi harfimizi koy */
+        [data-testid="stChatMessageAvatarAssistant"]::after {{
+            content: "N";
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1rem !important; line-height: 1 !important;
+            font-weight: 700; letter-spacing: 0;
+        }}
+        [data-testid="stChatMessageAvatarUser"]::after {{
+            content: "{kullanici_bas_harfi}";
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1rem !important; line-height: 1 !important;
+            font-weight: 700; letter-spacing: 0;
+        }}
         </style>
     """), unsafe_allow_html=True)
 
