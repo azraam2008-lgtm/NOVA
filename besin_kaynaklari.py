@@ -105,6 +105,7 @@ def urun_satiri(p):
         "tuz": round(tuz, 2) if tuz is not None else None, "doymus_yag": _sayi(n.get("saturated-fat_100g")),
         "porsiyon": int(porsiyon) if porsiyon and 5 <= porsiyon <= 2000 else None,
         "turkiye": "turkey" in ulkeler or "turkiye" in ulkeler,
+        "ulkeler": ulkeler,
         "mikro": _mikro_cikar(n),
     }
 
@@ -130,10 +131,15 @@ def _mikro_cikar(n):
 
 
 # ------------------------------------------------------------------ Open Food Facts
-def _ham_ara(sorgu):
-    """Önce yeni arama servisi, cevap vermezse eski (cgi) servis denenir."""
+def _ham_ara(sorgu, dil="tr"):
+    """Önce yeni arama servisi, cevap vermezse eski (cgi) servis denenir.
+
+    Arama dili sabit değil: Nova altı dilde çalıştığı için kullanıcının dili
+    gönderiliyor. Almanca kullanan birine Türkçe sonuç aramak yanlış olurdu.
+    """
     try:
-        veri = _istek(ARAMA_URL, {"q": sorgu, "page_size": 40, "langs": "tr", "fields": ALANLAR}) or {}
+        veri = _istek(ARAMA_URL, {"q": sorgu, "page_size": 40,
+                                  "langs": dil, "fields": ALANLAR}) or {}
         if veri.get("hits"):
             return veri["hits"]
     except KaynakHatasi:
@@ -145,20 +151,47 @@ def _ham_ara(sorgu):
     return veri.get("products", [])
 
 
+def _eksiksizlik(u):
+    """Kaydın ne kadar dolu olduğu. Tam kayıtlar listenin üstüne çıksın."""
+    puan = 0
+    for alan in ("kcal", "protein", "karb", "yag"):
+        if u.get(alan):
+            puan += 1
+    if u.get("porsiyon"):
+        puan += 1
+    if u.get("mikro"):
+        puan += 1
+    return puan
+
+
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
-def _off_ara_onbellekli(sorgu):
-    urunler = [u for u in (urun_satiri(p) for p in _ham_ara(sorgu)) if u]
-    # Türkiye'de satılan ürünler önce gelsin (diğer ülkelerin ürünleri de listede kalır)
-    urunler.sort(key=lambda u: not u["turkiye"])
+def _off_ara_onbellekli(sorgu, dil, ulke):
+    urunler = [u for u in (urun_satiri(p) for p in _ham_ara(sorgu, dil)) if u]
+
+    # Sıralama: önce kullanıcının ülkesinde satılanlar, sonra verisi en dolu
+    # olanlar. Eskiden Türkiye sabit olarak öne alınıyordu; Nova artık altı
+    # dilde çalıştığı için bu yanlıştı.
+    ulke_anahtari = (ulke or "").strip().lower()
+
+    def sira(u):
+        kendi_ulkesi = bool(ulke_anahtari) and ulke_anahtari in (u.get("ulkeler") or "")
+        return (not kendi_ulkesi, -_eksiksizlik(u))
+
+    urunler.sort(key=sira)
     return urunler[:25]
 
 
-def off_ara(sorgu):
-    """Marka ürünlerinde arama. Bağlantı sorununda KaynakHatasi fırlatır (hatalar önbelleğe alınmaz)."""
+def off_ara(sorgu, dil="tr", ulke=""):
+    """Marka ürünlerinde arama.
+
+    dil  : arama dili (tr, en, de, es, fr, ar)
+    ulke : kullanıcının ülkesi; o ülkede satılan ürünler öne alınır
+    Bağlantı sorununda KaynakHatasi fırlatır (hatalar önbelleğe alınmaz).
+    """
     sorgu = (sorgu or "").strip()
     if len(sorgu) < 2:
         return []
-    return _off_ara_onbellekli(sorgu.lower())
+    return _off_ara_onbellekli(sorgu.lower(), dil or "tr", (ulke or "").lower())
 
 
 @st.cache_data(ttl=7 * 24 * 3600, show_spinner=False)
