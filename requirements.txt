@@ -8,3 +8,4 @@ requests
 bcrypt
 zxing-cpp
 extra-streamlit-components
+reportlab
