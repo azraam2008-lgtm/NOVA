@@ -342,3 +342,115 @@ def onbellege_yaz(db, urunler):
         db.table("urun_onbellek").upsert(satirlar).execute()
     except Exception:  # noqa: BLE001
         pass
+
+
+# ==========================================================================
+# USDA FOODDATA CENTRAL
+#
+# Open Food Facts marka ürünlerinde güçlü ama ev yemeği, sebze, et, tahıl gibi
+# genel besinlerde zayıf. USDA tam tersi: Amerika'nın resmi besin veritabanı,
+# yüz binlerce kayıt, her biri numaralı ve kaynağı belli. İkisi birlikte
+# aramanın kapsamını kat kat büyütüyor.
+#
+# Ücretsiz bir anahtar gerekiyor (api.data.gov). Anahtar yoksa bu kaynak
+# sessizce devre dışı kalır, arama Open Food Facts ile çalışmaya devam eder.
+# Anahtar Streamlit Secrets'a USDA_API_KEY olarak yazılır.
+#
+# SR Legacy ve Survey (FNDDS) kayıtları 100 gram başına verilir; "Branded"
+# kayıtları da öyle. Hepsi doğrudan Nova'nın iç biçimine çevrilebiliyor.
+# ==========================================================================
+USDA_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
+
+# USDA besin numaraları -> Nova alanları
+USDA_BESIN = {
+    "208": "kcal", "203": "protein", "205": "karb", "204": "yag",
+    "291": "lif", "269": "seker", "307": "sodyum_mg",
+    "301": "Kalsiyum (mg)", "303": "Demir (mg)", "306": "Potasyum (mg)",
+    "304": "Magnezyum (mg)", "309": "Çinko (mg)", "401": "C vitamini (mg)",
+    "328": "D vitamini (µg)", "418": "B12 vitamini (µg)",
+    "606": "doymus_yag",
+}
+
+# Genel besinler önce: bunlar marka değil, yemeğin kendisi
+USDA_TURLER = "SR Legacy,Survey (FNDDS),Foundation"
+
+
+def usda_anahtari():
+    """Secrets'taki USDA anahtarı. Yoksa boş döner ve kaynak kapalı kalır."""
+    try:
+        from nova_core import cfg
+        return (cfg("USDA_API_KEY", "") or "").strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _usda_satiri(yemek):
+    """USDA kaydını Nova'nın iç biçimine çevirir. Eksikse None."""
+    degerler = {}
+    for besin in yemek.get("foodNutrients") or []:
+        numara = str(besin.get("nutrientNumber") or "")
+        alan = USDA_BESIN.get(numara)
+        if not alan:
+            continue
+        deger = _sayi(besin.get("value"))
+        if deger is not None:
+            degerler[alan] = deger
+
+    protein, karb, yag = degerler.get("protein"), degerler.get("karb"), degerler.get("yag")
+    if protein is None or karb is None or yag is None:
+        return None            # makrosu eksik kayıt işe yaramaz
+
+    ad = (yemek.get("description") or "").strip()
+    if not ad:
+        return None
+
+    mikro = {a: d for a, d in degerler.items() if a.endswith(")")}
+    if degerler.get("sodyum_mg") is not None:
+        # Nova tuz üzerinden gösteriyor: tuz = sodyum x 2,5
+        mikro.setdefault("Tuz (g)", round(degerler["sodyum_mg"] * 2.5 / 1000.0, 2))
+    for kaynak, hedef in (("lif", "Lif (g)"), ("seker", "Şeker (g)"),
+                          ("doymus_yag", "Doymuş yağ (g)")):
+        if degerler.get(kaynak) is not None:
+            mikro.setdefault(hedef, degerler[kaynak])
+
+    porsiyon = _sayi(yemek.get("servingSize"))
+    if porsiyon and str(yemek.get("servingSizeUnit", "")).upper() not in ("G", "GRM", "ML"):
+        porsiyon = None
+
+    return {
+        "kod": f"usda:{yemek.get('fdcId')}",
+        "ad": ad[:90],
+        # Marka yerine kaynak yazılıyor: değerin nereden geldiği görünsün
+        "marka": f"USDA {yemek.get('fdcId')}",
+        "kcal": degerler.get("kcal"),
+        "protein": protein, "karb": karb, "yag": yag,
+        "lif": degerler.get("lif"), "seker": degerler.get("seker"),
+        "tuz": mikro.get("Tuz (g)"), "doymus_yag": degerler.get("doymus_yag"),
+        "porsiyon": int(porsiyon) if porsiyon and 5 <= porsiyon <= 2000 else None,
+        "turkiye": False, "ulkeler": "", "mikro": mikro,
+    }
+
+
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _usda_ara_onbellekli(sorgu, anahtar):
+    veri = _istek(USDA_URL, {
+        "api_key": anahtar, "query": sorgu, "dataType": USDA_TURLER,
+        "pageSize": 25, "requireAllWords": "true",
+    }) or {}
+    satirlar = [s for s in (_usda_satiri(y) for y in veri.get("foods") or []) if s]
+    # Kısa açıklamalı kayıtlar genelde daha genel olur ("Bread, white" gibi);
+    # uzun olanlar çok özel varyantlar. Genel olanlar üste alınır.
+    satirlar.sort(key=lambda s: len(s["ad"]))
+    return satirlar[:15]
+
+
+def usda_ara(sorgu):
+    """USDA'da genel besin araması. Anahtar yoksa boş liste döner."""
+    sorgu = (sorgu or "").strip()
+    anahtar = usda_anahtari()
+    if len(sorgu) < 2 or not anahtar:
+        return []
+    try:
+        return _usda_ara_onbellekli(sorgu.lower(), anahtar)
+    except KaynakHatasi:
+        return []          # USDA çökerse arama diğer kaynaklarla devam etsin
