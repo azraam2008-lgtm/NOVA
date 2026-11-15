@@ -17,6 +17,7 @@ import datetime
 import streamlit as st
 
 from diller import DIL_LISTESI, t, dil_ayarla
+import ramazan
 
 
 def ayarlar_paneli(profil, temalar, aktivite_duzeyleri, kaydet,
@@ -123,6 +124,11 @@ def ayarlar_paneli(profil, temalar, aktivite_duzeyleri, kaydet,
             mevcut_tema = tema_listesi[0]
         tema = st.selectbox(t("Nova Deneyimin İçin Bir Tema Seç"), tema_listesi,
                             index=tema_listesi.index(mevcut_tema), key="ayar_tema")
+
+        st.divider()
+
+        # --------------------------------------------------------- Oruç modu
+        ramazan.ayarlar(profil, kaydet)
 
         st.divider()
 
