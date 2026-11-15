@@ -308,13 +308,19 @@ def _sekme_ara(df, db, kullanici, tarih, ogun):
 
     if marka_dahil:
         try:
-            with st.spinner("Marka ürünlerinde aranıyor..."):
+            with st.spinner(t("Marka ürünlerinde aranıyor...")):
                 disaridan = bk.off_ara(sorgu, aktif_dil(), _kullanici_ulkesi())
             if disaridan:
                 bk.onbellege_yaz(db, disaridan)
                 sonuclar += [_offtan(u) for u in disaridan]
         except bk.KaynakHatasi:
             st.caption(t("Marka ürünlerine şu an ulaşılamadı. Kendi veritabanındaki sonuçlar aşağıda."))
+
+        # USDA: genel besinler (et, sebze, tahıl, ev yemeği). Anahtar yoksa
+        # sessizce atlanır, arama diğer kaynaklarla çalışmaya devam eder.
+        usda = bk.usda_ara(sorgu)
+        if usda:
+            sonuclar += [_offtan(u) for u in usda]
 
     # Aynı yemek birden çok kaynaktan gelebilir
     benzersiz, gorulen = [], set()
