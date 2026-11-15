@@ -394,7 +394,8 @@ def prepare_image(file) -> bytes:
 
 # ----------------------------------------------------------- Arayüz parçaları
 def quota_caption(mode_key: str):
-    st.caption(f"Bugünkü kalan hakkın: {remaining(mode_key)} / {DAILY_LIMITS[mode_key]}")
+    from diller import t as _t
+    st.caption(f"{_t('Bugünkü kalan hakkın')}: {remaining(mode_key)} / {DAILY_LIMITS[mode_key]}")
 
 
 def support_slot():
