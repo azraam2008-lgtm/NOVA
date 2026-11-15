@@ -19,6 +19,7 @@ from diller import t, h, tarih_yaz, dil_ayarla, aktif_dil, DIL_LISTESI, yon
 from ayarlar import ayarlar_paneli
 import mikro
 import paylasim
+import ramazan
 from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
                     kullanilabilir_mi, oturum_tazele)
 
@@ -216,6 +217,10 @@ def hesapla_bmr_ve_hedef(p):
 
     # Güvenli sınır: haftada 1 kilodan (günde ~1100 kcal açık) hızlı hedef kabul edilmez
     gunluk_acik = max(min(gunluk_acik, 1100.0), -700.0)
+
+    # Oruçluyken açık daha da daraltılır; oruç zaten öğünleri kısıtlıyor
+    import ramazan as _ramazan
+    gunluk_acik, _ = _ramazan.guvenli_acik(p, gunluk_acik)
 
     hedef_kalori = tdee - gunluk_acik
     taban = 1200 if p.get("cinsiyet") == "Kadın" else 1500
@@ -831,6 +836,13 @@ else:
 
         st.stop()
 
+    # Oruç modu açıksa iftara/sahura kalan süre ve Ramazan önerisi
+    _oruc_saatleri = ramazan.saatleri_al(p) if ramazan.oruc_acik_mi(p) else None
+    ramazan.ramazan_karti(p, _oruc_saatleri)
+    if ramazan.oruc_acik_mi(p):
+        with st.container(key="novakart_oruc"):
+            ramazan.oneri_bolumu()
+
     # ----------------------------------------------------
     # AYARLAR PANELİ
     # Kurulum sihirbazini bastan baslatmak yerine tek sayfalik panel
@@ -980,7 +992,7 @@ else:
                 st.markdown(h("<h2 style='font-size: 2rem;'>Yemek Ekle</h2>"), unsafe_allow_html=True)
 
                 secilen_ogun = st.selectbox(t("Hangi öğüne eklenecek?"),
-                                            ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="db_ogun")
+                                            ramazan.ogunler(p), format_func=t, key="db_ogun")
                 yeni_kayitlar = yemek_arama_sayfasi(df_yemek, supabase, aktif_user, secilen_tarih,
                                                     secilen_ogun, st.session_state.gunluk_kayitlar)
                 if yeni_kayitlar:
@@ -991,7 +1003,10 @@ else:
 
                 st.markdown(h("<hr style='border: 1px solid rgba(255,255,255,0.1); margin: 25px 0;'>"), unsafe_allow_html=True)
                 st.markdown(h("<h3>Bugünkü Öğünlerin</h3>"), unsafe_allow_html=True)
-                for ogun_turu in ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"]:
+                # Oruç modundaki öğünler önce; eski kayıtlar kaybolmasın diye
+                # normal öğün adları da listeye ekleniyor, tekrarlar atılıyor
+                _ogun_sirasi = list(dict.fromkeys(ramazan.ogunler(p) + ramazan.OGUNLER_NORMAL))
+                for ogun_turu in _ogun_sirasi:
                     ogun_yemekleri = [(i, k) for i, k in enumerate(st.session_state.gunluk_kayitlar) if k.get("Tarih") == secilen_tarih and k.get("Öğün") == ogun_turu]
                     if ogun_yemekleri:
                         st.markdown(h(f"**{ogun_turu}**"))
@@ -1060,6 +1075,7 @@ else:
                             </div>
                         </div><br>
                     """), unsafe_allow_html=True)
+                    ramazan.su_notu(p, _oruc_saatleri)
                     su_secim = st.number_input(t("Eklenecek su (litre)"), min_value=0.0, max_value=3.0,
                                                value=0.25, step=0.25,
                                                help="İçtikçe ekle. Bir bardak yaklaşık 0,25 litredir.")
@@ -1104,7 +1120,7 @@ else:
 
         with tab_ai_ogun:
             with st.container(key="novakart9"):
-                secilen_ogun_ai = st.selectbox(t("Hangi Öğün İçin Tarama Yapıyorsun?"), ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "Ara Öğün"], key="ai_ogun_sec")
+                secilen_ogun_ai = st.selectbox(t("Hangi Öğün İçin Tarama Yapıyorsun?"), ramazan.ogunler(p), format_func=t, key="ai_ogun_sec")
                 totals = meal_scan_page()
                 if totals:
                     for item in totals["items"]:
