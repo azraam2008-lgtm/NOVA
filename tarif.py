@@ -14,7 +14,7 @@ yemek_arama.py içinden çağrılır: sekme_tarif(...)
 
 import streamlit as st
 
-from diller import t, h
+from diller import t, h, aktif_dil
 
 ANAHTAR = "tarif_malzemeleri"
 AD_ANAHTARI = "tarif_adi"
@@ -64,7 +64,7 @@ def sekme_tarif(df, db, kullanici, tarih, ogun, *, ara_fn, liste_ara_fn,
         sonuclar += liste_ara_fn(kullanici_yemekleri_fn(db, kullanici, "kendi"), sorgu, limit=5)
         if off_ara_fn and st.session_state.get("tarif_marka_dahil"):
             try:
-                disaridan = off_ara_fn(sorgu)
+                disaridan = off_ara_fn(sorgu, aktif_dil(), (st.session_state.get('profil') or {}).get('ulke', ''))
                 if disaridan:
                     if onbellege_yaz_fn:
                         onbellege_yaz_fn(db, disaridan)
