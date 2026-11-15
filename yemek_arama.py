@@ -23,6 +23,7 @@ Gerekli Supabase tabloları: urun_onbellek, kullanici_yemekleri (supabase_kurulu
 
 import unicodedata
 
+import pandas as pd
 import streamlit as st
 
 import besin_kaynaklari as bk
@@ -54,6 +55,17 @@ def _yemek(ad, p, k, y, gram=100, marka="", kaynak="", kod="", ekstra=None):
     }
 
 
+def _kaynak_adi(deger):
+    """Kaynak sütunu boş ya da NaN ise 'Nova' yazar, 'nan' yazmaz."""
+    try:
+        if deger is None or pd.isna(deger):
+            return "Nova"
+    except (TypeError, ValueError):
+        pass
+    metin = str(deger).strip()
+    return metin if metin and metin.lower() != "nan" else "Nova"
+
+
 def _yerelden(satir):
     """CSV satırı porsiyon başına değer taşır; 100 grama indirgenir."""
     try:
@@ -63,13 +75,36 @@ def _yerelden(satir):
     if ref <= 0:
         ref = 100.0
     oran = 100.0 / ref
+
+    # CSV'de varsa mikro besinler de taşınır. Olmayan sütun yok sayılır;
+    # değeri olmayan kalem için sıfır yazılmaz, hiç eklenmez.
+    ekstra = {}
+    for sutun in ("Lif (g)", "Şeker (g)", "Doymuş yağ (g)", "Tuz (g)", "Demir (mg)",
+                  "Kalsiyum (mg)", "Magnezyum (mg)", "Çinko (mg)", "Potasyum (mg)",
+                  "C vitamini (mg)", "D vitamini (µg)", "B12 vitamini (µg)"):
+        deger = satir.get(sutun)
+        try:
+            if deger is None or str(deger).strip() == "" or pd.isna(deger):
+                continue
+            ekstra[sutun] = float(deger) * oran
+        except (TypeError, ValueError):
+            continue
+    # Sodyum mg olarak verilmişse tuza çevrilir (tuz = sodyum x 2,5)
+    sodyum = satir.get("Sodyum (mg)")
+    try:
+        if sodyum is not None and str(sodyum).strip() != "" and not pd.isna(sodyum):
+            ekstra.setdefault("Tuz (g)", float(sodyum) * 2.5 / 1000.0 * oran)
+    except (TypeError, ValueError):
+        pass
+
     return _yemek(
         str(satir["Yemek Adı"]),
         float(satir["Protein (g)"]) * oran,
         float(satir["Karbonhidrat (g)"]) * oran,
         float(satir["Yağ (g)"]) * oran,
         gram=ref,
-        kaynak="Nova",
+        kaynak=_kaynak_adi(satir.get("Kaynak")),
+        ekstra=ekstra,
     )
 
 
@@ -136,6 +171,11 @@ def _yerel_ara(df, sorgu, limit=25):
     if df is None or df.empty or "Yemek Adı" not in df.columns:
         return []
     adlar = df["Yemek Adı"].astype(str).tolist()
+    # Uygulama altı dilde çalışıyor; İngilizce ad sütunu varsa o da aranır,
+    # böylece "burger" ya da "fries" yazan biri de sonucu bulur.
+    if "Yemek Adı (EN)" in df.columns:
+        ingilizce = df["Yemek Adı (EN)"].fillna("").astype(str).tolist()
+        adlar = [f"{a} {b}".strip() for a, b in zip(adlar, ingilizce)]
     dizin = _yerel_dizin(tuple(adlar))
     q = _norm(sorgu)
     if not q:
