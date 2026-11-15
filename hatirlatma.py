@@ -88,6 +88,10 @@ def mesaj_olustur(k, bugun):
     if adim and adim < GUNLUK_ADIM_HEDEFI * 0.5:
         satirlar.append(f"Adım: {adim}. Kısa bir yürüyüş hedefe yaklaştırır.")
 
+    # Oruç modundaysa mesaj oruç düzenine göre yazılır
+    if profil.get("oruc_modu"):
+        satirlar = _oruc_satirlari(k, ogunler, su, satirlar)
+
     # Pazar günü tartı hatırlatması
     if bugun.weekday() == 6 and profil.get("son_tarti_tarihi") != gun:
         satirlar.append("Bugün Pazar. Tartılıp kilonu girersen gelişim grafiğin güncellenir.")
@@ -99,6 +103,31 @@ def mesaj_olustur(k, bugun):
         return None
 
     return f"Merhaba {ad},\n\n" + "\n".join(satirlar) + "\n\nNova"
+
+
+def _oruc_satirlari(k, ogunler, su, satirlar):
+    """Oruç tutan kullanıcı için mesajı yeniden yazar.
+
+    Oruçluyken "bugün hiç öğün kaydetmemişsin" demek anlamsız; gündüz zaten
+    yemiyor. Bunun yerine sahur ve iftarın kaydedilip kaydedilmediğine bakılır.
+    """
+    adlar = {(r.get("Öğün") or "").strip() for r in ogunler}
+    yeni = []
+    if "Sahur" not in adlar and "İftar" not in adlar:
+        yeni.append("Bugün sahur ve iftar kaydın görünmüyor. İftardan sonra birkaç dakikanı "
+                    "ayırıp girersen haftalık tablon eksik kalmaz.")
+    elif "İftar" not in adlar:
+        yeni.append("Sahurunu kaydetmişsin, iftarın eksik görünüyor.")
+    elif "Sahur" not in adlar:
+        yeni.append("İftarını kaydetmişsin, sahurun eksik görünüyor.")
+    else:
+        yeni.append(f"Bugün {len(ogunler)} kalem kaydettin.")
+
+    if su < GUNLUK_SU_HEDEFI * 0.6:
+        yeni.append(f"Su: {su:.2f} litre. İftar ile sahur arasında {GUNLUK_SU_HEDEFI} litreye "
+                    "ulaşmaya çalış; tek seferde değil, yayarak.")
+    # Adım uyarısı oruçluyken çıkarılıyor: gündüz hareket zaten kısıtlı
+    return yeni
 
 
 def main():
