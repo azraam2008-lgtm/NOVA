@@ -1,1 +1,55 @@
+name: Nova günlük hatırlatma
 
+on:
+  schedule:
+    # 17:05 UTC = Istanbul saatiyle 20:05.
+    # Tam saat başı GitHub'da en yoğun an olduğu için beş dakika kaydırıldı;
+    # saat başına denk gelen işler sırada bekleyip gecikebiliyor.
+    - cron: "5 17 * * *"
+  # Elle de çalıştırılabilsin: Actions sekmesi > Run workflow
+  workflow_dispatch:
+
+jobs:
+  hatirlatma:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Gerekli paketler
+        run: |
+          python -m pip install --upgrade pip
+          pip install supabase requests
+
+      - name: Gizli anahtarlar tanımlı mı
+        id: kontrol
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          # Anahtarlar yoksa iş hata vermeden atlanır. Aksi halde her gece
+          # "çalışma başarısız" e-postası gelir ve bu bir işe yaramaz.
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "SUPABASE_URL veya SUPABASE_KEY tanımlı değil, hatırlatma atlanıyor."
+            echo "devam=hayir" >> "$GITHUB_OUTPUT"
+          else
+            echo "devam=evet" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Hatırlatmaları gönder
+        if: steps.kontrol.outputs.devam == 'evet'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          GONDEREN: ${{ secrets.GONDEREN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python hatirlatma.py
