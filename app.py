@@ -18,6 +18,7 @@ from sifre_sifirlama import sifre_sifirlama_bolumu
 from diller import t, h, tarih_yaz, dil_ayarla, aktif_dil, DIL_LISTESI, yon
 from ayarlar import ayarlar_paneli
 import mikro
+import paylasim
 from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
                     kullanilabilir_mi, oturum_tazele)
 
@@ -252,6 +253,19 @@ if "giris_yapildi" not in st.session_state: st.session_state.giris_yapildi = Fal
 if "aktif_kullanici" not in st.session_state: st.session_state.aktif_kullanici = ""
 if "onboarding_step" not in st.session_state: st.session_state.onboarding_step = 1
 if "ayarlar_acik" not in st.session_state: st.session_state.ayarlar_acik = False
+
+# --- DİYETİSYEN RAPORU ---
+# Bağlantıyla gelen kişi giriş yapmadan raporu görür. Giriş akışından önce
+# çalışır, çünkü diyetisyenin hesabı yok ve olmasına gerek de yok.
+_rapor_belirteci = st.query_params.get("rapor")
+if _rapor_belirteci:
+    _rapor = paylasim.baglanti_oku(supabase, _rapor_belirteci)
+    if _rapor:
+        paylasim.rapor_goster(_rapor)
+    else:
+        st.error("Bu rapor bağlantısı geçersiz ya da süresi dolmuş. "
+                 "Raporu paylaşan kişiden yeni bir bağlantı isteyebilirsin.")
+    st.stop()
 
 # --- "BENİ HATIRLA" ÇEREZİNDEN GİRİŞ ---
 # Çerezler her çizimde tam bir kez okunur (aynı anahtar iki kez çizilemez).
@@ -565,6 +579,31 @@ else:
         }}
         th, td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: left; color: {tema['text_color']} !important; }}
         th {{ font-weight: 800; font-size: 1.2rem; opacity: 0.9; }}
+
+        /* --- SİMGELERİN HAM METNİ ---
+           Streamlit simgeleri bir simge yazı tipiyle çiziyor. O yazı tipi
+           yüklenemezse simgenin ADI düz yazı olarak basılıyor ve yanındaki
+           metnin üstüne biniyor. Simge kutusu 1em'e sabitlenip taşanı
+           kırpıyoruz; böylece en kötü ihtimalle küçük bir boşluk kalır,
+           cümlenin üstüne yazı binmez. */
+        [data-testid="stIconMaterial"] {{
+            display: inline-flex !important;
+            align-items: center; justify-content: center;
+            width: 1em !important; min-width: 1em !important;
+            max-width: 1em !important; overflow: hidden !important;
+            white-space: nowrap !important;
+        }}
+        /* Açılır bölüm okunu kendimiz çiziyoruz: yazı tipine bağlı değil */
+        [data-testid="stExpander"] summary [data-testid="stIconMaterial"] {{
+            font-size: 0 !important;
+            width: 1rem !important; min-width: 1rem !important; max-width: 1rem !important;
+        }}
+        [data-testid="stExpander"] summary [data-testid="stIconMaterial"]::after {{
+            content: "›";
+            font-family: Georgia, serif;
+            font-size: 1rem !important;
+            line-height: 1;
+        }}
 
         /* --- SOHBET AVATARLARI ---
            Streamlit sohbet avatarlarını simge yazı tipiyle çiziyor. O yazı tipi
@@ -1043,6 +1082,13 @@ else:
                              sifre_ozeti=kullanici_sifre_ozeti(aktif_user),
                              kullanici_eposta=kullanici_epostasi(aktif_user),
                              kaydet=lambda: verileri_kaydet(aktif_user))
+                st.divider()
+                paylasim.paylasim_bolumu(
+                    supabase, aktif_user, p,
+                    st.session_state.gunluk_kayitlar,
+                    st.session_state.aktivite_loglari,
+                    hedef_kalori_alim,
+                    site_adresi=cfg("SITE_ADRESI", ""))
                 st.divider()
                 st.markdown(h("#### Oturum"))
                 st.caption(t("Çıkış yaparsan bu tarayıcıdaki kayıtlı oturum da silinir."))
