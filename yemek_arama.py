@@ -30,7 +30,7 @@ import besin_kaynaklari as bk
 from nutrition_check import kcal as kcal_hesapla
 from nutrition_check import verify
 
-from diller import t, h
+from diller import t, h, aktif_dil
 import tarif as tarif_modulu
 
 _TR = str.maketrans("çğıöşüÇĞİÖŞÜâîû", "cgiosuCGIOSUaiu")
@@ -285,6 +285,14 @@ def _sonuc_listesi(sonuclar, on_ek, db, kullanici, tarih, ogun):
 
 
 # ------------------------------------------------------------------ Sekmeler
+def _kullanici_ulkesi():
+    """Kullanıcının ülkesi. Oruç modu ayarlarında girilmişse oradan gelir."""
+    try:
+        return (st.session_state.get("profil") or {}).get("ulke", "") or ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def _sekme_ara(df, db, kullanici, tarih, ogun):
     sorgu = st.text_input(t("Yemek ara"), placeholder="Örn: mercimek çorbası, yoğurt, Eti kraker",
                           key="arama_sorgu", max_chars=60)
@@ -301,7 +309,7 @@ def _sekme_ara(df, db, kullanici, tarih, ogun):
     if marka_dahil:
         try:
             with st.spinner("Marka ürünlerinde aranıyor..."):
-                disaridan = bk.off_ara(sorgu)
+                disaridan = bk.off_ara(sorgu, aktif_dil(), _kullanici_ulkesi())
             if disaridan:
                 bk.onbellege_yaz(db, disaridan)
                 sonuclar += [_offtan(u) for u in disaridan]
