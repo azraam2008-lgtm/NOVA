@@ -8,7 +8,7 @@ Yeni mod eklemek için: bir şema (isteğe bağlı) + bir Mode kaydı + DAILY_LI
 
 Streamlit Secrets:
     GEMINI_API_KEY = "..."
-    GEMINI_MODEL   = "gemini-2.5-flash-lite"      # isteğe bağlı
+    GEMINI_MODEL   = "gemini-3.5-flash-lite"      # isteğe bağlı
     SUPPORT_URL    = "https://..."                # isteğe bağlı (bağış/destek bağlantısı)
     SPONSOR_TEXT   = "..."  SPONSOR_URL = "..."   # isteğe bağlı (doğrudan sponsor yazısı)
 """
@@ -30,9 +30,17 @@ from PIL import Image, ImageOps
 from pydantic import BaseModel
 
 # ------------------------------------------------------------------ Ayarlar
-DEFAULT_MODEL = "gemini-2.5-flash-lite"
+# Model adlari degisiyor; eskiler kapatiliyor. Kasim 2026 itibariyla
+# gemini-2.5-* yalnizca eski kullanicilara acik, yeni anahtarlarla calismiyor.
+# Ucuzdan pahaliya siralanmis guncel modeller:
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 # Seçili model yoğunluk (503) nedeniyle cevap veremezse sırayla denenecek yedekler
-YEDEK_MODELLER = ["gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
+YEDEK_MODELLER = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.1-flash-lite"]
+
+# Fotoğraf gönderilen işlerde (öğün taraması, etiket okuma) görsel desteği
+# belgelenmiş model öne alınır. Hafif model görseli kabul etmezse zaten
+# yedeğe geçilir, ama baştan doğru modele gitmek bir tur zaman kazandırır.
+GORSEL_MODELLER = ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite"]
 MAX_SIDE = 1024                                   # fotoğraf bu boyuta küçültülür
 # Kullanıcı başına günlük hak. Sayaç artık Supabase'de kalıcı tutulduğu için
 # sayfa yenileyerek sıfırlanamıyor; bu yüzden haklar yükseltildi.
@@ -342,16 +350,22 @@ def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = 
     _check_quota(mode_key)
 
     # Seçili model geçici olarak yoğunsa (503) önce kısa bir bekleyişle tekrar dener, sonra yedek modellere geçer
-    ana_model = cfg("GEMINI_MODEL", DEFAULT_MODEL)
-    modeller = [ana_model] + [m for m in YEDEK_MODELLER if m != ana_model]
+    sira_listesi = GORSEL_MODELLER if mode.needs_image else YEDEK_MODELLER
+    ana_model = cfg("GEMINI_MODEL", "") or sira_listesi[0] if mode.needs_image \
+        else cfg("GEMINI_MODEL", DEFAULT_MODEL)
+    modeller = [ana_model] + [m for m in sira_listesi if m != ana_model]
     ilk_hata = None
     for sira, model in enumerate(modeller):
         for deneme in range(2 if sira == 0 else 1):
             try:
                 result = _call(mode_key, user_text.strip(), context, image_bytes, model, audio_bytes, audio_mime)
             except Exception as e:  # noqa: BLE001
-                if sira == 0 and not _gecici_hata(e):
+                if sira == 0 and not _gecici_hata(e) and not _model_yok(e):
                     raise  # anahtar ya da istek hatası: tekrar denemek işe yaramaz
+                if _model_yok(e):
+                    # Model kaldırılmış: beklemenin anlamı yok, hemen yedeğe geç
+                    ilk_hata = ilk_hata or e
+                    break
                 ilk_hata = ilk_hata or e
                 if sira == 0 and deneme == 0:
                     time.sleep(2)
@@ -359,6 +373,20 @@ def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = 
             _charge(mode_key)
             return result
     raise ilk_hata
+
+
+def _model_yok(e: Exception) -> bool:
+    """Model kaldırılmış ya da bu anahtara kapalı mı?
+
+    Google kaldırılan modeller için bazen 404, bazen 401 döndürüyor; ikisi de
+    'anahtarın bozuk' demek değil, 'bu model artık yok' demek. Bu ayrımı
+    yapmazsak tek bir eski model adı yüzünden bütün yapay zeka çalışmaz.
+    """
+    text = str(e)
+    isaretler = ("NOT_FOUND", "404", "is not found", "no longer available",
+                 "not supported", "has been deprecated", "deprecated",
+                 "ACCESS_TOKEN_TYPE_UNSUPPORTED")
+    return any(i in text for i in isaretler)
 
 
 def _gecici_hata(e: Exception) -> bool:
@@ -374,7 +402,12 @@ def friendly_error(e: Exception) -> str:
         return "Yapay zeka şu an çok yoğun. Birkaç dakika sonra tekrar dene."
     if "429" in text or "RESOURCE_EXHAUSTED" in text:
         return "API kotası doldu. Biraz sonra tekrar dene."
-    if "GEMINI_API_KEY" in text or "API key" in text or "401" in text or "403" in text:
+    if _model_yok(e):
+        return ("Kullanılmak istenen yapay zeka modeli artık yok ya da bu anahtara kapalı. "
+                "Secrets içindeki GEMINI_MODEL satırını sil ya da güncel bir modelle değiştir "
+                f"(örnek: {DEFAULT_MODEL}).")
+    if ("GEMINI_API_KEY" in text or "API key" in text or "API_KEY_INVALID" in text
+            or "PERMISSION_DENIED" in text or "401" in text or "403" in text):
         # Google'ın hata kodu (ör. SERVICE_DISABLED, API_KEY_INVALID) sorunun kaynağını gösterir; anahtarın kendisi bu metinde yer almaz
         neden = ", ".join(dict.fromkeys(re.findall(r"\b[A-Z][A-Z_]{5,}\b", text))) or text[:200]
         return f"API anahtarı sorunu var. Anahtarı ve Secrets ayarını kontrol et. (Google'ın yanıtı: {neden})"
