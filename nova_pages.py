@@ -267,8 +267,8 @@ def ask_page(profil=None):
                 st.write(cevap)
     else:
         with st.chat_message("assistant"):
-            st.write("Merhaba. Beslenme ve antrenmanla ilgili aklına takılanı sorabilirsin. "
-                     "Aşağıdaki hazır sorulardan birine dokunarak da başlayabilirsin.")
+            st.write(t("Merhaba. Beslenme ve antrenmanla ilgili aklına takılanı sorabilirsin. "
+                     "Aşağıdaki hazır sorulardan birine dokunarak da başlayabilirsin."))
 
     bekleyen = st.session_state.pop("ask_bekleyen", None)
     if not bekleyen:
@@ -277,8 +277,9 @@ def ask_page(profil=None):
             st.caption(t("Hazır sorular"))
         sutunlar = st.columns(2)
         for i, soru in enumerate(gosterilecek):
-            if sutunlar[i % 2].button(soru, key=f"hazir_{i}", use_container_width=True):
-                st.session_state["ask_bekleyen"] = soru
+            if sutunlar[i % 2].button(t(soru), key=f"hazir_{i}", use_container_width=True):
+                # Asistana da kullanıcının gördüğü dilde gitsin
+                st.session_state["ask_bekleyen"] = t(soru)
                 st.rerun()
 
     yazilan = st.chat_input(t("Bir şey sor..."), key="ask_girdi")
