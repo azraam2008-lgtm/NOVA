@@ -118,15 +118,16 @@ SAFETY = """Genel kurallar:
 - Aşırı düşük kalori, uzun oruç, kusma ya da müshil gibi sağlıksız yöntemler önerme.
 - Kullanıcı yeme bozukluğu belirtisi gösterirse (öğün atlama takıntısı, kusma, aşırı kısıtlama gibi) kalori, gram veya diyet sayısı verme; destekleyici ol ve bir sağlık uzmanına başvurmasını öner.
 - Kullanıcı sakatlık, ağrı, hamilelik ya da kronik hastalık belirtirse genel bilgi ver ve bir uzmana danışmasını öner.
-- Türkçe, sade ve kısa yaz."""
+- Kullanıcının dilinde yaz: bağlamda "Yanıt dili" verilmişse o dilde, yoksa kullanıcının yazdığı dilde. Sade ve kısa yaz.
+- Adın Nova. Öğün tarayan, plan hazırlayan ve soruları yanıtlayan hep aynı Nova'sın; kendini başka bir asistan gibi tanıtma."""
 
 MEAL_SYSTEM = SAFETY + """
 
 Görev: Sen deneyimli bir diyetisyensin. Fotoğraftaki öğünü analiz et.
-- Her yemeği veya içeceği ayrı kalem olarak yaz (en fazla 8 kalem). Adlar Türkçe olsun.
+- Her yemeği veya içeceği ayrı kalem olarak yaz (en fazla 8 kalem). Adlar yanıt dilinde olsun.
 - Gramajı tabak, çatal, kaşık, bardak gibi referans nesnelere bakarak tahmin et. Servis edilen (pişmiş) haliyle gram ver.
 - Görünmeyen ama büyük olasılıkla kullanılmış yağ, sos, şeker gibi şeyleri (ör. zeytinyağı, tereyağı) ayrı kalem yap ve 'assumptions' alanında açıkla.
-- Protein, karbonhidrat ve yağ değerlerini 100 gram için ver. Türk mutfağı için gerçekçi değerler kullan.
+- Protein, karbonhidrat ve yağ değerlerini 100 gram için ver. Yemeğin geldiği mutfak için gerçekçi değerler kullan.
 - confidence: 0 ile 1 arası, tahminden ne kadar emin olduğun.
 - Fotoğrafta yiyecek yoksa is_food=false yap ve items'ı boş bırak.
 - Emin değilsen uç değerlerden kaçın, makul orta bir tahmin ver.
@@ -135,7 +136,7 @@ Görev: Sen deneyimli bir diyetisyensin. Fotoğraftaki öğünü analiz et.
 VOICE_SYSTEM = SAFETY + """
 
 Görev: Sen deneyimli bir diyetisyensin. Kullanıcı ne yediğini sesli ya da yazılı olarak anlatıyor.
-- Anlatılan her yiyecek veya içeceği ayrı kalem yap (en fazla 10). Adlar Türkçe olsun; kullanıcı başka dilde konuştuysa adı o dilde bırakabilirsin.
+- Anlatılan her yiyecek veya içeceği ayrı kalem yap (en fazla 10). Adlar yanıt dilinde olsun.
 - "Bir kase", "iki dilim", "bir avuç" gibi ölçüleri gerçekçi grama çevir. Ölçü söylenmediyse ortalama bir porsiyon varsay.
 - Protein, karbonhidrat ve yağ değerlerini 100 gram için ver; biliyorsan lif, şeker ve tuzu da 100 gram için ver.
 - confidence: 0 ile 1 arası, ne kadar emin olduğun.
@@ -345,6 +346,12 @@ def run_mode(mode_key: str, user_text: str = "", image_bytes: Optional[bytes] = 
              context: str = "", audio_bytes: Optional[bytes] = None, audio_mime: str = "audio/wav") -> dict:
     """Bir modu çalıştırır. Hak kontrolü yapar, başarılı olursa kullanıcının hakkından düşer."""
     mode = MODES[mode_key]
+    # Yanıt, kullanıcının seçtiği dilde gelsin
+    try:
+        from diller import aktif_dil, DIL_LISTESI
+        context = f"Yanıt dili: {DIL_LISTESI.get(aktif_dil(), 'Türkçe')}" + ("\n" + context if context else "")
+    except Exception:  # noqa: BLE001
+        pass
     if mode.needs_image and not image_bytes:
         raise ValueError("Bu mod için fotoğraf gerekli.")
     _check_quota(mode_key)
