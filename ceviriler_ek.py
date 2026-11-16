@@ -733,3 +733,13 @@ for _k, _v in EK_ORUC.items():
 EK_ARAMA = {'en': {'Marka ürünlerinde aranıyor...': 'Searching branded products...'}, 'de': {'Marka ürünlerinde aranıyor...': 'Suche in Markenprodukten...'}, 'es': {'Marka ürünlerinde aranıyor...': 'Buscando en productos de marca...'}, 'fr': {'Marka ürünlerinde aranıyor...': 'Recherche dans les produits de marque...'}, 'ar': {'Marka ürünlerinde aranıyor...': 'جارٍ البحث في المنتجات التجارية...'}}
 for _k, _v in EK_ARAMA.items():
     EK.setdefault(_k, {}).update(_v)
+
+EK_GIRIS = {
+    'en': {'Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene.': 'The sign-in service is unreachable right now. Please try again shortly.'},
+    'de': {'Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene.': 'Der Anmeldedienst ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.'},
+    'es': {'Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene.': 'El servicio de inicio de sesión no está disponible ahora. Vuelve a intentarlo en un momento.'},
+    'fr': {'Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene.': 'Le service de connexion est momentanément indisponible. Réessaie dans un instant.'},
+    'ar': {'Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene.': 'خدمة تسجيل الدخول غير متاحة الآن. حاول مرة أخرى بعد قليل.'},
+}
+for _k, _v in EK_GIRIS.items():
+    EK.setdefault(_k, {}).update(_v)
