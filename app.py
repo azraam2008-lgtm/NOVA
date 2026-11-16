@@ -20,6 +20,7 @@ from ayarlar import ayarlar_paneli
 import mikro
 import paylasim
 import ramazan
+import hesap_koprusu
 from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
                     kullanilabilir_mi, oturum_tazele)
 
@@ -133,11 +134,49 @@ def sifre_kontrol(sifre):
     if not any(c.isdigit() for c in sifre): return "Şifre en az bir rakam içermelidir."
     return None
 
-def kullanicilari_yukle():
-    try:
-        res = supabase.table("kullanicilar").select("username, password_hash, email").execute()
-        return {row["username"]: row for row in res.data}
-    except: return {}
+def kullanici_kaydi(username):
+    """Tek bir kullanıcının satırı. Eskiden her çizimde BÜTÜN kullanıcılar şifre
+    özetleriyle birlikte çekiliyordu; hem yavaştı hem gereksiz yere açıktı."""
+    if not username:
+        return None
+    for sutunlar in ("username, password_hash, email, auth_id", "username, password_hash, email"):
+        try:
+            res = supabase.table("kullanicilar").select(sutunlar).eq("username", username).limit(1).execute()
+            return res.data[0] if res.data else None
+        except Exception:
+            continue   # auth_id sütunu henüz eklenmediyse eski sorguya düş
+    return None
+
+def kullanici_var_mi(username):
+    return kullanici_kaydi(username) is not None
+
+def hesap_dogrula(username, sifre):
+    """Kullanıcı adı ve şifreyi doğrular.
+
+    True  : doğru
+    False : yanlış
+    None  : giriş servisine ulaşılamadı (yanlış şifre değil, sonra tekrar denenmeli)
+
+    Hesabın Auth karşılığı varsa şifre yalnızca Auth'a sorulur. Yoksa eski özetle
+    doğrulanır ve doğruysa Auth karşılığı o anda, girilen şifreyle sessizce açılır.
+    """
+    kayit = kullanici_kaydi(username)
+    if not kayit:
+        return False
+    if kayit.get("auth_id"):
+        return hesap_koprusu.auth_ile_dogrula(
+            SUPABASE_URL, SUPABASE_KEY, username, kayit.get("email"), sifre)
+    if not sifre_dogrula(sifre, kayit.get("password_hash")):
+        return False
+    # Eski SHA-256 kaydı ise sessizce bcrypt'e yükseltilir
+    if not str(kayit.get("password_hash", "")).startswith("$2"):
+        try:
+            supabase.table("kullanicilar").update(
+                {"password_hash": sifre_olustur(sifre)}).eq("username", username).execute()
+        except Exception:
+            pass
+    hesap_koprusu.auth_olustur(supabase, username, kayit.get("email"), sifre=sifre)
+    return True
 
 def kullanici_sifre_ozeti(username):
     """Hesap silmede şifreyi doğrulamak için. Google ile girenlerde boş döner."""
@@ -278,7 +317,7 @@ oturum_tazele()
 # Tarayıcıda geçerli bir oturum belirteci varsa sayfa yenilense de içeride kalınır.
 if not st.session_state.giris_yapildi:
     _cerez_kullanici = cerezden_giris(supabase)
-    if _cerez_kullanici and _cerez_kullanici in kullanicilari_yukle():
+    if _cerez_kullanici and kullanici_var_mi(_cerez_kullanici):
         st.session_state.giris_yapildi = True
         st.session_state.aktif_kullanici = _cerez_kullanici
         st.session_state.update(verileri_yukle(_cerez_kullanici))
@@ -298,10 +337,9 @@ if not st.session_state.giris_yapildi and google_hazir_mi():
             if not kullanici_adi:
                 # E-postanın baş kısmından benzersiz bir kullanıcı adı türetilir
                 taban = "".join(c for c in g_mail.split("@")[0] if c.isalnum()) or "kullanici"
-                mevcutlar = set(kullanicilari_yukle())
                 kullanici_adi = taban
                 ek = 1
-                while kullanici_adi in mevcutlar:
+                while kullanici_var_mi(kullanici_adi):
                     ek += 1
                     kullanici_adi = f"{taban}{ek}"
                 try:
@@ -347,7 +385,6 @@ if not st.session_state.giris_yapildi:
     with c2:
         with st.container(key="novakart1"):
             tab_giris, tab_kayit = st.tabs([t("Giriş Yap"), t("Kayıt Ol")])
-            users = kullanicilari_yukle()
 
             with tab_giris:
                 g_user = st.text_input(t("Kullanıcı Adı"), key="g_user").strip().lower()
@@ -358,15 +395,10 @@ if not st.session_state.giris_yapildi:
                     help="Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. "
                          "Ortak bir bilgisayardaysan işaretleme.")
                 if st.button(t("Giriş Yap"), key="btn_giris", use_container_width=True):
-                    kayit = users.get(g_user)
-                    if kayit and sifre_dogrula(g_pass, kayit.get("password_hash")):
-                        # Eski SHA-256 kaydı ise sessizce bcrypt'e yükseltilir
-                        if not str(kayit.get("password_hash", "")).startswith("$2"):
-                            try:
-                                supabase.table("kullanicilar").update(
-                                    {"password_hash": sifre_olustur(g_pass)}).eq("username", g_user).execute()
-                            except Exception:
-                                pass
+                    dogru = hesap_dogrula(g_user, g_pass)
+                    if dogru is None:
+                        st.error(t("Giriş servisine şu an ulaşılamadı. Biraz sonra tekrar dene."))
+                    elif dogru:
                         st.session_state.giris_yapildi = True
                         st.session_state.aktif_kullanici = g_user
                         st.session_state.update(verileri_yukle(g_user))
@@ -385,7 +417,7 @@ if not st.session_state.giris_yapildi:
                         st.error(hata)
                     elif not k_user:
                         st.error(t("Kullanıcı adı boş olamaz."))
-                    elif k_user in users:
+                    elif kullanici_var_mi(k_user):
                         st.error(t("Bu kullanıcı adı zaten alınmış."))
                     elif k_mail and ("@" not in k_mail or "." not in k_mail.split("@")[-1]):
                         st.error(t("E-posta adresi geçerli görünmüyor."))
@@ -394,6 +426,8 @@ if not st.session_state.giris_yapildi:
                             "username": k_user, "password_hash": sifre_olustur(k_pass),
                             "email": k_mail or None,
                         }).execute()
+                        # Telefon uygulaması için giriş karşılığı da hemen açılır
+                        hesap_koprusu.auth_olustur(supabase, k_user, k_mail or None, sifre=k_pass)
                         # Hesap açılır açılmaz içeri al; tekrar giriş yaptırma
                         st.session_state.giris_yapildi = True
                         st.session_state.aktif_kullanici = k_user
@@ -1094,7 +1128,9 @@ else:
                 st.markdown(h("<h2 style='font-size: 2rem;'>Hesap ve Verilerin</h2>"), unsafe_allow_html=True)
                 hesap_bolumu(supabase, aktif_user, st.session_state.gunluk_kayitlar,
                              st.session_state.aktivite_loglari, p,
-                             sifre_dogrula=sifre_dogrula,
+                             # Auth'a taşınmış hesaplarda eski özet güncel olmayabilir;
+                             # şifre her zaman hesap_dogrula üzerinden sorulur
+                             sifre_dogrula=lambda s, _ozet: hesap_dogrula(aktif_user, s) is True,
                              sifre_ozeti=kullanici_sifre_ozeti(aktif_user),
                              kullanici_eposta=kullanici_epostasi(aktif_user),
                              kaydet=lambda: verileri_kaydet(aktif_user))
