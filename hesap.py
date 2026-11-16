@@ -44,6 +44,10 @@ def _tum_veri(kullanici, gunluk_kayitlar, aktivite_loglari, profil, db=None):
 
 def _hesabi_sil(db, kullanici):
     """Kullanıcının bütün satırlarını siler. Hata olursa False döner."""
+    # Önce giriş karşılığı (Auth) silinir; kimliği kullanicilar satırında duruyor
+    import hesap_koprusu
+    if not hesap_koprusu.auth_sil(db, kullanici):
+        return ["giriş hesabı silinemedi, biraz sonra tekrar dene"]
     tablolar = [
         ("kullanici_verileri", "username"),
         ("kullanici_yemekleri", "kullanici"),
