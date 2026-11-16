@@ -18,6 +18,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 import streamlit as st
+import hesap_koprusu
 
 from bildirim import eposta_ayarli_mi, eposta_gonder
 
@@ -151,6 +152,11 @@ def sifre_sifirlama_bolumu(db, sifre_olustur, sifre_kontrol):
                         st.error(mesaj)
                     else:
                         try:
+                            # Auth karşılığı olan hesapta şifrenin doğrusu Auth'tur:
+                            # önce orası değişir, olmazsa hiçbir şey değişmez
+                            if hesap_koprusu.auth_id_al(db, kullanici) and \
+                                    not hesap_koprusu.sifre_guncelle(db, kullanici, yeni):
+                                raise RuntimeError("giriş servisi şifreyi kabul etmedi")
                             db.table("kullanicilar").update(
                                 {"password_hash": sifre_olustur(yeni)}
                             ).eq("username", kullanici).execute()
