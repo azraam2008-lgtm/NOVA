@@ -940,8 +940,8 @@ else:
             st.session_state.aktivite_loglari[secilen_tarih] = {"adim": 0, "su": 0.0, "egzersiz_kalori": 0}
         curr_aktivite = st.session_state.aktivite_loglari[secilen_tarih]
 
-        tab_ozet, tab_gelisim, tab_ai_ogun, tab_ai_koc, tab_ai_asistan = st.tabs(
-            [t("Günlük Özet"), t("Gelişim"), t("Öğün Tarama"), t("Antrenman Koçu"), t("Asistan")])
+        tab_ozet, tab_gelisim, tab_ai_ogun, tab_ai_koc, tab_ai_asistan, tab_hakkimda = st.tabs(
+            [t("Günlük Özet"), t("Gelişim"), t("Öğün Tarama"), t("Antrenman Koçu"), t("Asistan"), t("Hakkımda")])
 
         # ==========================================
         # 1. SEKME: GÜNLÜK ÖZET & MANUEL EKLEME
@@ -1184,3 +1184,24 @@ else:
         with tab_ai_asistan:
             with st.container(key="novakart11"):
                 ask_page(p)
+
+        # ==========================================
+        # HAKKIMDA: Nova'yı tanıtan bilgi bölümü
+        # ==========================================
+        with tab_hakkimda:
+            with st.container(key="novakart12"):
+                st.markdown(h("<h2 style='font-size: 2rem;'>Hakkımda</h2>"), unsafe_allow_html=True)
+                st.markdown(t("Merhaba, ben Nova! Sağlıklı beslenme ve aktif bir yaşam yolculuğunda "
+                              "sana eşlik eden diyet ve aktivite asistanınım."))
+                st.markdown(h("#### Neler yapabilirim?"))
+                st.markdown(
+                    "- " + t("Günlük kalori ve makro hedefini hesaplar, öğünlerini takip ederim.") + "\n"
+                    "- " + t("Su, adım ve egzersiz kayıtlarını tutarım.") + "\n"
+                    "- " + t("Yemek fotoğrafını tarayıp kalori ve besin değerlerini tahmin ederim.") + "\n"
+                    "- " + t("Antrenman koçu olarak sana uygun egzersiz planı sunarım.") + "\n"
+                    "- " + t("Kilo ve gelişimini grafiklerle gösteririm.") + "\n"
+                    "- " + t("Beslenme ve aktiviteyle ilgili sorularını yanıtlarım.")
+                )
+                st.markdown(h("#### Önemli not"))
+                st.caption(t("Nova bir sağlık uygulaması değildir ve tıbbi tavsiye vermez.") + " " +
+                           t("Sağlık durumunla ilgili kararlar için bir doktora veya diyetisyene danışmalısın."))
