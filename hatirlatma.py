@@ -19,6 +19,9 @@ import os
 import sys
 
 from bildirim import ayar, eposta_ayarli_mi, kullaniciya_gonder
+import tarti
+
+_GUN_ADLARI = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
 # Bir kullanıcıya günde en fazla bir hatırlatma
 GUNLUK_SU_HEDEFI = 2.5
@@ -92,9 +95,10 @@ def mesaj_olustur(k, bugun):
     if profil.get("oruc_modu"):
         satirlar = _oruc_satirlari(k, ogunler, su, satirlar)
 
-    # Pazar günü tartı hatırlatması
-    if bugun.weekday() == 6 and profil.get("son_tarti_tarihi") != gun:
-        satirlar.append("Bugün Pazar. Tartılıp kilonu girersen gelişim grafiğin güncellenir.")
+    # Tartı günü hatırlatması (Pazartesi, Cuma, Pazar; tarti.TARTI_GUNLERI)
+    if tarti.tarti_gunu_mu(bugun) and not tarti.tartildi_mi(profil, bugun):
+        satirlar.append(f"Bugün {_GUN_ADLARI[bugun.weekday()]}, tartı günü. "
+                        "Tartılıp kilonu girersen gelişim grafiğin güncellenir.")
 
     # Söylenecek olumsuz bir şey yoksa rahatsız etme
     if len(satirlar) == 1 and ogunler and su >= GUNLUK_SU_HEDEFI * 0.6:

@@ -169,9 +169,9 @@ _EN = {
     "Kilo (kg)": "Weight (kg)",
     "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. "
     "Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada "
-    "Pazar günleri güncelleyebilirsin.":
+    "Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.":
         "This helps us calculate your calorie target from where you are now. If you are not sure, "
-        "enter your best guess; you can update it on Sundays inside the app.",
+        "enter your best guess; you can update it in the app on Mondays, Fridays and Sundays.",
     "Hedef kilon nedir?": "What is your goal weight?",
     "Hedef Kilo (kg)": "Goal weight (kg)",
     "Hedefe Ulaşma Süresi (Ay)": "Time to reach it (months)",
@@ -770,8 +770,8 @@ _EK = {
    "Deine Angaben helfen uns zu bestimmen, wie wir dich unterstützen.",
  "Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.":
    "Deine Größe beeinflusst, wie viel Energie dein Körper täglich verbraucht.",
- "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.":
-   "Das hilft uns, dein Kalorienziel von deinem jetzigen Stand aus zu berechnen. Wenn du unsicher bist, gib deine beste Schätzung ein; sonntags kannst du sie in der App aktualisieren.",
+ "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.":
+   "Das hilft uns, dein Kalorienziel von deinem jetzigen Stand aus zu berechnen. Wenn du unsicher bist, gib deine beste Schätzung ein; montags, freitags und sonntags kannst du sie in der App aktualisieren.",
  "Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. Ortak bir bilgisayardaysan işaretleme.":
    "Du bleibst 30 Tage in diesem Browser angemeldet und wirst beim Neuladen nicht abgemeldet. An einem gemeinsam genutzten Rechner besser nicht aktivieren.",
  "Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.":
@@ -806,8 +806,8 @@ _EK = {
    "Lo que nos cuentas da forma a cómo vamos a apoyarte.",
  "Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.":
    "Tu altura influye en la energía que gasta tu cuerpo cada día.",
- "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.":
-   "Esto nos ayuda a calcular tu objetivo desde tu punto actual. Si no estás seguro, pon tu mejor estimación; podrás actualizarla los domingos en la app.",
+ "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.":
+   "Esto nos ayuda a calcular tu objetivo desde tu punto actual. Si no estás seguro, pon tu mejor estimación; podrás actualizarla en la app los lunes, viernes y domingos.",
  "Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. Ortak bir bilgisayardaysan işaretleme.":
    "Permanecerás conectado 30 días en este navegador y recargar la página no cerrará tu sesión. No lo marques en un ordenador compartido.",
  "Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.":
@@ -842,8 +842,8 @@ _EK = {
    "Ce que tu nous dis façonne la manière dont nous allons t'accompagner.",
  "Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.":
    "Ta taille influence l'énergie que ton corps dépense chaque jour.",
- "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.":
-   "Cela nous aide à calculer ton objectif à partir de ta situation actuelle. Si tu hésites, donne ta meilleure estimation ; tu pourras la mettre à jour le dimanche.",
+ "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.":
+   "Cela nous aide à calculer ton objectif à partir de ta situation actuelle. Si tu hésites, donne ta meilleure estimation ; tu pourras la mettre à jour le lundi, le vendredi et le dimanche.",
  "Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. Ortak bir bilgisayardaysan işaretleme.":
    "Tu resteras connecté 30 jours sur ce navigateur et recharger la page ne te déconnectera pas. À éviter sur un ordinateur partagé.",
  "Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.":
@@ -878,8 +878,8 @@ _EK = {
    "ما أخبرتنا به يحدد كيف سندعمك.",
  "Boyun, vücudunun her gün ne kadar enerji harcadığını etkiler.":
    "طولك يؤثر على كمية الطاقة التي يحرقها جسمك يوميًا.",
- "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.":
-   "هذا يساعدنا على حساب هدفك انطلاقًا من وضعك الحالي. إن لم تكن متأكدًا فاكتب أفضل تقدير، ويمكنك تحديثه أيام الأحد داخل التطبيق.",
+ "Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.":
+   "هذا يساعدنا على حساب هدفك انطلاقًا من وضعك الحالي. إن لم تكن متأكدًا فاكتب أفضل تقدير، ويمكنك تحديثه داخل التطبيق أيام الاثنين والجمعة والأحد.",
  "Bu tarayıcıda 30 gün açık kalırsın, sayfayı yenileyince çıkış yapmazsın. Ortak bir bilgisayardaysan işaretleme.":
    "ستبقى مسجلًا ٣٠ يومًا في هذا المتصفح ولن يؤدي تحديث الصفحة إلى خروجك. لا تفعّله على جهاز مشترك.",
  "Bugün kaydedilmiş antrenman yok. Antrenman Koçu sekmesinden plan yapıp tamamladığın setleri girebilirsin.":
@@ -950,6 +950,11 @@ _GUNLER = {
  "fr": ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"],
  "ar": ["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"],
 }
+
+
+def gun_adi(gun, dil=None):
+    """Haftanın gününün aktif dildeki adı."""
+    return _GUNLER.get(dil or aktif_dil(), _GUNLER["tr"])[gun.weekday()]
 
 
 def tarih_yaz(gun, dil=None):

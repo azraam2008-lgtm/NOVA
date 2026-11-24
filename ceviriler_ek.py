@@ -743,3 +743,72 @@ EK_GIRIS = {
 }
 for _k, _v in EK_GIRIS.items():
     EK.setdefault(_k, {}).update(_v)
+
+# Tartı günleri (Pazartesi, Cuma, Pazar) kartı ve ilgili metinler
+_T_PZT = "Yeni haftaya başlarken bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin."
+_T_CUM = "Hafta sonuna girmeden durumunu görmek için bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin."
+_T_PAZ = "Haftayı kapatmadan önce bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin."
+_T_GEL = ("Kilo grafiğin ikinci tartından sonra görünecek. "
+          "Pazartesi, Cuma ve Pazar günleri Günlük Özet'teki tartı kartından kilonu girmen yeterli.")
+_T_HAT = ("Öğün kaydetmediğin, su hedefinin gerisinde kaldığın ya da tartı gününde "
+          "(Pazartesi, Cuma, Pazar) tartılmadığın günlerde kısa bir hatırlatma gelir. "
+          "Her şey yolundaysa mesaj gelmez.")
+EK_TARTI = {
+    'en': {
+        "Tartı günü": "Weigh-in day",
+        "Tartı tarihi": "Weigh-in date",
+        _T_PZT: "Starting a new week? Enter this morning's weight and your calorie plan will be updated.",
+        _T_CUM: "Check in before the weekend: enter this morning's weight and your calorie plan will be updated.",
+        _T_PAZ: "Before the week closes, enter this morning's weight and your calorie plan will be updated.",
+        "Gelecek bir tarihe kilo girilemez.": "You can't enter a weight for a future date.",
+        "Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.": "Your weight couldn't be saved. Check your connection and try again.",
+        _T_GEL: "Your weight chart appears after your second weigh-in. Just enter your weight on Mondays, Fridays and Sundays from the weigh-in card in the Daily summary.",
+        _T_HAT: "You'll get a short reminder on days you don't log meals, fall behind on water, or skip a weigh-in day (Monday, Friday, Sunday). If everything is on track, no message is sent.",
+    },
+    'de': {
+        "Tartı günü": "Wiegetag",
+        "Tartı tarihi": "Datum der Messung",
+        _T_PZT: "Zum Wochenstart: Trag dein Gewicht von heute Morgen ein, dann wird dein Kalorienplan angepasst.",
+        _T_CUM: "Kurzer Check vor dem Wochenende: Trag dein Gewicht von heute Morgen ein, dann wird dein Kalorienplan angepasst.",
+        _T_PAZ: "Bevor die Woche endet: Trag dein Gewicht von heute Morgen ein, dann wird dein Kalorienplan angepasst.",
+        "Gelecek bir tarihe kilo girilemez.": "Für ein zukünftiges Datum kann kein Gewicht eingetragen werden.",
+        "Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.": "Dein Gewicht konnte nicht gespeichert werden. Prüfe deine Verbindung und versuche es erneut.",
+        _T_GEL: "Dein Gewichtsdiagramm erscheint nach der zweiten Messung. Trag dein Gewicht montags, freitags und sonntags über die Wiege-Karte in der Tagesübersicht ein.",
+        _T_HAT: "An Tagen, an denen du keine Mahlzeit erfasst, beim Wasser zurückliegst oder einen Wiegetag (Montag, Freitag, Sonntag) auslässt, kommt eine kurze Erinnerung. Läuft alles gut, kommt keine Nachricht.",
+    },
+    'es': {
+        "Tartı günü": "Día de pesaje",
+        "Tartı tarihi": "Fecha del pesaje",
+        _T_PZT: "Empieza la semana: introduce tu peso de esta mañana y tu plan de calorías se actualizará.",
+        _T_CUM: "Antes del fin de semana: introduce tu peso de esta mañana y tu plan de calorías se actualizará.",
+        _T_PAZ: "Antes de cerrar la semana, introduce tu peso de esta mañana y tu plan de calorías se actualizará.",
+        "Gelecek bir tarihe kilo girilemez.": "No puedes registrar un peso en una fecha futura.",
+        "Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.": "No se pudo guardar tu peso. Revisa tu conexión e inténtalo de nuevo.",
+        _T_GEL: "Tu gráfico de peso aparecerá tras tu segundo pesaje. Basta con introducir tu peso los lunes, viernes y domingos desde la tarjeta de pesaje del resumen diario.",
+        _T_HAT: "Recibirás un breve recordatorio los días en que no registres comidas, vayas atrasado con el agua o te saltes un día de pesaje (lunes, viernes, domingo). Si todo va bien, no llega ningún mensaje.",
+    },
+    'fr': {
+        "Tartı günü": "Jour de pesée",
+        "Tartı tarihi": "Date de la pesée",
+        _T_PZT: "Nouvelle semaine : saisis ton poids de ce matin et ton plan calorique sera mis à jour.",
+        _T_CUM: "Avant le week-end : saisis ton poids de ce matin et ton plan calorique sera mis à jour.",
+        _T_PAZ: "Avant de clôturer la semaine, saisis ton poids de ce matin et ton plan calorique sera mis à jour.",
+        "Gelecek bir tarihe kilo girilemez.": "Impossible d'enregistrer un poids à une date future.",
+        "Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.": "Ton poids n'a pas pu être enregistré. Vérifie ta connexion et réessaie.",
+        _T_GEL: "Ton graphique de poids apparaîtra après ta deuxième pesée. Il suffit de saisir ton poids le lundi, le vendredi et le dimanche depuis la carte de pesée du résumé du jour.",
+        _T_HAT: "Tu reçois un court rappel les jours où tu n'enregistres pas de repas, où tu es en retard sur l'eau ou où tu sautes un jour de pesée (lundi, vendredi, dimanche). Si tout va bien, aucun message n'est envoyé.",
+    },
+    'ar': {
+        "Tartı günü": "يوم الوزن",
+        "Tartı tarihi": "تاريخ الوزن",
+        _T_PZT: "مع بداية الأسبوع، أدخل وزنك هذا الصباح ليتم تحديث خطة السعرات.",
+        _T_CUM: "قبل عطلة نهاية الأسبوع، أدخل وزنك هذا الصباح ليتم تحديث خطة السعرات.",
+        _T_PAZ: "قبل إغلاق الأسبوع، أدخل وزنك هذا الصباح ليتم تحديث خطة السعرات.",
+        "Gelecek bir tarihe kilo girilemez.": "لا يمكن إدخال وزن لتاريخ في المستقبل.",
+        "Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.": "تعذّر حفظ وزنك. تحقق من اتصالك وحاول مرة أخرى.",
+        _T_GEL: "سيظهر مخطط وزنك بعد الوزن الثاني. يكفي أن تدخل وزنك أيام الاثنين والجمعة والأحد من بطاقة الوزن في الملخص اليومي.",
+        _T_HAT: "ستصلك رسالة تذكير قصيرة في الأيام التي لا تسجّل فيها وجبات أو تتأخر في شرب الماء أو تفوّت يوم الوزن (الاثنين، الجمعة، الأحد). إن كان كل شيء على ما يرام فلن تصلك رسالة.",
+    },
+}
+for _k, _v in EK_TARTI.items():
+    EK.setdefault(_k, {}).update(_v)

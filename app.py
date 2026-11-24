@@ -1,3 +1,4 @@
+import copy
 import datetime
 import hashlib
 import json
@@ -15,11 +16,12 @@ from yemek_arama import yemek_arama_sayfasi
 from gelisim import gelisim_sayfasi
 from hesap import hesap_bolumu
 from sifre_sifirlama import sifre_sifirlama_bolumu
-from diller import t, h, tarih_yaz, dil_ayarla, aktif_dil, DIL_LISTESI, yon
+from diller import t, h, tarih_yaz, gun_adi, dil_ayarla, aktif_dil, DIL_LISTESI, yon
 from ayarlar import ayarlar_paneli
 import mikro
 import paylasim
 import ramazan
+import tarti
 import hesap_koprusu
 from oturum import (cerezden_giris, oturum_baslat, cikis_dugmesi,
                     kullanilabilir_mi, oturum_tazele)
@@ -220,8 +222,22 @@ def verileri_yukle(username):
 
 def verileri_kaydet(username):
     data = {"gunluk_kayitlar": st.session_state.gunluk_kayitlar, "aktivite_loglari": st.session_state.aktivite_loglari, "profil": st.session_state.profil}
-    try: supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
-    except: pass
+    try:
+        supabase.table("kullanici_verileri").upsert({"username": username, "data": data}).execute()
+        return True
+    except: return False
+
+def kilo_kaydet(p, tarih, kilo, username):
+    """Tartıyı kilo geçmişine yazar ve kaydeder. Kayıt başarısızsa profili
+    eski haline döndürüp False döner; gelecek tarihte ValueError verir."""
+    eski = {a: copy.deepcopy(p[a]) for a in ("kilo_gecmisi", "mevcut_kilo", "son_tarti_tarihi") if a in p}
+    tarti.kilo_gecmisine_yaz(p, tarih, kilo)
+    if verileri_kaydet(username):
+        return True
+    for a in ("kilo_gecmisi", "mevcut_kilo", "son_tarti_tarihi"):
+        p.pop(a, None)
+    p.update(eski)
+    return False
 
 # Aktivite düzeyi çarpanları (yaygın kullanılan Harris-Benedict katsayıları)
 AKTIVITE_DUZEYLERI = {
@@ -797,7 +813,7 @@ else:
             elif step == 7:
                 st.markdown(h("<h2 style='text-align:center;'>Şu andaki kilon ne?</h2>"), unsafe_allow_html=True)
                 mevcut_kilo = st.number_input(t("Kilo (kg)"), min_value=35.0, max_value=250.0, value=float(p.get("mevcut_kilo", 60.0)), step=0.5)
-                st.markdown(h('<div class="info-box">Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazar günleri güncelleyebilirsin.</div>'), unsafe_allow_html=True)
+                st.markdown(h('<div class="info-box">Bu bilgi, bulunduğun noktaya göre kalori hedefini hesaplamamıza yardımcı olur. Şu anki kilonu tam bilmiyorsan en iyi tahminini gir, daha sonra uygulamada Pazartesi, Cuma ve Pazar günleri güncelleyebilirsin.</div>'), unsafe_allow_html=True)
 
                 b1, b2 = st.columns(2)
                 if b1.button(t("Geri")): st.session_state.onboarding_step = 6; st.rerun()
@@ -899,32 +915,6 @@ else:
     tarih_str = tarih_yaz(bugun_dt)
     st.markdown(h(f'<div class="nova-tarih">{tarih_str}</div>'), unsafe_allow_html=True)
 
-    # ----------------------------------------------------
-    # PAZAR GÜNÜ TARTI & HEDEF GÜNCELLEME KONTROLÜ
-    # ----------------------------------------------------
-    bugun_pazar_mu = (bugun_dt.weekday() == 6)
-    pazar_guncellendi_key = f"pazar_tartildi_{str(bugun_dt)}"
-    son_tarti = p.get("son_tarti_tarihi", "")
-    
-    if bugun_pazar_mu and son_tarti != str(bugun_dt) and not st.session_state.get(pazar_guncellendi_key, False):
-        st.markdown(h(f"""
-            <div class="calai-card" style="border: 2px solid #ffcc00; background: rgba(50, 40, 0, 0.9);">
-                <h3 style="color: #ffcc00 !important;">Pazar Günü Tartı ve Durum Güncellemesi!</h3>
-                <p>Harika bir hafta geçirdik! Haftayı kapatmadan önce bugün sabah tartıldığın güncel kilonu girerek hedeflerini ve kalori planını yeni kilosuna göre güncelleyebilirsin.</p>
-            </div>
-        """), unsafe_allow_html=True)
-        
-        yeni_tartilinan_kilo = st.number_input(t("Bugünkü Güncel Kilon (kg)"), min_value=30.0, max_value=250.0, value=float(p["mevcut_kilo"]), step=0.1, key="pazar_kilo_input")
-        if st.button(t("Kilomu Güncelle ve Hedeflerimi Yenile"), use_container_width=True):
-            p["mevcut_kilo"] = yeni_tartilinan_kilo
-            p["son_tarti_tarihi"] = str(bugun_dt)
-            p.setdefault("kilo_gecmisi", []).append({"tarih": str(bugun_dt), "kilo": yeni_tartilinan_kilo})
-            st.session_state[pazar_guncellendi_key] = True
-            verileri_kaydet(aktif_user)
-            st.success(t("Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!"))
-            st.rerun()
-        st.markdown(h("<br>"), unsafe_allow_html=True)
-
     c_sol, c_orta, c_sag = st.columns([1, 10, 1])
     with c_orta:
         t_col1, t_col2 = st.columns([8, 2])
@@ -947,6 +937,43 @@ else:
         # 1. SEKME: GÜNLÜK ÖZET & MANUEL EKLEME
         # ==========================================
         with tab_ozet:
+            # TARTI KARTI: Pazartesi, Cuma ve Pazar (tarti.TARTI_GUNLERI)
+            # Bugün tartı günüyse ve bugünün kaydı yoksa açılır. Unutulan bir
+            # günün kilosu da geçmiş tarih seçilerek girilebilir.
+            _tarti_key = f"tarti_yapildi_{bugun_dt}"
+            if st.session_state.pop("tarti_mesaji", None):
+                st.success(t("Harika! Kilon güncellendi ve haftalık kalori/makro planın yeni hedeflerine göre yeniden hesaplandı!"))
+            if (tarti.tarti_gunu_mu(bugun_dt) and not tarti.tartildi_mi(p, bugun_dt)
+                    and not st.session_state.get(_tarti_key, False)):
+                _tarti_metni = {
+                    0: "Yeni haftaya başlarken bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin.",
+                    4: "Hafta sonuna girmeden durumunu görmek için bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin.",
+                    6: "Haftayı kapatmadan önce bu sabah tartıldığın kilonu gir; kalori planın yeni kilona göre güncellensin.",
+                }.get(bugun_dt.weekday(), "")
+                with st.container(key="novakart_tarti"):
+                    st.markdown(
+                        f'<div class="calai-card" style="border: 2px solid #ffcc00; background: rgba(50, 40, 0, 0.9);">'
+                        f'<h3 style="color: #ffcc00 !important;">{t("Tartı günü")}: {gun_adi(bugun_dt)}</h3>'
+                        f'<p>{t(_tarti_metni)}</p></div>',
+                        unsafe_allow_html=True)
+                    _tc1, _tc2 = st.columns(2)
+                    _tarti_tarihi = _tc1.date_input(t("Tartı tarihi"), value=bugun_dt,
+                                                    max_value=bugun_dt, key="tarti_tarih_input")
+                    _tarti_kilo = _tc2.number_input(t("Kilo (kg)"), min_value=30.0, max_value=250.0,
+                                                    value=float(p["mevcut_kilo"]), step=0.1,
+                                                    key="tarti_kilo_input")
+                    if st.button(t("Kilomu Güncelle ve Hedeflerimi Yenile"), use_container_width=True,
+                                 key="tarti_kaydet"):
+                        # Seçici zaten engelliyor; yine de sunucu tarafında da bakılır
+                        if not _tarti_tarihi or _tarti_tarihi > datetime.date.today():
+                            st.error(t("Gelecek bir tarihe kilo girilemez."))
+                        elif kilo_kaydet(p, _tarti_tarihi, _tarti_kilo, aktif_user):
+                            st.session_state[f"tarti_yapildi_{_tarti_tarihi}"] = True
+                            st.session_state["tarti_mesaji"] = True
+                            st.rerun()
+                        else:
+                            st.error(t("Kilon kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene."))
+
             # KALORİ TABLOSU
             with st.container(key="novakart3"):
                 st.markdown(h("<h2 style='font-size: 2rem;'>Kalori ve Denge Tablosu</h2>"), unsafe_allow_html=True)
