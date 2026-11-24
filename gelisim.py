@@ -148,8 +148,8 @@ def _kilo_bolumu(profil, gun_sayisi, renk):
     st.markdown(h("#### Kilo"))
     gecmis = sorted(profil.get("kilo_gecmisi", []), key=lambda x: x.get("tarih", ""))
     if len(gecmis) < 2:
-        st.caption("Kilo grafiğin ikinci tartından sonra görünecek. "
-                   "Her Pazar tartılman ya da Günlük Özet'ten kilo girmen yeterli.")
+        st.caption(t("Kilo grafiğin ikinci tartından sonra görünecek. "
+                     "Pazartesi, Cuma ve Pazar günleri Günlük Özet'teki tartı kartından kilonu girmen yeterli."))
         return
 
     baslangic = datetime.date.today() - datetime.timedelta(days=gun_sayisi)

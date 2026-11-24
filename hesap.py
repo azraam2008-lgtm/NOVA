@@ -83,8 +83,9 @@ def _hatirlatma_ayarlari(profil, kullanici_eposta, kaydet):
     acik = st.toggle(
         t("Her akşam hatırlatma gönder"),
         value=bool(profil.get("hatirlatma_acik")),
-        help="Öğün kaydetmediğin, su hedefinin gerisinde kaldığın ya da Pazar tartısı "
-             "atladığın günlerde kısa bir hatırlatma gelir. Her şey yolundaysa mesaj gelmez.",
+        help=t("Öğün kaydetmediğin, su hedefinin gerisinde kaldığın ya da tartı gününde "
+               "(Pazartesi, Cuma, Pazar) tartılmadığın günlerde kısa bir hatırlatma gelir. "
+               "Her şey yolundaysa mesaj gelmez."),
         key="hatirlatma_acik_toggle")
 
     if acik != bool(profil.get("hatirlatma_acik")):
