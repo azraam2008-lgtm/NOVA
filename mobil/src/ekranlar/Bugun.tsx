@@ -4,7 +4,7 @@ import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { aktifDil, t } from "../dil";
 import { bugunMetni, gunToplami, ogunler, type Kayit, type Veri } from "../hesap";
-import { Cubuk, Dugme, Kart, R, SayfaBasligi, Yazi, temali } from "../bilesenler";
+import { Cubuk, Dugme, Halka, Kart, R, SayfaBasligi, Yazi, temali } from "../bilesenler";
 import { MikroKarti, OrucKarti } from "./GunKartlari";
 import { DengeKarti } from "./Denge";
 import { gunHedefi } from "../denge";
@@ -69,6 +69,24 @@ export function BugunSayfasi(p: { veri: Veri; tarih: string; hedef: number; gunc
     <View testID="sayfa-bugun">
       <SayfaBasligi baslik={`${t("Merhaba")}, ${pr.ad ?? ""}`} alt={tarihYazisi} />
 
+      {/* Sitedeki "Günlük Aktivite ve Su Halkaları": 10.000 adım ve 2,5 litre */}
+      <Kart testID="halkalar">
+        <View style={s.halkalar}>
+          <View style={s.halkaSutun}>
+            <Halka testID="adim" oran={adim / 10000} renk={R.halkaAdim} deger={adim.toLocaleString(aktifDil())} etiket={t("Adım")} />
+          </View>
+          <View style={s.halkaSutun}>
+            <Halka testID="su" oran={su / 2.5} renk={R.halkaSu} deger={`${su.toFixed(2)} L`} etiket={t("Su")} />
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
+              <Dugme tur="ikincil" yazi="−" bas={() => suDegistir(-0.25)} kapali={su <= 0} s={s.kare} testID="su-eksi" />
+              <Dugme tur="ikincil" yazi="+" bas={() => suDegistir(0.25)} s={s.kare} testID="su-arti" />
+            </View>
+            <Yazi tur="soluk" s={{ marginTop: 4 }}>{Math.round(su / 0.25)} {t("bardak")}</Yazi>
+          </View>
+        </View>
+        <Yazi tur="soluk" s={{ marginTop: 12, fontSize: 13, textAlign: "center" }}>{adimNotu(p.adimDurumu)}</Yazi>
+      </Kart>
+
       {!!pr.oruc_modu && <OrucKarti profil={pr} su={su} />}
 
       <Kart testID="ozet">
@@ -88,28 +106,6 @@ export function BugunSayfasi(p: { veri: Veri; tarih: string; hedef: number; gunc
           {makro("Karbonhidrat", gun.karb, (p.hedef * 0.4) / 4, R.karb)}
           {makro("Yağ", gun.yag, (p.hedef * 0.3) / 9, R.yag)}
         </View>
-      </Kart>
-
-      <Kart>
-        <View style={[s.satir, { marginTop: 0 }]}>
-          <View>
-            <Yazi tur="alt">{t("Su")}</Yazi>
-            <Yazi s={{ fontWeight: "700", fontSize: 22 }} testID="su">{su.toFixed(2)} L</Yazi>
-            <Yazi tur="soluk">{Math.round(su / 0.25)} {t("bardak")}</Yazi>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Dugme tur="ikincil" yazi="−" bas={() => suDegistir(-0.25)} kapali={su <= 0} s={s.kare} testID="su-eksi" />
-            <Dugme tur="ikincil" yazi="+" bas={() => suDegistir(0.25)} s={s.kare} testID="su-arti" />
-          </View>
-        </View>
-      </Kart>
-
-      <Kart testID="adim-karti">
-        <Yazi tur="alt">{t("Adım")}</Yazi>
-        <Yazi s={{ fontWeight: "700", fontSize: 22, marginBottom: 8 }} testID="adim">{adim.toLocaleString(aktifDil())}</Yazi>
-        {/* Sitedeki adım halkasıyla aynı ölçek: 10.000 adım */}
-        <Cubuk oran={adim / 10000} renk={R.protein} yukseklik={6} />
-        <Yazi tur="soluk" s={{ marginTop: 8, fontSize: 13 }}>{adimNotu(p.adimDurumu)}</Yazi>
       </Kart>
 
       <MikroKarti kayitlar={gun.kayitlar} />
@@ -150,4 +146,6 @@ const s = temali(() => StyleSheet.create({
   isaret: { width: 9, height: 9, borderRadius: 2 },
   kalem: { marginTop: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: R.cizgi },
   kare: { width: 48, minHeight: 44, paddingHorizontal: 0 },
+  halkalar: { flexDirection: "row", justifyContent: "space-around", alignItems: "flex-start" },
+  halkaSutun: { alignItems: "center", flex: 1 },
 }));

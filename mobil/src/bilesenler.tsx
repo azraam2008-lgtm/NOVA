@@ -2,6 +2,7 @@
 // Renkler sabit değil: seçilen temadan gelir (tema.ts). Tema değişince
 // uygulama baştan çizilir, stiller de yeni renklerle yeniden kurulur.
 import React from "react";
+import Svg, { Circle } from "react-native-svg";
 import { ActivityIndicator, ImageBackground, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { sagdanSola, t } from "./dil";
 import { VARSAYILAN_TEMA, opak, saydam, temaBul } from "./tema";
@@ -27,6 +28,9 @@ function paletKur(ad: string) {
     karb: "#F2B233",
     yag: "#FF6B5E",
     su: "#4AA8F0",
+    // Sitedeki aktivite halkalarıyla aynı renkler (app.py: adım #ff3b30, su #007aff)
+    halkaAdim: "#FF3B30",
+    halkaSu: "#007AFF",
     hata: x.acik ? "#B3261E" : "#FF8A80",
     iyi: x.acik ? "#1E7D4F" : "#7BE0A8",
   };
@@ -134,6 +138,30 @@ export function Cip(p: { yazi: string; secili: boolean; bas: () => void; testID?
 export function Hata(p: { metin?: string | null }) {
   if (!p.metin) return null;
   return <Yazi s={{ color: R.hata, marginVertical: 8 }}>{p.metin}</Yazi>;
+}
+
+/** Sitedeki gibi ilerleme halkası: oran 0-1, ortada değer ve etiket */
+export function Halka(p: { oran: number; renk: string; deger: string; etiket: string; boyut?: number; testID?: string }) {
+  const boyut = p.boyut ?? 132;
+  const kalinlik = Math.round(boyut * 0.11);
+  const r = (boyut - kalinlik) / 2;
+  const cevre = 2 * Math.PI * r;
+  const o = Math.max(0, Math.min(1, p.oran || 0));
+  return (
+    <View style={{ width: boyut, height: boyut, alignItems: "center", justifyContent: "center" }} testID={p.testID}
+      accessible accessibilityLabel={`${p.etiket}: ${p.deger}`}>
+      <Svg width={boyut} height={boyut} style={{ position: "absolute" }}>
+        <Circle cx={boyut / 2} cy={boyut / 2} r={r} stroke={R.cizgi} strokeWidth={kalinlik} fill="none" />
+        {o > 0 && (
+          <Circle cx={boyut / 2} cy={boyut / 2} r={r} stroke={p.renk} strokeWidth={kalinlik} fill="none"
+            strokeLinecap="round" strokeDasharray={`${cevre} ${cevre}`} strokeDashoffset={cevre * (1 - o)}
+            transform={`rotate(-90 ${boyut / 2} ${boyut / 2})`} />
+        )}
+      </Svg>
+      <Text style={{ fontSize: boyut * 0.17, fontWeight: "800", color: p.renk }} numberOfLines={1} adjustsFontSizeToFit>{p.deger}</Text>
+      <Text style={{ fontSize: 11, fontWeight: "600", letterSpacing: 1.5, color: R.ikincil, textTransform: "uppercase" }}>{p.etiket}</Text>
+    </View>
+  );
 }
 
 export function Cubuk(p: { oran: number; renk: string; yukseklik?: number }) {

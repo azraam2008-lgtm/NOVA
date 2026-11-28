@@ -13,7 +13,6 @@ export function MikroKarti(p: { kayitlar: Kayit[] }) {
   const [acik, setAcik] = useState(false);
   const toplam = topla(p.kayitlar);
   const [varOlan, hepsi] = kapsama(p.kayitlar);
-  if (hepsi === 0) return null;
   const az = eksikler(toplam), fazla = asilanlar(toplam);
 
   return (
@@ -24,10 +23,17 @@ export function MikroKarti(p: { kayitlar: Kayit[] }) {
           <Yazi tur="soluk">{acik ? "−" : "+"}</Yazi>
         </View>
         <Yazi tur="soluk" s={{ marginTop: 4 }}>
-          {varOlan === 0
+          {hepsi === 0
+            ? t("Bugün bir şey eklediğinde vitamin, mineral ve tuz burada görünür.")
+            : varOlan === 0
             ? t("Bugünkü kayıtlarında vitamin ve mineral bilgisi yok. Paketli ürünler ve etiket fotoğrafı bu bilgiyi getirir.")
             : `${t("Bilgisi olan kayıt")}: ${varOlan}/${hepsi}. ${t("Toplam yalnızca bunlardan hesaplanır.")}`}
         </Yazi>
+        {!acik && toplam["Tuz (g)"] != null && (
+          <Yazi s={{ marginTop: 6, fontSize: 14 }} testID="mikro-tuz">
+            {t("Tuz")}: {sayiYaz(toplam["Tuz (g)"])} / 6 g
+          </Yazi>
+        )}
         {varOlan > 0 && !acik && (fazla.length > 0 || az.length > 0) && (
           <Yazi s={{ marginTop: 6, fontSize: 14 }}>
             {fazla.length > 0 && <Yazi s={{ color: R.hata, fontSize: 14 }}>{t("Sınırı aşan")}: {fazla.map(t).join(", ")}. </Yazi>}
