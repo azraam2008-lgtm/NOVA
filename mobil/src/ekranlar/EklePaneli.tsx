@@ -1,16 +1,18 @@
 // EklePaneli.tsx - Tek "Ekle" düğmesinin açtığı panel
-// Bütün ekleme yolları burada: Ara, Barkod, Fotoğraf, Yazarak anlat, Kayıtlılarım, Tarif.
+// Bütün ekleme yolları burada: Ara, Barkod, Fotoğraf, Anlat (sesle ya da yazarak), Kayıtlılarım, Tarif.
 // Favoriler ve tarifler sitedeki kullanici_yemekleri tablosunda; iki tarafta aynı görünür.
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { aktifDil, t } from "../dil";
 import { kayitYap, kcal, ogunler, type Kayit, type Profil } from "../hesap";
 import { sadelestir, yemekAra } from "../yemekler";
 import { arka, type SiteYemek, type YemekTuru } from "../veri";
 import { barkodAra, etikettenSite, fotografAl, siteYemegi, yereldenSite } from "../disari";
-import { Cip, Dugme, Girdi, Hata, R, Yazi, hataMetni, temali } from "../bilesenler";
+import { CamKart, Cip, Dugme, Girdi, Hata, R, Yazi, hataMetni, temali } from "../bilesenler";
+import { EN_UZUN_SN, useSesKaydi } from "../ses";
 
 type Kip = "menu" | "ara" | "barkod" | "fotograf" | "anlat" | "kayitli" | "tarif";
 type Tahmin = { ad: string; gram: string; p: number; k: number; y: number; ekstra?: Record<string, number> };
@@ -66,6 +68,7 @@ export function EklePaneli(p: {
   const [barkodYok, setBarkodYok] = useState(false);
   const okundu = useRef(false);
   const [kameraIzni, kameraIzniIste] = useCameraPermissions();
+  const ses = useSesKaydi();
 
   const yukle = async () => {
     try {
@@ -79,7 +82,7 @@ export function EklePaneli(p: {
     setKip("menu"); setSorgu(""); setSecilen(null); setAnlatim(""); setTahmin(null); setVarsayim(""); setFoto(null);
     setHata(null); setBarkodMetni(""); setBarkodYok(false); okundu.current = false;
   };
-  const kapat = () => { sifirla(); p.kapat(); };
+  const kapat = () => { if (ses.kaydediyor) ses.vazgec(); sifirla(); p.kapat(); };
   const sec = (y: SiteYemek) => { setSecilen(y); setGram(String(y.gram || 100)); setHata(null); };
 
   const ekleVeKapat = async (k: Kayit[]) => {
@@ -135,6 +138,24 @@ export function EklePaneli(p: {
     if (!r.tamam) return setHata(hataMetni(r.hata));
     tahminiGoster(r.deger);
   };
+  // Sesle anlat: kayıt doğrudan yapay zekaya gider; yazılan not varsa onunla birlikte
+  const sesBitir = async () => {
+    const kayit = await ses.bitir();
+    if (!kayit) return setHata(t("Ses kaydedilemedi. Biraz sonra tekrar dene."));
+    setBekle(true); setHata(null); setTahmin(null);
+    const r = await arka.yapayZeka("voice", anlatim, p.baglam, kayit);
+    setBekle(false);
+    if (!r.tamam) return setHata(hataMetni(r.hata));
+    if (!r.deger?.is_food) return setHata(t("Anlattıklarında yiyecek bulamadım. Biraz daha yavaş ve net anlatıp tekrar dene."));
+    tahminiGoster(r.deger);
+  };
+  const sesBaslat = async () => {
+    setHata(null); setTahmin(null);
+    const r = await ses.baslat(() => { sesBitir(); });
+    if (r === "izin") setHata(t("Mikrofon izni verilmedi. iPhone Ayarlar > Expo Go bölümünden açabilirsin."));
+    if (r === "hata") setHata(t("Ses kaydedilemedi. Biraz sonra tekrar dene."));
+  };
+
   const fotografla = async (kaynak: "kamera" | "galeri", mod: "meal" | "label") => {
     setHata(null); setTahmin(null);
     let f;
@@ -156,7 +177,7 @@ export function EklePaneli(p: {
     { kip: "ara", yazi: "Ara", alt: "Yemek veritabanında" },
     { kip: "barkod", yazi: "Barkod", alt: "Paketli ürünler" },
     { kip: "fotograf", yazi: "Fotoğraf", alt: "Tabağını çek, Nova hesaplasın" },
-    { kip: "anlat", yazi: "Yazarak anlat", alt: "Ne yediğini yaz" },
+    { kip: "anlat", yazi: "Anlat", alt: "Sesle ya da yazarak" },
     { kip: "kayitli", yazi: "Kayıtlılarım", alt: "Favoriler ve tariflerin" },
     { kip: "tarif", yazi: "Tarif", alt: "Malzemelerden kur" },
   ];
@@ -165,6 +186,7 @@ export function EklePaneli(p: {
     anlat: "Ne yediğini anlat", kayitli: "Kayıtlılarım", tarif: "Tarif",
   };
   const geri = () => {
+    if (ses.kaydediyor) ses.vazgec();
     if (secilen) { setSecilen(null); okundu.current = false; return; }
     if (kip === "menu") return kapat();
     sifirla();
@@ -193,12 +215,40 @@ export function EklePaneli(p: {
     );
   })();
 
+  const tahminKayitlari = tahmin ? tahmin.map((it) => kayitYap(it.ad, sayiOku(it.gram), p.tarih, ogun, it.p, it.k, it.y, it.ekstra)) : [];
+  // Fotoğrafın üstündeki cam özet: kalori ve dört kutu. Lif yalnızca yapay zeka verdiyse; yoksa "veri yok"
+  const camOzet = tahmin && (() => {
+    const top = (a: string) => tahminKayitlari.reduce((x, k) => x + Number(k[a] ?? 0), 0);
+    const lifVar = tahminKayitlari.some((k) => k["Lif (g)"] != null);
+    const kutu = (ad: string, deger: string) => (
+      <View style={s.camKutu} key={ad}>
+        <Text style={s.camEtiket} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{t(ad)}</Text>
+        <Text style={[s.camDeger, deger === t("veri yok") && { fontSize: 11, fontWeight: "600" }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{deger}</Text>
+      </View>
+    );
+    return (
+      <CamKart testID="cam-ozet">
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <Yazi s={{ color: "#fff", fontSize: 17, fontWeight: "600" }}>{t("Tahmin")}</Yazi>
+          <Yazi s={{ color: "#fff", fontSize: 20, fontWeight: "800" }}>{Math.round(top("Kalori"))} kcal</Yazi>
+        </View>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {kutu("Protein", `${Math.round(top("Protein"))} g`)}
+          {kutu("Karbonhidrat", `${Math.round(top("Karbonhidrat"))} g`)}
+          {kutu("Yağ", `${Math.round(top("Yağ"))} g`)}
+          {kutu("Lif", lifVar ? `${Math.round(top("Lif (g)"))} g` : t("veri yok"))}
+        </View>
+      </CamKart>
+    );
+  })();
+
   const tahminGorunumu = tahmin && (() => {
-    const kayitlar = tahmin.map((it) => kayitYap(it.ad, sayiOku(it.gram), p.tarih, ogun, it.p, it.k, it.y, it.ekstra));
+    const kayitlar = tahminKayitlari;
     const top = kayitlar.reduce((a, k) => a + k.Kalori, 0);
     return (
       <View testID="tahmin">
-        <Yazi tur="alt" s={{ marginVertical: 8 }}>{t("Tahmin")}: {top} kcal</Yazi>
+        {!foto && <Yazi tur="alt" s={{ marginVertical: 8 }}>{t("Tahmin")}: {top} kcal</Yazi>}
+        {foto && <View style={{ height: 12 }} />}
         {tahmin.map((it, i) => (
           <View key={i} style={s.tahminSatiri}>
             <View style={{ flex: 1 }}>
@@ -245,7 +295,7 @@ export function EklePaneli(p: {
   );
   else if (kip === "ara") govde = <>
     <Girdi testID="arama-girdi" value={sorgu} onChangeText={setSorgu} placeholder={t("Yemek ara")} autoFocus autoCorrect={false} />
-    {sorgu.trim().length >= 2 && sonuclar.length === 0 && <Yazi tur="soluk">{t("Bulamadım. \"Yazarak anlat\" seçeneğini dene.")}</Yazi>}
+    {sorgu.trim().length >= 2 && sonuclar.length === 0 && <Yazi tur="soluk">{t("Bulamadım. \"Anlat\" seçeneğini dene.")}</Yazi>}
     {sonuclar.map((y, i) => <YemekSatiri key={`${y.ad}-${i}`} testID={`sonuc-${i}`} y={y} bas={() => sec(y)}
       sag={favoriMi(y.ad) ? <Yazi s={{ color: R.karb }}>★</Yazi> : undefined} />)}
   </>;
@@ -283,16 +333,38 @@ export function EklePaneli(p: {
         <Dugme testID="foto-sec" tur="ikincil" yazi={t("Galeriden seç")} bas={() => fotografla("galeri", "meal")} s={{ flex: 1 }} kapali={bekle} />
       </View>
     )}
-    {foto && <Image source={{ uri: foto }} style={s.foto} resizeMode="cover" />}
+    {foto && (
+      <View style={[s.fotoKap, tahmin && { height: 340 }]}>
+        <Image source={{ uri: foto }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        {tahmin && <View style={s.camYeri}>{camOzet}</View>}
+      </View>
+    )}
     {!foto && <Yazi tur="soluk" s={{ marginTop: 10 }}>{t("Tabağın tamamı görünsün; yanında çatal ya da bardak varsa Nova porsiyonu daha iyi tahmin eder.")}</Yazi>}
     {yukleniyor}
     <Hata metin={hata} />
     {tahminGorunumu}
   </>;
   else if (kip === "anlat") govde = <>
-    <Girdi testID="anlat-girdi" value={anlatim} onChangeText={setAnlatim} multiline maxLength={600}
-      placeholder={t("Örnek: 2 yumurta, 1 dilim peynir ve bir bardak çay")} style={{ minHeight: 90, paddingTop: 12, textAlignVertical: "top" }} />
-    {!tahmin && <Dugme testID="anlat-hesapla" yazi={t("Hesapla")} bas={anlat} yukleniyor={bekle} kapali={anlatim.trim().length < 3} />}
+    {!tahmin && (
+      <View style={s.mikrofonAlani}>
+        <Pressable testID="ses-dugmesi" onPress={ses.kaydediyor ? sesBitir : sesBaslat} disabled={bekle || ses.hazirlaniyor}
+          accessibilityRole="button" accessibilityLabel={t(ses.kaydediyor ? "Bitir ve hesapla" : "Sesle anlat")}
+          style={({ pressed }) => [s.mikrofon, ses.kaydediyor && { backgroundColor: R.halkaAdim }, pressed && { transform: [{ scale: 0.95 }] }]}>
+          <Ionicons name={ses.kaydediyor ? "stop" : "mic"} size={34} color="#fff" />
+        </Pressable>
+        <Yazi s={{ fontWeight: "700", marginTop: 10 }}>
+          {ses.kaydediyor ? `${t("Dinliyorum...")} ${Math.floor(ses.sure / 60)}:${String(ses.sure % 60).padStart(2, "0")} / ${EN_UZUN_SN / 60}:00` : t("Sesle anlat")}
+        </Yazi>
+        <Yazi tur="soluk" s={{ textAlign: "center", marginTop: 4 }}>
+          {t(ses.kaydediyor ? "Bitince kırmızı düğmeye dokun." : "Mikrofona dokun ve ne yediğini anlat. Örnek: iki yumurta, bir dilim peynir ve bir bardak çay.")}
+        </Yazi>
+        {ses.kaydediyor && <Dugme tur="yalin" testID="ses-vazgec" yazi={t("Vazgeç")} bas={() => ses.vazgec()} s={{ minHeight: 36, marginTop: 4 }} />}
+      </View>
+    )}
+    {!tahmin && !ses.kaydediyor && <Yazi tur="alt" s={{ marginBottom: 8 }}>{t("Ya da yazarak anlat")}</Yazi>}
+    {!ses.kaydediyor && <Girdi testID="anlat-girdi" value={anlatim} onChangeText={setAnlatim} multiline maxLength={600}
+      placeholder={t("Örnek: 2 yumurta, 1 dilim peynir ve bir bardak çay")} style={{ minHeight: 90, paddingTop: 12, textAlignVertical: "top" }} />}
+    {!tahmin && !ses.kaydediyor && <Dugme testID="anlat-hesapla" yazi={t("Hesapla")} bas={anlat} yukleniyor={bekle} kapali={anlatim.trim().length < 3} />}
     {yukleniyor}
     <Hata metin={hata} />
     {tahminGorunumu}
@@ -436,4 +508,12 @@ const s = temali(() => StyleSheet.create({
   kamera: { height: 240, borderRadius: 16, overflow: "hidden", backgroundColor: "#000", marginBottom: 4 },
   nisan: { position: "absolute", left: "12%", right: "12%", top: "38%", height: 70, borderWidth: 2, borderColor: "rgba(255,255,255,0.85)", borderRadius: 12 },
   foto: { width: "100%", height: 200, borderRadius: 16, marginTop: 12 },
+  fotoKap: { width: "100%", height: 220, borderRadius: 22, marginTop: 12, overflow: "hidden", backgroundColor: R.girdi },
+  camYeri: { position: "absolute", left: 12, right: 12, bottom: 12 },
+  camKutu: { flex: 1, alignItems: "center", paddingVertical: 10, paddingHorizontal: 4, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)", backgroundColor: "rgba(255,255,255,0.08)" },
+  camEtiket: { color: "rgba(255,255,255,0.85)", fontSize: 11, marginBottom: 4 },
+  camDeger: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  mikrofonAlani: { alignItems: "center", paddingVertical: 14, marginBottom: 8 },
+  mikrofon: { width: 76, height: 76, borderRadius: 38, backgroundColor: R.vurgu, alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
 }));
