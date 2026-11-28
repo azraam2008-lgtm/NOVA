@@ -67,6 +67,8 @@ class SupabaseArka implements Arka {
       });
       let g: any = null;
       try { g = await r.json(); } catch { /* boş */ }
+      // Sunucu tanıdık bir hata kodu döndürmediyse en azından durum kodu görünsün (sorun bulmak için)
+      if (r.status !== 200 && !g?.hata) g = { ...(g ?? {}), hata: `http_${r.status}` };
       return { durum: r.status, govde: g ?? {} };
     } catch {
       return { durum: 0, govde: { hata: "baglanti" } };
@@ -77,7 +79,8 @@ class SupabaseArka implements Arka {
     const { error } = await this.db.auth.setSession({
       access_token: g.oturum.access_token, refresh_token: g.oturum.refresh_token,
     });
-    return error ? { tamam: false, hata: "gecici" } : { tamam: true, deger: g.kullanici };
+    // Sunucu girişi onayladı ama telefon oturumu kuramadı: çoğunlukla uygulamadaki herkese açık anahtar geçersiz
+    return error ? { tamam: false, hata: `oturum: ${error.message || error.name || "?"}` } : { tamam: true, deger: g.kullanici };
   }
 
   async oturumKullanici() {
@@ -89,12 +92,12 @@ class SupabaseArka implements Arka {
   async girisYap(kullanici: string, sifre: string): Promise<Sonuc<string>> {
     const r = await this.fonksiyon("giris", { kullanici, sifre });
     if (r.durum === 200) return this.oturumuKur(r.govde);
-    return { tamam: false, hata: r.govde.hata ?? (r.durum === 0 ? "baglanti" : "gecici") };
+    return { tamam: false, hata: r.govde.hata ?? (r.durum === 0 ? "baglanti" : `http_${r.durum}`) };
   }
   async kayitOl(kullanici: string, eposta: string, sifre: string): Promise<Sonuc<string>> {
     const r = await this.fonksiyon("giris", { islem: "kayit", kullanici, eposta, sifre });
     if (r.durum === 200) return this.oturumuKur(r.govde);
-    return { tamam: false, hata: r.govde.hata ?? (r.durum === 0 ? "baglanti" : "gecici") };
+    return { tamam: false, hata: r.govde.hata ?? (r.durum === 0 ? "baglanti" : `http_${r.durum}`) };
   }
   async cikis() {
     await this.db.auth.signOut();

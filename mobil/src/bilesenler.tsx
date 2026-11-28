@@ -162,7 +162,8 @@ export function hataMetni(kod: string): string {
     hak_doldu: "Bugünkü hakkın doldu. Yarın tekrar dene.",
     kapasite_doldu: "Bugünkü hakkın doldu. Yarın tekrar dene.",
   };
-  return t(m[kod] ?? "Bir sorun çıktı. Biraz sonra tekrar dene.");
+  // Bilinmeyen kodda genel mesajın yanına kısa kodu ekle: sorunun yerini bulmayı sağlar
+  return m[kod] ? t(m[kod]) : `${t("Bir sorun çıktı. Biraz sonra tekrar dene.")} (${String(kod).slice(0, 80)})`;
 }
 
 const st = temali(() => StyleSheet.create({
