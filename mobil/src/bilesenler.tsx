@@ -3,6 +3,7 @@
 // uygulama baştan çizilir, stiller de yeni renklerle yeniden kurulur.
 import React from "react";
 import Svg, { Circle } from "react-native-svg";
+import { BlurView } from "expo-blur";
 import { ActivityIndicator, ImageBackground, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { sagdanSola, t } from "./dil";
 import { VARSAYILAN_TEMA, opak, saydam, temaBul } from "./tema";
@@ -138,6 +139,17 @@ export function Cip(p: { yazi: string; secili: boolean; bas: () => void; testID?
 export function Hata(p: { metin?: string | null }) {
   if (!p.metin) return null;
   return <Yazi s={{ color: R.hata, marginVertical: 8 }}>{p.metin}</Yazi>;
+}
+
+/** Buzlu cam kart: arkasındaki fotoğrafı bulanıklaştırarak gösterir (yemek fotoğrafının üstündeki özet) */
+export function CamKart(p: { children: React.ReactNode; s?: ViewStyle; testID?: string }) {
+  return (
+    <View style={[{ borderRadius: 22, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.28)" }, p.s]} testID={p.testID}>
+      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(40,40,40,0.25)" }]} />
+      <View style={{ padding: 16 }}>{p.children}</View>
+    </View>
+  );
 }
 
 /** Sitedeki gibi ilerleme halkası: oran 0-1, ortada değer ve etiket */

@@ -47,6 +47,12 @@
         {
           "motionPermission": "Nova counts your daily steps to show how much energy you burned."
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Nova listens when you describe your meal so it can estimate calories."
+        }
       ]
     ],
     "scheme": "nova",

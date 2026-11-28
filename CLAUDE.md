@@ -61,6 +61,7 @@ src/hesap.ts                 Profil/Kayıt tipleri, hedef kalori formülü (site
 src/veri.ts                  Arka uç: SupabaseArka (gerçek) ve SahteArka (deneme, AsyncStorage)
 src/disari.ts                Open Food Facts barkod, fotoğraf çekme ve küçültme
 src/adim.ts                  iPhone hareket sensöründen adım (useAdimSayar)
+src/ses.ts                   Öğünü sesle anlatma: expo-audio ile 16 kHz WAV, yapay-zeka "voice" moduna ses_b64 olarak gider
 src/mikro.ts, oruc.ts, rapor.ts, denge.ts, egzersizler.ts   Sitedeki modüllerin karşılıkları
 src/ekranlar/                Giris, Kurulum, AnaEkran (sekmeler), Bugun, Gelisim, Antrenman, Koc, Profil, Ayarlar,
                              EklePaneli, Asistan (Nova balonu), GunKartlari, Denge, TemaSecici
@@ -73,6 +74,8 @@ Kurallar:
 - `Arkaplan` bileşenine `key` verme: tema değişince ağaç baştan kurulur ve kurulum adımı başa döner.
 - Veri biçimi siteyle ortak (`kullanici_verileri` tablosunda `gunluk_kayitlar`, `aktivite_loglari`, `profil`). Alan adlarını değiştirme; site aynı satırı okuyor. Kayıt alanları: `Tarih, Öğün, Tarif, Kalori, Protein, Karbonhidrat, Yağ` ve mikro besinler (`"Kalsiyum (mg)"` gibi).
 - Kaçamak dengeleme (`profil.dengeleme`) şimdilik yalnızca telefonda; site o günlerde normal hedefi gösteriyor.
+- Yerel paket eklerken sürümü `node_modules/expo/bundledNativeModules.json`'dan al (Expo Go ile uyumlu olan o); `npx expo install` bu ortamda Expo sunucusuna ulaşamıyor.
+- Deneme kipinde değişiklik tarayıcıya yansımıyorsa sunucuyu `--clear` ile yeniden başlat.
 
 Komutlar (`mobil/` içinde):
 ```

@@ -24,7 +24,8 @@ export type SiteYemek = {
   p: number; k: number; y: number; kcal?: number; gram?: number; ekstra?: Record<string, number>;
 };
 export type YemekTuru = "favori" | "kendi";
-export type Gorsel = { gorsel_b64: string; gorsel_tur?: string };
+/** Yapay zekaya giden ek: fotoğraf ya da ses kaydı (sunucu ikisini de kabul eder) */
+export type Gorsel = { gorsel_b64?: string; gorsel_tur?: string; ses_b64?: string; ses_tur?: string };
 
 export interface Arka {
   oturumKullanici(): Promise<string | null>;
