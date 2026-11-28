@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Nova",
+    "slug": "nova",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.nova.tracker"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F5F7",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "app.nova.tracker"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-font",
+      "expo-status-bar",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Nova scans product barcodes and photographs your meals to estimate calories.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nova uses the meal photo you choose to estimate calories.",
+          "cameraPermission": "Nova photographs your meals and nutrition labels to estimate calories."
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Nova counts your daily steps to show how much energy you burned."
+        }
+      ]
+    ],
+    "scheme": "nova",
+    "runtimeVersion": "exposdk:58.0.0"
+  }
+}

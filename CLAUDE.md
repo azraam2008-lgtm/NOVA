@@ -60,6 +60,7 @@ src/dil.ts                   Çeviriler: anahtar Türkçe metin, değer [en, de,
 src/hesap.ts                 Profil/Kayıt tipleri, hedef kalori formülü (siteyle aynı), öğünler
 src/veri.ts                  Arka uç: SupabaseArka (gerçek) ve SahteArka (deneme, AsyncStorage)
 src/disari.ts                Open Food Facts barkod, fotoğraf çekme ve küçültme
+src/adim.ts                  iPhone hareket sensöründen adım (useAdimSayar)
 src/mikro.ts, oruc.ts, rapor.ts, denge.ts, egzersizler.ts   Sitedeki modüllerin karşılıkları
 src/ekranlar/                Giris, Kurulum, AnaEkran (sekmeler), Bugun, Gelisim, Antrenman, Koc, Profil, Ayarlar,
                              EklePaneli, Asistan (Nova balonu), GunKartlari, Denge, TemaSecici
@@ -106,7 +107,7 @@ SQL kurulumu: `supabase_kurulum.sql`, `supabase_asama_a.sql` (RLS, Auth köprüs
 
 `main`'e gelen her değişiklikte `.github/workflows/nova-mobil.yml` uygulamayı EAS Update ile `nova` kanalına yayınlar; Azra Expo Go'da yeniden açınca yeni sürümü görür. GitHub secret'ları: `EXPO_TOKEN` (zorunlu), `EXPO_PUBLIC_SUPABASE_KEY` (yoksa uygulama deneme kipinde açılır).
 
-**Önemli:** Eskiden telefon uygulaması depoya tek dosya (`mobil.zip`) olarak yükleniyordu, çünkü Safari klasör yüklemeyi bozuyordu. Workflow `mobil.zip` varsa `mobil/` klasörünü siler ve zip'i açar. Artık `mobil/` klasörü doğrudan depoda tutulacaksa `mobil.zip`'i depodan sil; yoksa zip'teki eski sürüm klasörün üzerine yazılır.
+**Önemli:** Telefon uygulaması artık doğrudan `mobil/` klasöründe duruyor; `mobil.zip` silindi. Eskiden Safari klasör yüklemeyi bozduğu için zip kullanılıyordu. Workflow depoda yeniden bir `mobil.zip` görürse `mobil/` klasörünü siler ve zip'i açar; bu yüzden depoya bir daha zip yüklenmemeli, yoksa zip'teki eski sürüm klasörün üzerine yazılır.
 
 Site Streamlit Cloud'da `main` dalından kendiliğinden yayınlanır.
 
@@ -118,7 +119,7 @@ Ayrıntılı plan ve puan tablosu: "Nova Yol Haritası" belgesi (claude.ai). Pua
 - Aşama B (uygulama iskeleti, sade ana ekran, Nova balonu): bitti.
 - Aşama C (sitedeki her özelliğin telefona taşınması, kaçamak dengeleme): bitti.
 - **Aşama D:** Apple geliştirici hesabı (yılda 99 dolar) şimdilik alınmıyor. Bu yüzden önce ücretsiz parçalar:
-  1. Adım sayar: `expo-sensors` Pedometer ile iPhone'un hareket sensöründen bugünün adımı (Apple Health bağlantısı tam sürüme kalıyor).
+  1. Adım sayar: bitti. `src/adim.ts` (`expo-sensors` Pedometer). Açılışta, öne gelince ve açıkken 3 dakikada bir son 7 günün sensör adımını `aktivite_loglari[tarih].adim`'a yazar; kayıtlı sayı daha yüksekse (elle girilmişse) dokunmaz. Yalnızca iOS; Android ve web'de elle giriş. Apple Health bağlantısı tam sürüme kalıyor.
   2. Yerel hatırlatmalar (`expo-notifications`): akşam kaydı, sahur ve iftar, su.
   Widget ve TestFlight Apple hesabı açılınca.
 - Aşama E: 35 hareket x kadın ve erkek egzersiz videoları. Videoları Azra başka bir araçla üretiyor; senden istem (prompt) isteyebilir. Biçim dikey 9:16, sessiz döngü, çalışan kaslar kırmızı. Dosya adları `squat_kadin.mp4`, `squat_erkek.mp4` gibi, id'ler `exercises.json` ile aynı.
