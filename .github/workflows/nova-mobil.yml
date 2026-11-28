@@ -1,8 +1,7 @@
 # Nova telefon uygulamasını Expo'ya yükler; iPhone'da Expo Go ile açılır.
-# Bilgisayarda hiçbir şey çalıştırmak gerekmez. Uygulama depoya TEK DOSYA olarak,
-# mobil.zip adıyla yüklenir (Safari klasör yüklerken yapıyı bozduğu için);
-# görev zip'i kendisi açar. mobil.zip değişince kendiliğinden çalışır,
-# "Run workflow" ile elle de çalıştırılabilir.
+# Bilgisayarda hiçbir şey çalıştırmak gerekmez. Uygulama depoda mobil/ klasöründe durur;
+# main'de mobil/ değişince kendiliğinden çalışır, "Run workflow" ile elle de çalıştırılabilir.
+# Eski düzen: depoya mobil.zip yüklenirse görev onu açıp mobil/ klasörünün yerine koyar.
 #
 # Gerekli gizli değişken (Settings -> Secrets and variables -> Actions):
 #   EXPO_TOKEN                 expo.dev -> Account settings -> Access tokens
@@ -47,7 +46,7 @@ jobs:
             unzip -q -o mobil.zip
           fi
           if [ ! -f mobil/package.json ]; then
-            echo "::error::mobil.zip bulunamadi ya da icinde mobil klasoru yok. mobil.zip dosyasini deponun ana sayfasina tek dosya olarak yukle."
+            echo "::error::mobil/package.json bulunamadi. Telefon uygulamasi depoda mobil/ klasorunde olmali."
             exit 1
           fi
           echo "Uygulama surumu: $(node -p "require('./mobil/package.json').dependencies.expo")"
